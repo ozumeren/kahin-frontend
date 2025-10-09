@@ -1,11 +1,18 @@
 import { Link, useLocation } from 'react-router-dom'
-import { TrendingUp, Menu, X } from 'lucide-react'
+import { TrendingUp, Menu, X, User, LogOut } from 'lucide-react'
 import { useState } from 'react'
+import { useAuth } from '../context/AuthContext'  // ← YENİ
 
 export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const location = useLocation()
+  const { user, logout } = useAuth()  // ← YENİ
   const isActive = (path) => location.pathname === path
+
+  const handleLogout = () => {
+    logout()
+    setMobileMenuOpen(false)
+  }
 
   return (
     <nav className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
@@ -23,11 +30,34 @@ export default function Navbar() {
             <Link to="/markets" className={`px-4 py-2 rounded-lg font-medium ${isActive('/markets') ? 'bg-brand-50 text-brand-700' : 'hover:bg-gray-100'}`}>
               Pazarlar
             </Link>
+            {user && (
+              <Link to="/portfolio" className={`px-4 py-2 rounded-lg font-medium ${isActive('/portfolio') ? 'bg-brand-50 text-brand-700' : 'hover:bg-gray-100'}`}>
+                Portfolyo
+              </Link>
+            )}
           </div>
 
           <div className="hidden md:flex items-center gap-3">
-            <Link to="/login" className="btn btn-ghost">Giriş</Link>
-            <Link to="/register" className="btn btn-primary">Kayıt Ol</Link>
+            {user ? (
+              <>
+                <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg">
+                  <User className="w-4 h-4 text-gray-600" />
+                  <span className="text-sm font-medium">{user.username}</span>
+                  <span className="text-xs text-gray-500">
+                    ₺{parseFloat(user.balance || 0).toFixed(2)}
+                  </span>
+                </div>
+                <button onClick={handleLogout} className="btn btn-ghost">
+                  <LogOut className="w-4 h-4" />
+                  Çıkış
+                </button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" className="btn btn-ghost">Giriş</Link>
+                <Link to="/register" className="btn btn-primary">Kayıt Ol</Link>
+              </>
+            )}
           </div>
 
           <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden">
@@ -35,6 +65,8 @@ export default function Navbar() {
           </button>
         </div>
       </div>
+
+      {/* Mobile Menu - aynı kalacak, sadece user bilgisi güncellenecek */}
     </nav>
   )
 }
