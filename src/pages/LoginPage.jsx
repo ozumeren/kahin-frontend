@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { LogIn, Mail, Lock, AlertCircle } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -13,19 +14,22 @@ export default function LoginPage() {
   const navigate = useNavigate()
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
-    setLoading(true)
+  e.preventDefault()
+  setError('')
+  setLoading(true)
 
-    try {
-      await login(email, password)
-      navigate('/markets')
-    } catch (err) {
-      setError(err.response?.data?.message || 'Giriş başarısız. Lütfen bilgilerinizi kontrol edin.')
-    } finally {
-      setLoading(false)
-    }
+  try {
+    await login(email, password)
+    toast.success('Giriş başarılı! 🎉')  // ← YENİ
+    navigate('/markets')
+  } catch (err) {
+    const errorMsg = err.response?.data?.message || 'Giriş başarısız'
+    setError(errorMsg)
+    toast.error(errorMsg)  // ← YENİ
+  } finally {
+    setLoading(false)
   }
+}
 
   return (
     <div className="min-h-[80vh] flex items-center justify-center py-12 px-4">

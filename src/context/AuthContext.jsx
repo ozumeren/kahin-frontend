@@ -31,9 +31,18 @@ export function AuthProvider({ children }) {
     const { accessToken, user } = response.data
     
     localStorage.setItem('token', accessToken)
-    setUser(user)
-    
-    return response.data
+    try {
+    const userResponse = await apiClient.get('/users/me')
+    setUser(userResponse.data.data)
+  } catch (error) {
+    console.error('Failed to fetch user after login:', error)
+    // Token varsa en azından basic user bilgisi set et
+    if (response.data.user) {
+      setUser(response.data.user)
+    }
+  }
+  
+  return response.data
   }
 
   const register = async (username, email, password) => {
@@ -50,12 +59,25 @@ export function AuthProvider({ children }) {
     setUser(null)
   }
 
+  // ✅ YENİ: User bilgilerini yenile
+  const refreshUser = async () => {
+    try {
+      const response = await apiClient.get('/users/me')
+      setUser(response.data.data)
+      return response.data.data
+    } catch (error) {
+      console.error('Failed to refresh user:', error)
+      return null
+    }
+  }
+
   const value = {
     user,
     loading,
     login,
     register,
     logout,
+    refreshUser,  // ✅ YENİ
     isAuthenticated: !!user
   }
 
