@@ -2,13 +2,18 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { Search, Filter, TrendingUp, Clock, Users } from 'lucide-react'
+import { useEffect } from 'react'
 import apiClient from '../api/client'
 import { formatDistanceToNow } from 'date-fns'
 import { tr } from 'date-fns/locale'
+import { useWebSocket } from '../hooks/useWebSocket'
+import { useMarketWebSocket } from '../hooks/useWebSocket'
+import ConnectionStatus from '../components/ConnectionStatus'
 
 export default function MarketsPage() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const ws = useWebSocket()
 
   // Fetch markets
   const { data, isLoading, error } = useQuery({
@@ -19,6 +24,20 @@ export default function MarketsPage() {
       return response.data.data
     }
   })
+
+  useEffect(() => {
+    if (data && data.length > 0) {
+      data.forEach(market => {
+        ws.subscribeToMarket(market.id)
+      })
+
+      return () => {
+        data.forEach(market => {
+          ws.unsubscribeFromMarket(market.id)
+        })
+      }
+    }
+  }, [data])
 
   // Filter markets by search
   const filteredMarkets = data?.filter(market =>
