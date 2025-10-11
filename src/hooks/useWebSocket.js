@@ -8,26 +8,37 @@ export function useWebSocket() {
   const reconnectTimeoutRef = useRef(null)
   const subscribedMarkets = useRef(new Set())
   const messageHandlers = useRef(new Map())
+  const isCleaningUpRef = useRef(false)
 
   useEffect(() => {
+    isCleaningUpRef.current = false
     connect()
 
     return () => {
+      isCleaningUpRef.current = true
       if (wsRef.current) {
         wsRef.current.close()
+        wsRef.current = null
       }
       if (reconnectTimeoutRef.current) {
         clearTimeout(reconnectTimeoutRef.current)
+        reconnectTimeoutRef.current = null
       }
     }
   }, [])
 
   const connect = () => {
+  if (isCleaningUpRef.current) return
+  
   try {
     const ws = new WebSocket(WS_URL)
     wsRef.current = ws
 
     ws.onopen = () => {
+      if (isCleaningUpRef.current) {
+        ws.close()
+        return
+      }
       console.log('✅ WebSocket connected')
       setIsConnected(true)
       
@@ -37,6 +48,8 @@ export function useWebSocket() {
     }
 
     ws.onmessage = (event) => {
+      if (isCleaningUpRef.current) return
+      
       try {
         const data = JSON.parse(event.data)
         handleMessage(data)
@@ -51,11 +64,14 @@ export function useWebSocket() {
     }
 
     ws.onclose = () => {
+      if (isCleaningUpRef.current) return
+      
       console.log('🔴 WebSocket disconnected')
       setIsConnected(false)
+      wsRef.current = null
       
       // ✅ Sadece 1 kez reconnect dene, sonra bırak
-      if (!reconnectTimeoutRef.current) {
+      if (!reconnectTimeoutRef.current && !isCleaningUpRef.current) {
         reconnectTimeoutRef.current = setTimeout(() => {
           console.log('🔄 Attempting to reconnect...')
           reconnectTimeoutRef.current = null
@@ -149,15 +165,16 @@ export function useMarketWebSocket(marketId) {
   const ws = useWebSocket()
   const [orderBook, setOrderBook] = useState(null)
   const [lastUpdate, setLastUpdate] = useState(null)
+  const cleanupRef = useRef(null)
 
   useEffect(() => {
-    if (!marketId) return
+    if (!marketId || !ws) return
 
     // Subscribe
     ws.subscribeToMarket(marketId)
 
     // Setup message handler
-    const cleanup = ws.onMessage(marketId, (data) => {
+    cleanupRef.current = ws.onMessage(marketId, (data) => {
       if (data.type === 'orderbook_update' && data.marketId === marketId) {
         setOrderBook(data.orderBook)
         setLastUpdate(new Date())
@@ -166,10 +183,13 @@ export function useMarketWebSocket(marketId) {
 
     // Cleanup
     return () => {
-      cleanup()
+      if (cleanupRef.current) {
+        cleanupRef.current()
+        cleanupRef.current = null
+      }
       ws.unsubscribeFromMarket(marketId)
     }
-  }, [marketId])
+  }, [marketId, ws?.isConnected])
 
   return {
     isConnected: ws.isConnected,

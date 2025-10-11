@@ -1,75 +1,27 @@
 import React, { useState, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
 import { ArrowLeft, TrendingUp, Users, Clock, Wifi, RefreshCw } from 'lucide-react';
+import { useMarketWebSocket } from '../hooks/useWebSocket';
 
-const MarketDetailWithWebSocket = ({ marketId }) => {
+const MarketDetailWithWebSocket = () => {
+  const { id: marketId } = useParams();
   const [market, setMarket] = useState(null);
-  const [orderBook, setOrderBook] = useState(null);
   const [trades, setTrades] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [wsConnected, setWsConnected] = useState(false);
-  const [lastUpdate, setLastUpdate] = useState(null);
+
+  // WebSocket hook kullan (artık manuel WebSocket yönetimi yok!)
+  const { isConnected: wsConnected, orderBook, lastUpdate } = useMarketWebSocket(marketId);
 
   // Fetch initial market data
   useEffect(() => {
-    fetchMarketData();
-  }, [marketId]);
-
-  // WebSocket connection
-  useEffect(() => {
-    if (!marketId) return;
-
-    const ws = new WebSocket('wss://api.kahinmarket.com/ws');
-
-    ws.onopen = () => {
-      console.log('✅ WebSocket connected to market:', marketId);
-      setWsConnected(true);
-
-      // Subscribe to this market
-      ws.send(JSON.stringify({
-        type: 'subscribe',
-        marketId: marketId
-      }));
-    };
-
-    ws.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        
-        if (data.type === 'orderbook_update' && data.marketId === marketId) {
-          setOrderBook(data.orderBook);
-          setLastUpdate(new Date());
-        }
-
-        if (data.type === 'trade' && data.marketId === marketId) {
-          setTrades(prev => [data.trade, ...prev].slice(0, 20));
-        }
-      } catch (error) {
-        console.error('WebSocket message error:', error);
-      }
-    };
-
-    ws.onclose = () => {
-      console.log('🔴 WebSocket disconnected');
-      setWsConnected(false);
-    };
-
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      setWsConnected(false);
-    };
-
-    return () => {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(JSON.stringify({
-          type: 'unsubscribe',
-          marketId: marketId
-        }));
-        ws.close();
-      }
-    };
+    if (marketId) {
+      fetchMarketData();
+    }
   }, [marketId]);
 
   const fetchMarketData = async () => {
+    if (!marketId) return;
+    
     try {
       setLoading(true);
       
@@ -77,11 +29,6 @@ const MarketDetailWithWebSocket = ({ marketId }) => {
       const marketRes = await fetch(`https://api.kahinmarket.com/api/v1/markets/${marketId}`);
       const marketData = await marketRes.json();
       setMarket(marketData.data);
-
-      // Fetch order book
-      const obRes = await fetch(`https://api.kahinmarket.com/api/v1/markets/${marketId}/orderbook`);
-      const obData = await obRes.json();
-      setOrderBook(obData.data);
 
       // Fetch recent trades
       const tradesRes = await fetch(`https://api.kahinmarket.com/api/v1/trades/market/${marketId}?limit=20`);
