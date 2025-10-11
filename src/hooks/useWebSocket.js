@@ -28,74 +28,70 @@ export function useWebSocket() {
   }, [])
 
   const connect = () => {
-  if (isCleaningUpRef.current) return
-  
-  try {
-    const ws = new WebSocket(WS_URL)
-    wsRef.current = ws
+    if (isCleaningUpRef.current) return
+    
+    try {
+      const ws = new WebSocket(WS_URL)
+      wsRef.current = ws
 
-    ws.onopen = () => {
-      if (isCleaningUpRef.current) {
-        ws.close()
-        return
+      ws.onopen = () => {
+        if (isCleaningUpRef.current) {
+          ws.close()
+          return
+        }
+        console.log('✅ WebSocket connected')
+        setIsConnected(true)
+        
+        subscribedMarkets.current.forEach(marketId => {
+          subscribeToMarket(marketId)
+        })
       }
-      console.log('✅ WebSocket connected')
-      setIsConnected(true)
-      
-      subscribedMarkets.current.forEach(marketId => {
-        subscribeToMarket(marketId)
-      })
-    }
 
-    ws.onmessage = (event) => {
-      if (isCleaningUpRef.current) return
-      
-      try {
-        const data = JSON.parse(event.data)
-        handleMessage(data)
-      } catch (error) {
-        console.error('Failed to parse WebSocket message:', error)
+      ws.onmessage = (event) => {
+        if (isCleaningUpRef.current) return
+        
+        try {
+          const data = JSON.parse(event.data)
+          handleMessage(data)
+        } catch (error) {
+          console.error('Failed to parse WebSocket message:', error)
+        }
       }
-    }
 
-    ws.onerror = (error) => {
-      // ✅ Sessizce handle et
-      console.warn('⚠️ WebSocket error (backend may not be ready):', error.type)
-    }
+      ws.onerror = (error) => {
+        console.warn('⚠️ WebSocket error (backend may not be ready):', error.type)
+      }
 
-    ws.onclose = () => {
-      if (isCleaningUpRef.current) return
-      
-      console.log('🔴 WebSocket disconnected')
+      ws.onclose = () => {
+        if (isCleaningUpRef.current) return
+        
+        console.log('🔴 WebSocket disconnected')
+        setIsConnected(false)
+        wsRef.current = null
+        
+        if (!reconnectTimeoutRef.current && !isCleaningUpRef.current) {
+          reconnectTimeoutRef.current = setTimeout(() => {
+            console.log('🔄 Attempting to reconnect...')
+            reconnectTimeoutRef.current = null
+            connect()
+          }, 5000)
+        }
+      }
+    } catch (error) {
+      console.warn('⚠️ WebSocket not available:', error)
       setIsConnected(false)
-      wsRef.current = null
-      
-      // ✅ Sadece 1 kez reconnect dene, sonra bırak
-      if (!reconnectTimeoutRef.current && !isCleaningUpRef.current) {
-        reconnectTimeoutRef.current = setTimeout(() => {
-          console.log('🔄 Attempting to reconnect...')
-          reconnectTimeoutRef.current = null
-          connect()
-        }, 5000)
-      }
     }
-  } catch (error) {
-    console.warn('⚠️ WebSocket not available:', error)
-    setIsConnected(false)
   }
-}
 
   const handleMessage = (data) => {
     const { type, marketId } = data
 
     if (type === 'orderbook_update' && marketId) {
-      // Call all handlers for this market
       const handlers = messageHandlers.current.get(marketId) || []
       handlers.forEach(handler => handler(data))
     }
 
     if (type === 'market_update') {
-      // Broadcast to all market handlers
       messageHandlers.current.forEach(handlers => {
         handlers.forEach(handler => handler(data))
       })
@@ -104,7 +100,6 @@ export function useWebSocket() {
 
   const subscribeToMarket = (marketId) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-      // Queue subscription for when connected
       subscribedMarkets.current.add(marketId)
       return
     }
@@ -131,7 +126,6 @@ export function useWebSocket() {
       console.log(`📴 Unsubscribed from market: ${marketId}`)
     }
 
-    // Remove handlers
     messageHandlers.current.delete(marketId)
   }
 
@@ -142,7 +136,6 @@ export function useWebSocket() {
     
     messageHandlers.current.get(marketId).push(handler)
 
-    // Return cleanup function
     return () => {
       const handlers = messageHandlers.current.get(marketId) || []
       const index = handlers.indexOf(handler)
@@ -170,18 +163,19 @@ export function useMarketWebSocket(marketId) {
   useEffect(() => {
     if (!marketId || !ws) return
 
-    // Subscribe
     ws.subscribeToMarket(marketId)
 
-    // Setup message handler
     cleanupRef.current = ws.onMessage(marketId, (data) => {
+      // ✅ DÜZELTME: Backend'den gelen data yapısını doğru parse et
       if (data.type === 'orderbook_update' && data.marketId === marketId) {
-        setOrderBook(data.orderBook)
+        // Backend'den gelen data.data içinde orderBook var
+        const receivedOrderBook = data.data || data.orderBook
+        console.log('📊 Order book güncellendi:', receivedOrderBook)
+        setOrderBook(receivedOrderBook)
         setLastUpdate(new Date())
       }
     })
 
-    // Cleanup
     return () => {
       if (cleanupRef.current) {
         cleanupRef.current()
