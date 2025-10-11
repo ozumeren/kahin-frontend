@@ -40,7 +40,6 @@ class WebSocketManager {
           this.ws.close()
           return
         }
-        console.log('✅ WebSocket connected')
         this.isConnected = true
         this.notify()
         
@@ -67,14 +66,12 @@ class WebSocketManager {
       this.ws.onclose = () => {
         if (this.isCleaningUp) return
         
-        console.log('🔴 WebSocket disconnected')
         this.isConnected = false
         this.notify()
         this.ws = null
         
         if (!this.reconnectTimeout && !this.isCleaningUp) {
           this.reconnectTimeout = setTimeout(() => {
-            console.log('🔄 Attempting to reconnect...')
             this.reconnectTimeout = null
             this.connect()
           }, 5000)
@@ -153,8 +150,6 @@ class WebSocketManager {
       marketId,
       userId
     }))
-
-    console.log(`📡 Subscribed to market: ${marketId}${userId ? ` (user: ${userId})` : ''}`)
   }
 
   subscribeUser(userId) {
@@ -166,8 +161,6 @@ class WebSocketManager {
       type: 'subscribe_user',
       userId
     }))
-
-    console.log(`👤 Subscribed user: ${userId}`)
   }
 
   unsubscribeFromMarket(marketId) {
@@ -178,8 +171,6 @@ class WebSocketManager {
         type: 'unsubscribe',
         marketId
       }))
-      
-      console.log(`📴 Unsubscribed from market: ${marketId}`)
     }
 
     this.messageHandlers.delete(marketId)
