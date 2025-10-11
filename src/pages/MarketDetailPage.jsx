@@ -1,19 +1,21 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, TrendingUp, Users, Clock, Wifi, RefreshCw, X, BarChart3 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useMarketWebSocket } from '../hooks/useWebSocket';
 import { useAuth } from '../context/AuthContext';
-import toast from 'react-hot-toast';
+import { useMarket, useOrderBook, useMarketTrades, useCreateOrder } from '../hooks/useMarketQueries';
 
 const MarketDetailPage = () => {
   const { id: marketId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [market, setMarket] = useState(null);
-  const [trades, setTrades] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [initialOrderBook, setInitialOrderBook] = useState(null);
+  
+  // React Query hooks - API verilerini yönet
+  const { data: market, isLoading: marketLoading, error: marketError } = useMarket(marketId);
+  const { data: initialOrderBook, isLoading: orderBookLoading } = useOrderBook(marketId);
+  const { data: trades = [], isLoading: tradesLoading } = useMarketTrades(marketId, 100);
+  const createOrderMutation = useCreateOrder();
 
   // Modal states
   const [showBuyModal, setShowBuyModal] = useState(false);
@@ -21,45 +23,12 @@ const MarketDetailPage = () => {
   const [orderType, setOrderType] = useState('BUY');
   const [orderQuantity, setOrderQuantity] = useState('');
   const [orderPrice, setOrderPrice] = useState('');
-  const [submitting, setSubmitting] = useState(false);
 
   // Chart tab
   const [chartTimeframe, setChartTimeframe] = useState('1h'); // 1h, 4h, 1d, all
 
-  // WebSocket hook
+  // WebSocket hook - real-time güncellemeler için
   const { isConnected: wsConnected, orderBook: liveOrderBook, lastUpdate } = useMarketWebSocket(marketId);
-
-  useEffect(() => {
-    if (marketId) {
-      fetchMarketData();
-    }
-  }, [marketId]);
-
-  const fetchMarketData = async () => {
-    if (!marketId) return;
-    
-    try {
-      setLoading(true);
-      
-      const marketRes = await fetch(`https://api.kahinmarket.com/api/v1/markets/${marketId}`);
-      const marketData = await marketRes.json();
-      setMarket(marketData.data);
-
-      const orderBookRes = await fetch(`https://api.kahinmarket.com/api/v1/markets/${marketId}/orderbook`);
-      const orderBookData = await orderBookRes.json();
-      setInitialOrderBook(orderBookData.data);
-
-      const tradesRes = await fetch(`https://api.kahinmarket.com/api/v1/trades/market/${marketId}?limit=100`);
-      const tradesData = await tradesRes.json();
-      setTrades(tradesData.trades || []);
-
-    } catch (error) {
-      console.error('Error fetching market data:', error);
-      toast.error('Market verileri yüklenemedi');
-    } finally {
-      setLoading(false);
-    }
-  };
 
   // Prepare chart data from trades
   const chartData = useMemo(() => {
@@ -94,7 +63,7 @@ const MarketDetailPage = () => {
 
   const handleOpenBuyModal = (outcome) => {
     if (!user) {
-      toast.error('Lütfen önce giriş yapın');
+      createOrderMutation.reset(); // Önceki hataları temizle
       navigate('/login');
       return;
     }
@@ -116,7 +85,6 @@ const MarketDetailPage = () => {
     e.preventDefault();
     
     if (!user) {
-      toast.error('Lütfen giriş yapın');
       navigate('/login');
       return;
     }
@@ -125,53 +93,34 @@ const MarketDetailPage = () => {
     const price = parseFloat(orderPrice);
 
     if (!quantity || quantity <= 0) {
-      toast.error('Geçerli bir miktar girin');
-      return;
+      return; // React Query mutation otomatik olarak hata yönetir
     }
 
     if (!price || price <= 0 || price > 100) {
-      toast.error('Fiyat 0-100 arasında olmalıdır');
-      return;
+      return; // React Query mutation otomatik olarak hata yönetir
     }
 
-    try {
-      setSubmitting(true);
-
-      const token = localStorage.getItem('token');
-      const response = await fetch('https://api.kahinmarket.com/api/v1/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          marketId,
-          type: orderType,
-          outcome: selectedOutcome,
-          quantity,
-          price
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Emir oluşturulamadı');
+    // React Query mutation kullanarak order oluştur
+    createOrderMutation.mutate(
+      {
+        marketId,
+        type: orderType,
+        outcome: selectedOutcome,
+        quantity,
+        price
+      },
+      {
+        onSuccess: () => {
+          // Modal'ı kapat
+          handleCloseBuyModal();
+          // NOT: fetchMarketData() artık gerekli değil!
+          // React Query otomatik olarak ilgili verileri invalidate edip yenileyecek
+        }
       }
-
-      toast.success(data.message || 'Emir başarıyla oluşturuldu!');
-      handleCloseBuyModal();
-      fetchMarketData();
-
-    } catch (error) {
-      console.error('Order error:', error);
-      toast.error(error.message || 'Emir oluşturulurken bir hata oluştu');
-    } finally {
-      setSubmitting(false);
-    }
+    );
   };
 
-  if (loading) {
+  if (marketLoading || orderBookLoading || tradesLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-brand-600 border-t-transparent"></div>
@@ -179,7 +128,7 @@ const MarketDetailPage = () => {
     );
   }
 
-  if (!market) {
+  if (marketError || !market) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -297,13 +246,13 @@ const MarketDetailPage = () => {
 
               <button
                 type="submit"
-                disabled={submitting}
+                disabled={createOrderMutation.isPending}
                 className={`w-full py-3 rounded-lg font-semibold text-white transition-colors ${
-                  submitting ? 'bg-gray-400 cursor-not-allowed' :
+                  createOrderMutation.isPending ? 'bg-gray-400 cursor-not-allowed' :
                   selectedOutcome ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
                 }`}
               >
-                {submitting ? 'İşleniyor...' : `${orderType === 'BUY' ? 'Satın Al' : 'Sat'}`}
+                {createOrderMutation.isPending ? 'İşleniyor...' : `${orderType === 'BUY' ? 'Satın Al' : 'Sat'}`}
               </button>
             </form>
           </div>

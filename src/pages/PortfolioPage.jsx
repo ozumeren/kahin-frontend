@@ -7,11 +7,12 @@ import {
   Clock, ChevronRight, AlertCircle, PieChart 
 } from 'lucide-react'
 import apiClient from '../api/client'
+import { useCancelOrder } from '../hooks/useMarketQueries'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
 
 export default function PortfolioPage() {
-  const { user, isAuthenticated } = useAuth()
+  const { user, isAuthenticated, loading } = useAuth()
   const [activeTab, setActiveTab] = useState('positions') // positions, orders, history
 
   // Fetch portfolio
@@ -44,6 +45,19 @@ export default function PortfolioPage() {
     enabled: isAuthenticated
   })
 
+  // ✅ Authentication yükleniyor
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8">
+        <div className="animate-pulse space-y-4">
+          <div className="h-32 bg-gray-200 rounded-lg"></div>
+          <div className="h-64 bg-gray-200 rounded-lg"></div>
+        </div>
+      </div>
+    )
+  }
+
+  // ✅ Kullanıcı giriş yapmamış
   if (!isAuthenticated) {
     return (
       <div className="container mx-auto px-4 py-16">
@@ -61,6 +75,7 @@ export default function PortfolioPage() {
     )
   }
 
+  // ✅ Portfolio yükleniyor
   if (portfolioLoading) {
     return (
       <div className="container mx-auto px-4 py-8">
@@ -280,7 +295,14 @@ function PositionsPanel({ positions }) {
 
 // Orders Panel
 function OrdersPanel({ orders }) {
-  const openOrders = orders?.filter(order => order.status === 'OPEN') || []
+  const cancelOrderMutation = useCancelOrder();
+  const openOrders = orders?.filter(order => order.status === 'OPEN') || [];
+
+  const handleCancelOrder = (orderId) => {
+    if (window.confirm('Bu emri iptal etmek istediğinizden emin misiniz?')) {
+      cancelOrderMutation.mutate(orderId);
+    }
+  };
 
   if (openOrders.length === 0) {
     return (
@@ -317,8 +339,12 @@ function OrdersPanel({ orders }) {
                 </span>
               </div>
             </div>
-            <button className="btn btn-secondary btn-sm">
-              İptal Et
+            <button 
+              className="btn btn-secondary btn-sm"
+              onClick={() => handleCancelOrder(order.id)}
+              disabled={cancelOrderMutation.isPending}
+            >
+              {cancelOrderMutation.isPending ? 'İptal ediliyor...' : 'İptal Et'}
             </button>
           </div>
 

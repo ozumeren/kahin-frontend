@@ -207,7 +207,7 @@ function MarketCard({ market }) {
         </div>
         <div className="flex items-center gap-1">
           <Clock className="w-4 h-4" />
-          <span>{formatDate(market.closingDate)}</span>
+          <span>{formatDate(market.closing_date)}</span>
         </div>
       </div>
     </Link>

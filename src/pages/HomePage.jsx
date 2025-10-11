@@ -287,13 +287,6 @@ const HomePage = () => {
           )}
         </div>
       </div>
-
-      {/* Footer */}
-      <footer className="border-t border-gray-200 bg-white py-8 mt-20">
-        <div className="container mx-auto px-4 text-center text-sm text-gray-600">
-          <p>© 2025 Kahin Market. Tüm hakları saklıdır.</p>
-        </div>
-      </footer>
     </div>
   );
 };

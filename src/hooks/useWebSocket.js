@@ -86,11 +86,35 @@ export function useWebSocket() {
   const handleMessage = (data) => {
     const { type, marketId } = data
 
+    // Orderbook güncellemeleri
     if (type === 'orderbook_update' && marketId) {
       const handlers = messageHandlers.current.get(marketId) || []
       handlers.forEach(handler => handler(data))
     }
 
+    // Yeni trade bildirimi
+    if (type === 'new_trade' && marketId) {
+      const handlers = messageHandlers.current.get(marketId) || []
+      handlers.forEach(handler => handler(data))
+      
+      // Global trade handler'ları da tetikle (tüm pazarlar için)
+      const globalHandlers = messageHandlers.current.get('__global_trades__') || []
+      globalHandlers.forEach(handler => handler(data))
+    }
+
+    // Kişiselleştirilmiş emir dolum bildirimi
+    if (type === 'my_order_filled') {
+      const handlers = messageHandlers.current.get('__my_orders__') || []
+      handlers.forEach(handler => handler(data))
+    }
+
+    // Kişiselleştirilmiş emir iptal bildirimi
+    if (type === 'my_order_cancelled') {
+      const handlers = messageHandlers.current.get('__my_orders__') || []
+      handlers.forEach(handler => handler(data))
+    }
+
+    // Market update (genel)
     if (type === 'market_update') {
       messageHandlers.current.forEach(handlers => {
         handlers.forEach(handler => handler(data))
@@ -98,7 +122,7 @@ export function useWebSocket() {
     }
   }
 
-  const subscribeToMarket = (marketId) => {
+  const subscribeToMarket = (marketId, userId = null) => {
     if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
       subscribedMarkets.current.add(marketId)
       return
@@ -108,10 +132,11 @@ export function useWebSocket() {
 
     wsRef.current.send(JSON.stringify({
       type: 'subscribe',
-      marketId
+      marketId,
+      userId
     }))
 
-    console.log(`📡 Subscribed to market: ${marketId}`)
+    console.log(`📡 Subscribed to market: ${marketId}${userId ? ` (user: ${userId})` : ''}`)
   }
 
   const unsubscribeFromMarket = (marketId) => {
@@ -154,7 +179,7 @@ export function useWebSocket() {
 }
 
 // Market-specific hook
-export function useMarketWebSocket(marketId) {
+export function useMarketWebSocket(marketId, userId = null) {
   const ws = useWebSocket()
   const [orderBook, setOrderBook] = useState(null)
   const [lastUpdate, setLastUpdate] = useState(null)
@@ -163,7 +188,7 @@ export function useMarketWebSocket(marketId) {
   useEffect(() => {
     if (!marketId || !ws) return
 
-    ws.subscribeToMarket(marketId)
+    ws.subscribeToMarket(marketId, userId)
 
     cleanupRef.current = ws.onMessage(marketId, (data) => {
       // ✅ DÜZELTME: Backend'den gelen data yapısını doğru parse et
@@ -183,11 +208,78 @@ export function useMarketWebSocket(marketId) {
       }
       ws.unsubscribeFromMarket(marketId)
     }
-  }, [marketId, ws?.isConnected])
+  }, [marketId, userId, ws?.isConnected])
 
   return {
     isConnected: ws.isConnected,
     orderBook,
     lastUpdate
+  }
+}
+
+// Hook for listening to new trades
+export function useNewTrades(marketId, onNewTrade) {
+  const ws = useWebSocket()
+  const cleanupRef = useRef(null)
+
+  useEffect(() => {
+    if (!ws || !onNewTrade) return
+
+    // Belirli bir market için trade'leri dinle
+    if (marketId) {
+      cleanupRef.current = ws.onMessage(marketId, (data) => {
+        if (data.type === 'new_trade') {
+          onNewTrade(data.data)
+        }
+      })
+    } else {
+      // Tüm marketler için trade'leri dinle
+      cleanupRef.current = ws.onMessage('__global_trades__', (data) => {
+        if (data.type === 'new_trade') {
+          onNewTrade(data.data)
+        }
+      })
+    }
+
+    return () => {
+      if (cleanupRef.current) {
+        cleanupRef.current()
+        cleanupRef.current = null
+      }
+    }
+  }, [ws?.isConnected, marketId, onNewTrade])
+
+  return {
+    isConnected: ws.isConnected
+  }
+}
+
+// Hook for listening to personal order events
+export function useMyOrderEvents(onOrderFilled, onOrderCancelled) {
+  const ws = useWebSocket()
+  const cleanupRef = useRef(null)
+
+  useEffect(() => {
+    if (!ws) return
+
+    cleanupRef.current = ws.onMessage('__my_orders__', (data) => {
+      if (data.type === 'my_order_filled' && onOrderFilled) {
+        onOrderFilled(data.data)
+      }
+      if (data.type === 'my_order_cancelled' && onOrderCancelled) {
+        onOrderCancelled(data.data)
+      }
+    })
+
+    return () => {
+      if (cleanupRef.current) {
+        cleanupRef.current()
+        cleanupRef.current = null
+      }
+    }
+  }, [ws?.isConnected, onOrderFilled, onOrderCancelled])
+
+  return {
+    isConnected: ws.isConnected
   }
 }
