@@ -101,8 +101,8 @@ export default function WebSocketNotifications({ marketId = null }) {
     })
   }, [setUser])
 
-  // Bakiye güncellemelerini dinle
-  useBalanceUpdates(handleBalanceUpdate)
+  // Bakiye güncellemelerini dinle (ws instance'ını geç)
+  useBalanceUpdates(ws, handleBalanceUpdate)
 
   // Bu component görsel bir şey render etmez, sadece bildirimleri yönetir
   return null
