@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 
-const WS_URL = 'wss://api.kahinmarket.com/ws'
+// WebSocket URL'yi environment'a göre belirle
+const WS_URL = import.meta.env.VITE_WS_URL || 
+  (import.meta.env.DEV ? 'ws://localhost:5001/ws' : 'wss://api.kahinmarket.com/ws')
 
 export function useWebSocket() {
   const [isConnected, setIsConnected] = useState(false)

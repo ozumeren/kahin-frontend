@@ -1,8 +1,9 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, TrendingUp, Users, Clock, Wifi, RefreshCw, X, BarChart3 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { useMarketWebSocket } from '../hooks/useWebSocket';
+import { useQueryClient } from '@tanstack/react-query';
+import { useMarketWebSocket, useNewTrades } from '../hooks/useWebSocket';
 import { useAuth } from '../context/AuthContext';
 import { useMarket, useOrderBook, useMarketTrades, useCreateOrder } from '../hooks/useMarketQueries';
 
@@ -10,6 +11,7 @@ const MarketDetailPage = () => {
   const { id: marketId } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   
   // React Query hooks - API verilerini yönet
   const { data: market, isLoading: marketLoading, error: marketError } = useMarket(marketId);
@@ -29,6 +31,16 @@ const MarketDetailPage = () => {
 
   // WebSocket hook - real-time güncellemeler için
   const { isConnected: wsConnected, orderBook: liveOrderBook, lastUpdate } = useMarketWebSocket(marketId);
+  
+  // WebSocket'ten yeni trade geldiğinde trades listesini güncelle
+  const handleNewTrade = useCallback((newTrade) => {
+    console.log('🆕 Yeni trade alındı:', newTrade);
+    // Trades listesini invalidate et, böylece yeniden fetch edilir
+    queryClient.invalidateQueries({ queryKey: ['trades', marketId] });
+  }, [queryClient, marketId]);
+  
+  // Yeni trade'leri dinle
+  useNewTrades(marketId, handleNewTrade);
 
   // Prepare chart data from trades
   const chartData = useMemo(() => {
@@ -61,16 +73,18 @@ const MarketDetailPage = () => {
     }));
   }, [trades]);
 
-  const handleOpenBuyModal = (outcome) => {
+  const handleOpenBuyModal = (outcome, type = 'BUY') => {
     if (!user) {
       createOrderMutation.reset(); // Önceki hataları temizle
       navigate('/login');
       return;
     }
     setSelectedOutcome(outcome);
-    setOrderType('BUY');
+    setOrderType(type);
     setOrderQuantity('');
-    setOrderPrice('');
+    // Mevcut piyasa fiyatını default olarak ayarla
+    const currentPrice = outcome ? yesPrice : noPrice;
+    setOrderPrice(currentPrice.toFixed(2));
     setShowBuyModal(true);
   };
 
@@ -140,8 +154,8 @@ const MarketDetailPage = () => {
   }
 
   const orderBook = liveOrderBook || initialOrderBook;
-  const yesPrice = orderBook?.yes?.midPrice || 50;
-  const noPrice = orderBook?.no?.midPrice || 50;
+  const yesPrice = parseFloat(orderBook?.yes?.midPrice) || 0.50;
+  const noPrice = parseFloat(orderBook?.no?.midPrice) || 0.50;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -170,7 +184,7 @@ const MarketDetailPage = () => {
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-2xl font-bold text-gray-900">
-                {selectedOutcome ? 'EVET' : 'HAYIR'} Emri
+                {selectedOutcome ? 'EVET' : 'HAYIR'} {orderType === 'BUY' ? 'Al' : 'Sat'}
               </h3>
               <button onClick={handleCloseBuyModal} className="text-gray-400 hover:text-gray-600">
                 <X className="w-6 h-6" />
@@ -221,15 +235,17 @@ const MarketDetailPage = () => {
                   type="number"
                   step="0.01"
                   min="0.01"
-                  max="100"
+                  max="0.99"
                   value={orderPrice}
                   onChange={(e) => setOrderPrice(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-                  placeholder="Örn: 50.00"
+                  placeholder="Örn: 0.50"
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">
                   Mevcut fiyat: ₺{selectedOutcome ? yesPrice.toFixed(2) : noPrice.toFixed(2)}
+                  <br />
+                  <span className="text-brand-600 font-medium">Kazanan hisse değeri: 1.00 TL</span>
                 </p>
               </div>
 
@@ -380,84 +396,176 @@ const MarketDetailPage = () => {
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-md p-6 border-2 border-green-200">
             <h3 className="text-lg font-bold mb-2 text-green-800">EVET</h3>
-            <div className="text-4xl font-bold text-green-700 mb-4">
+            <div className="text-4xl font-bold text-green-700 mb-2">
               ₺{yesPrice.toFixed(2)}
             </div>
-            <button
-              onClick={() => handleOpenBuyModal(true)}
-              disabled={market.status !== 'open'}
-              className={`w-full py-3 rounded-lg font-semibold text-white transition-colors ${
-                market.status === 'open' ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'
-              }`}
-            >
-              {market.status === 'open' ? 'EVET Satın Al' : 'Market Kapalı'}
-            </button>
+            <p className="text-xs text-green-600 mb-4">Kazanç: ₺1.00</p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => handleOpenBuyModal(true, 'BUY')}
+                disabled={market.status !== 'open'}
+                className={`py-3 rounded-lg font-semibold text-white transition-colors ${
+                  market.status === 'open' ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'
+                }`}
+              >
+                {market.status === 'open' ? 'Al' : 'Kapalı'}
+              </button>
+              <button
+                onClick={() => handleOpenBuyModal(true, 'SELL')}
+                disabled={market.status !== 'open'}
+                className={`py-3 rounded-lg font-semibold transition-colors ${
+                  market.status === 'open' ? 'bg-white text-green-700 border-2 border-green-600 hover:bg-green-50' : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                {market.status === 'open' ? 'Sat' : 'Kapalı'}
+              </button>
+            </div>
           </div>
 
           <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl shadow-md p-6 border-2 border-red-200">
             <h3 className="text-lg font-bold mb-2 text-red-800">HAYIR</h3>
-            <div className="text-4xl font-bold text-red-700 mb-4">
+            <div className="text-4xl font-bold text-red-700 mb-2">
               ₺{noPrice.toFixed(2)}
             </div>
-            <button
-              onClick={() => handleOpenBuyModal(false)}
-              disabled={market.status !== 'open'}
-              className={`w-full py-3 rounded-lg font-semibold text-white transition-colors ${
-                market.status === 'open' ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-400 cursor-not-allowed'
-              }`}
-            >
-              {market.status === 'open' ? 'HAYIR Satın Al' : 'Market Kapalı'}
-            </button>
+            <p className="text-xs text-red-600 mb-4">Kazanç: ₺1.00</p>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                onClick={() => handleOpenBuyModal(false, 'BUY')}
+                disabled={market.status !== 'open'}
+                className={`py-3 rounded-lg font-semibold text-white transition-colors ${
+                  market.status === 'open' ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-400 cursor-not-allowed'
+                }`}
+              >
+                {market.status === 'open' ? 'Al' : 'Kapalı'}
+              </button>
+              <button
+                onClick={() => handleOpenBuyModal(false, 'SELL')}
+                disabled={market.status !== 'open'}
+                className={`py-3 rounded-lg font-semibold transition-colors ${
+                  market.status === 'open' ? 'bg-white text-red-700 border-2 border-red-600 hover:bg-red-50' : 'bg-gray-200 text-gray-500 cursor-not-allowed'
+                }`}
+              >
+                {market.status === 'open' ? 'Sat' : 'Kapalı'}
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Order Books */}
         <div className="grid grid-cols-2 gap-4 mb-6">
+          {/* YES Order Book */}
           <div className="bg-white rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold mb-4 flex items-center justify-between">
               <span>EVET Emir Defteri</span>
               {wsConnected && <RefreshCw className="w-4 h-4 animate-spin text-green-600" />}
             </h3>
-            <div className="space-y-2">
-              <div className="text-sm font-medium text-gray-600 grid grid-cols-3 gap-2 pb-2 border-b">
-                <span>Fiyat</span>
-                <span>Miktar</span>
-                <span className="text-right">Toplam</span>
-              </div>
-              {orderBook?.yes?.bids?.slice(0, 5).map((bid, idx) => (
-                <div key={idx} className="grid grid-cols-3 gap-2 text-sm">
-                  <span className="text-green-600 font-medium">₺{bid.price}</span>
-                  <span>{bid.quantity}</span>
-                  <span className="text-right text-gray-600">₺{bid.total}</span>
+            
+            {/* ALIŞ EMİRLERİ (BIDS) */}
+            <div className="mb-4">
+              <h4 className="text-sm font-semibold text-green-700 mb-2 flex items-center gap-2">
+                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                Alış Emirleri
+              </h4>
+              <div className="space-y-1">
+                <div className="text-xs font-medium text-gray-600 grid grid-cols-3 gap-2 pb-1 border-b">
+                  <span>Fiyat</span>
+                  <span>Miktar</span>
+                  <span className="text-right">Toplam</span>
                 </div>
-              ))}
-              {(!orderBook?.yes?.bids || orderBook.yes.bids.length === 0) && (
-                <div className="text-center text-gray-500 py-4 text-sm">Emir yok</div>
-              )}
+                {orderBook?.yes?.bids?.slice(0, 5).map((bid, idx) => (
+                  <div key={idx} className="grid grid-cols-3 gap-2 text-sm">
+                    <span className="text-green-600 font-medium">₺{bid.price}</span>
+                    <span>{bid.quantity}</span>
+                    <span className="text-right text-gray-600">₺{bid.total}</span>
+                  </div>
+                ))}
+                {(!orderBook?.yes?.bids || orderBook.yes.bids.length === 0) && (
+                  <div className="text-center text-gray-400 py-2 text-xs">Emir yok</div>
+                )}
+              </div>
+            </div>
+
+            {/* SATIŞ EMİRLERİ (ASKS) */}
+            <div>
+              <h4 className="text-sm font-semibold text-red-700 mb-2 flex items-center gap-2">
+                <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                Satış Emirleri
+              </h4>
+              <div className="space-y-1">
+                <div className="text-xs font-medium text-gray-600 grid grid-cols-3 gap-2 pb-1 border-b">
+                  <span>Fiyat</span>
+                  <span>Miktar</span>
+                  <span className="text-right">Toplam</span>
+                </div>
+                {orderBook?.yes?.asks?.slice(0, 5).map((ask, idx) => (
+                  <div key={idx} className="grid grid-cols-3 gap-2 text-sm">
+                    <span className="text-red-600 font-medium">₺{ask.price}</span>
+                    <span>{ask.quantity}</span>
+                    <span className="text-right text-gray-600">₺{ask.total}</span>
+                  </div>
+                ))}
+                {(!orderBook?.yes?.asks || orderBook.yes.asks.length === 0) && (
+                  <div className="text-center text-gray-400 py-2 text-xs">Emir yok</div>
+                )}
+              </div>
             </div>
           </div>
 
+          {/* NO Order Book */}
           <div className="bg-white rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold mb-4 flex items-center justify-between">
               <span>HAYIR Emir Defteri</span>
               {wsConnected && <RefreshCw className="w-4 h-4 animate-spin text-red-600" />}
             </h3>
-            <div className="space-y-2">
-              <div className="text-sm font-medium text-gray-600 grid grid-cols-3 gap-2 pb-2 border-b">
-                <span>Fiyat</span>
-                <span>Miktar</span>
-                <span className="text-right">Toplam</span>
-              </div>
-              {orderBook?.no?.bids?.slice(0, 5).map((bid, idx) => (
-                <div key={idx} className="grid grid-cols-3 gap-2 text-sm">
-                  <span className="text-red-600 font-medium">₺{bid.price}</span>
-                  <span>{bid.quantity}</span>
-                  <span className="text-right text-gray-600">₺{bid.total}</span>
+            
+            {/* ALIŞ EMİRLERİ (BIDS) */}
+            <div className="mb-4">
+              <h4 className="text-sm font-semibold text-green-700 mb-2 flex items-center gap-2">
+                <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                Alış Emirleri
+              </h4>
+              <div className="space-y-1">
+                <div className="text-xs font-medium text-gray-600 grid grid-cols-3 gap-2 pb-1 border-b">
+                  <span>Fiyat</span>
+                  <span>Miktar</span>
+                  <span className="text-right">Toplam</span>
                 </div>
-              ))}
-              {(!orderBook?.no?.bids || orderBook.no.bids.length === 0) && (
-                <div className="text-center text-gray-500 py-4 text-sm">Emir yok</div>
-              )}
+                {orderBook?.no?.bids?.slice(0, 5).map((bid, idx) => (
+                  <div key={idx} className="grid grid-cols-3 gap-2 text-sm">
+                    <span className="text-green-600 font-medium">₺{bid.price}</span>
+                    <span>{bid.quantity}</span>
+                    <span className="text-right text-gray-600">₺{bid.total}</span>
+                  </div>
+                ))}
+                {(!orderBook?.no?.bids || orderBook.no.bids.length === 0) && (
+                  <div className="text-center text-gray-400 py-2 text-xs">Emir yok</div>
+                )}
+              </div>
+            </div>
+
+            {/* SATIŞ EMİRLERİ (ASKS) */}
+            <div>
+              <h4 className="text-sm font-semibold text-red-700 mb-2 flex items-center gap-2">
+                <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                Satış Emirleri
+              </h4>
+              <div className="space-y-1">
+                <div className="text-xs font-medium text-gray-600 grid grid-cols-3 gap-2 pb-1 border-b">
+                  <span>Fiyat</span>
+                  <span>Miktar</span>
+                  <span className="text-right">Toplam</span>
+                </div>
+                {orderBook?.no?.asks?.slice(0, 5).map((ask, idx) => (
+                  <div key={idx} className="grid grid-cols-3 gap-2 text-sm">
+                    <span className="text-red-600 font-medium">₺{ask.price}</span>
+                    <span>{ask.quantity}</span>
+                    <span className="text-right text-gray-600">₺{ask.total}</span>
+                  </div>
+                ))}
+                {(!orderBook?.no?.asks || orderBook.no.asks.length === 0) && (
+                  <div className="text-center text-gray-400 py-2 text-xs">Emir yok</div>
+                )}
+              </div>
             </div>
           </div>
         </div>

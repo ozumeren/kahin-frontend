@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom'
-import { TrendingUp, Menu, X, User, LogOut } from 'lucide-react'
+import { TrendingUp, Menu, X, User, LogOut, Shield } from 'lucide-react'
 import { useState } from 'react'
 import { useAuth } from '../context/AuthContext'  // ← YENİ
 
@@ -33,6 +33,12 @@ export default function Navbar() {
             {user && (
               <Link to="/portfolio" className={`px-4 py-2 rounded-lg font-medium ${isActive('/portfolio') ? 'bg-brand-50 text-brand-700' : 'hover:bg-gray-100'}`}>
                 Portfolyo
+              </Link>
+            )}
+            {user?.role === 'admin' && (
+              <Link to="/admin" className={`px-4 py-2 rounded-lg font-medium flex items-center gap-1 ${isActive('/admin') ? 'bg-purple-50 text-purple-700' : 'hover:bg-purple-50 hover:text-purple-700'}`}>
+                <Shield className="w-4 h-4" />
+                Admin
               </Link>
             )}
           </div>

@@ -1,8 +1,12 @@
 // src/api/client.js
 import axios from 'axios'
 
+// API URL'yi environment'a göre belirle
+const API_BASE_URL = import.meta.env.VITE_API_URL || 
+  (import.meta.env.DEV ? 'http://localhost:5001/api/v1' : 'https://api.kahinmarket.com/api/v1')
+
 const apiClient = axios.create({
-  baseURL: 'https://api.kahinmarket.com/api/v1',
+  baseURL: API_BASE_URL,
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'

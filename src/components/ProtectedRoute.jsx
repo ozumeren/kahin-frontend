@@ -6,6 +6,7 @@ import { useAuth } from '../context/AuthContext'
  * 
  * Kullanıcının giriş yapmış olmasını gerektiren sayfaları korur.
  * Loading durumunda loading gösterir, giriş yapmamışsa login sayfasına yönlendirir.
+ * requireAdmin prop'u ile admin yetkisi kontrolü yapılabilir.
  * 
  * @example
  * <Route 
@@ -16,9 +17,19 @@ import { useAuth } from '../context/AuthContext'
  *     </ProtectedRoute>
  *   } 
  * />
+ * 
+ * @example
+ * <Route 
+ *   path="/admin" 
+ *   element={
+ *     <ProtectedRoute requireAdmin>
+ *       <AdminPage />
+ *     </ProtectedRoute>
+ *   } 
+ * />
  */
-export default function ProtectedRoute({ children, redirectTo = '/login' }) {
-  const { isAuthenticated, loading } = useAuth()
+export default function ProtectedRoute({ children, redirectTo = '/login', requireAdmin = false }) {
+  const { isAuthenticated, loading, user } = useAuth()
 
   // Authentication kontrolü yapılıyor
   if (loading) {
@@ -36,6 +47,11 @@ export default function ProtectedRoute({ children, redirectTo = '/login' }) {
   // Giriş yapmamış, login sayfasına yönlendir
   if (!isAuthenticated) {
     return <Navigate to={redirectTo} replace />
+  }
+
+  // Admin yetkisi gerekiyorsa ve kullanıcı admin değilse, ana sayfaya yönlendir
+  if (requireAdmin && user?.role !== 'admin') {
+    return <Navigate to="/" replace />
   }
 
   // Giriş yapmış, sayfayı göster

@@ -38,7 +38,8 @@ export function useMarketTrades(marketId, limit = 100) {
       return response.data.trades || [];
     },
     enabled: !!marketId,
-    staleTime: 20000, // 20 saniye
+    staleTime: 5000, // 5 saniye - daha sık güncellensin
+    refetchInterval: 10000, // 10 saniyede bir otomatik refresh
   });
 }
 

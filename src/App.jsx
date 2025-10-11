@@ -6,6 +6,8 @@ import MarketDetailPage from './pages/MarketDetailPage'
 import PortfolioPage from './pages/PortfolioPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import AdminPage from './pages/AdminPage'
+import ProtectedRoute from './components/ProtectedRoute'
 
 function App() {
   return (
@@ -15,6 +17,14 @@ function App() {
         <Route path="markets" element={<MarketsPage />} />
         <Route path="markets/:id" element={<MarketDetailPage />} />
         <Route path="portfolio" element={<PortfolioPage />} />
+        <Route 
+          path="admin" 
+          element={
+            <ProtectedRoute requireAdmin>
+              <AdminPage />
+            </ProtectedRoute>
+          } 
+        />
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
       </Route>
