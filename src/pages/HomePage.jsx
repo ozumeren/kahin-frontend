@@ -10,7 +10,7 @@ const HomePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  const { isConnected: wsConnected } = useWebSocket();
+  const { isConnected: wsConnected, onMessage } = useWebSocket();
 
   const categories = [
     { id: 'all', name: 'Tüm Marketler', icon: '🎯' },
@@ -25,6 +25,64 @@ const HomePage = () => {
   useEffect(() => {
     fetchMarkets();
   }, []);
+
+  // WebSocket'ten gelen market güncellemelerini dinle
+  useEffect(() => {
+    if (!wsConnected) return;
+
+    // Tüm market güncellemelerini dinle
+    const unsubscribe = onMessage('__market_updates__', (data) => {
+      if (data.type === 'market_update' || data.type === 'orderbook_update') {
+        // Market listesini güncelle
+        setMarkets(prevMarkets => 
+          prevMarkets.map(market => {
+            if (market.id === data.marketId) {
+              // Order book verisinden fiyatları çıkar
+              const orderBook = data.data || data.orderBook;
+              if (orderBook) {
+                return {
+                  ...market,
+                  yesPrice: orderBook.yes?.midPrice || 
+                           orderBook.yes?.bids?.[0]?.price || 
+                           market.yesPrice,
+                  noPrice: orderBook.no?.midPrice || 
+                          orderBook.no?.bids?.[0]?.price || 
+                          market.noPrice
+                };
+              }
+            }
+            return market;
+          })
+        );
+      }
+      
+      // Yeni trade geldiğinde de fiyatları güncelle
+      if (data.type === 'new_trade') {
+        const trade = data.data;
+        if (trade && trade.marketId) {
+          // Trade'den sonra market'i yeniden fetch etmek yerine
+          // mevcut fiyatı trade fiyatı ile güncelle
+          setMarkets(prevMarkets => 
+            prevMarkets.map(market => {
+              if (market.id === trade.marketId) {
+                const priceStr = parseFloat(trade.price).toFixed(2);
+                if (trade.outcome) {
+                  return { ...market, yesPrice: priceStr };
+                } else {
+                  return { ...market, noPrice: priceStr };
+                }
+              }
+              return market;
+            })
+          );
+        }
+      }
+    });
+
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [wsConnected, onMessage]);
 
   const fetchMarkets = async () => {
     try {
@@ -210,7 +268,7 @@ const HomePage = () => {
 
           {/* Error State */}
           {error && (
-            <div className="bg-white rounded-xl shadow-md p-6 bg-red-50 border-red-200 text-center">
+            <div className="rounded-xl shadow-md p-6 bg-red-50 border border-red-200 text-center">
               <p className="text-red-600 font-medium">{error}</p>
               <button 
                 onClick={fetchMarkets}
@@ -270,13 +328,13 @@ const HomePage = () => {
                       <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
                         <div className="text-xs text-green-600 font-medium mb-1">EVET</div>
                         <div className="text-xl font-bold text-green-700">
-                          ₺{market.yesPrice || '50'}
+                          ₺{parseFloat(market.yesPrice || 50).toFixed(2)}
                         </div>
                       </div>
                       <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
                         <div className="text-xs text-red-600 font-medium mb-1">HAYIR</div>
                         <div className="text-xl font-bold text-red-700">
-                          ₺{market.noPrice || '50'}
+                          ₺{parseFloat(market.noPrice || 50).toFixed(2)}
                         </div>
                       </div>
                     </div>

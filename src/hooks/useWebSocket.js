@@ -92,6 +92,10 @@ export function useWebSocket() {
     if (type === 'orderbook_update' && marketId) {
       const handlers = messageHandlers.current.get(marketId) || []
       handlers.forEach(handler => handler(data))
+      
+      // Global market update handler'ları da tetikle
+      const globalHandlers = messageHandlers.current.get('__market_updates__') || []
+      globalHandlers.forEach(handler => handler(data))
     }
 
     // Yeni trade bildirimi
@@ -102,6 +106,10 @@ export function useWebSocket() {
       // Global trade handler'ları da tetikle (tüm pazarlar için)
       const globalHandlers = messageHandlers.current.get('__global_trades__') || []
       globalHandlers.forEach(handler => handler(data))
+      
+      // Global market update handler'ları da tetikle
+      const updateHandlers = messageHandlers.current.get('__market_updates__') || []
+      updateHandlers.forEach(handler => handler(data))
     }
 
     // Kişiselleştirilmiş emir dolum bildirimi
@@ -118,6 +126,9 @@ export function useWebSocket() {
 
     // Market update (genel)
     if (type === 'market_update') {
+      const globalHandlers = messageHandlers.current.get('__market_updates__') || []
+      globalHandlers.forEach(handler => handler(data))
+      
       messageHandlers.current.forEach(handlers => {
         handlers.forEach(handler => handler(data))
       })
