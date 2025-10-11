@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, ChevronRight, Search, Menu, X, Clock, Users } from 'lucide-react';
+import { TrendingUp, ChevronRight, Search, Menu, X, Clock, Users, Wifi } from 'lucide-react';
 
 const KahinMarket = () => {
   const [activeCategory, setActiveCategory] = useState('all');
@@ -7,6 +7,8 @@ const KahinMarket = () => {
   const [markets, setMarkets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [wsConnected, setWsConnected] = useState(false);
+  const [ws, setWs] = useState(null);
 
   const categories = [
     { id: 'all', name: 'Tüm Marketler', icon: '🎯' },
@@ -271,6 +273,13 @@ const KahinMarket = () => {
           )}
         </div>
       </div>
+
+      {/* Footer */}
+      <footer className="border-t border-gray-200 bg-white py-8 mt-20">
+        <div className="container mx-auto px-4 text-center text-sm text-gray-600">
+          <p>© 2025 Kahin Market. Tüm hakları saklıdır.</p>
+        </div>
+      </footer>
     </div>
   );
 };
