@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, ChevronRight, Search, Menu, X, Clock, Users, Wifi } from 'lucide-react';
+import { TrendingUp, ChevronRight, Search, Menu, X, Clock, Users } from 'lucide-react';
 
 const KahinMarket = () => {
   const [activeCategory, setActiveCategory] = useState('all');
@@ -7,8 +7,6 @@ const KahinMarket = () => {
   const [markets, setMarkets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [wsConnected, setWsConnected] = useState(false);
-  const [ws, setWs] = useState(null);
 
   const categories = [
     { id: 'all', name: 'Tüm Marketler', icon: '🎯' },
@@ -24,6 +22,66 @@ const KahinMarket = () => {
   useEffect(() => {
     fetchMarkets();
   }, []);
+
+  // WebSocket bağlantısı
+  useEffect(() => {
+    const websocket = new WebSocket('wss://api.kahinmarket.com/ws');
+    
+    websocket.onopen = () => {
+      console.log('✅ WebSocket bağlandı');
+      setWsConnected(true);
+      
+      // Tüm marketlere subscribe ol
+      markets.forEach(market => {
+        websocket.send(JSON.stringify({
+          type: 'subscribe',
+          marketId: market.id
+        }));
+      });
+    };
+
+    websocket.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        
+        // Order book güncellemesi
+        if (data.type === 'orderbook_update') {
+          setMarkets(prevMarkets => 
+            prevMarkets.map(market => {
+              if (market.id === data.marketId && data.orderBook) {
+                return {
+                  ...market,
+                  yesPrice: data.orderBook.yes?.midPrice || market.yesPrice,
+                  noPrice: data.orderBook.no?.midPrice || market.noPrice
+                };
+              }
+              return market;
+            })
+          );
+        }
+      } catch (err) {
+        console.error('WebSocket mesaj hatası:', err);
+      }
+    };
+
+    websocket.onclose = () => {
+      console.log('🔴 WebSocket bağlantısı kesildi');
+      setWsConnected(false);
+    };
+
+    websocket.onerror = (error) => {
+      console.error('WebSocket hatası:', error);
+      setWsConnected(false);
+    };
+
+    setWs(websocket);
+
+    return () => {
+      if (websocket.readyState === WebSocket.OPEN) {
+        websocket.close();
+      }
+    };
+  }, [markets.length]);
 
   const fetchMarkets = async () => {
     try {
@@ -79,6 +137,20 @@ const KahinMarket = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* WebSocket Status */}
+      <div className="fixed bottom-4 right-4 z-50">
+        <div className={`px-4 py-2 rounded-lg shadow-lg flex items-center gap-2 transition-all ${
+          wsConnected 
+            ? 'bg-green-100 border border-green-300 text-green-700' 
+            : 'bg-yellow-100 border border-yellow-300 text-yellow-700'
+        }`}>
+          <Wifi className="w-4 h-4" />
+          <span className="text-sm font-medium">
+            {wsConnected ? 'Gerçek Zamanlı' : 'Bağlanıyor...'}
+          </span>
+        </div>
+      </div>
+
       {/* Category Navigation */}
       <div className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-4">
