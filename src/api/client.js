@@ -2,14 +2,12 @@
 import axios from 'axios'
 
 const apiClient = axios.create({
-  baseURL: import.meta.env.DEV ? '/api/v1' : 'https://api.kahinmarket.com/api/v1',
+  baseURL: 'https://api.kahinmarket.com/api/v1',
   withCredentials: true,
   headers: {
-    'Content-Type': 'application/json',
-  },
+    'Content-Type': 'application/json'
+  }
 })
-
-// ... rest of the code
 
 apiClient.interceptors.request.use(
   (config) => {
@@ -19,7 +17,9 @@ apiClient.interceptors.request.use(
     }
     return config
   },
-  (error) => Promise.reject(error)
+  (error) => {
+    return Promise.reject(error)
+  }
 )
 
 apiClient.interceptors.response.use(

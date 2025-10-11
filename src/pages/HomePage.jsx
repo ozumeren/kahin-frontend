@@ -1,262 +1,278 @@
-import { Link } from 'react-router-dom'
-import { TrendingUp, Target, Shield, Zap, Users, BarChart3, ChevronRight, Sparkles } from 'lucide-react'
-import { useQuery } from '@tanstack/react-query'
-import apiClient from '../api/client'
+import React, { useState, useEffect } from 'react';
+import { TrendingUp, ChevronRight, Search, Menu, X, Clock, Users } from 'lucide-react';
 
-export default function HomePage() {
-  // Fetch stats (if available)
-  const { data: stats } = useQuery({
-    queryKey: ['homeStats'],
-    queryFn: async () => {
-      try {
-        const response = await apiClient.get('/markets?status=open')
-        return {
-          totalMarkets: response.data.count || 0,
-          activeTraders: 1250, // Mock data - sonra backend'den gelecek
-          totalVolume: '₺125,000' // Mock data
-        }
-      } catch {
-        return { totalMarkets: 0, activeTraders: 0, totalVolume: '₺0' }
+const KahinMarket = () => {
+  const [activeCategory, setActiveCategory] = useState('all');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [markets, setMarkets] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const categories = [
+    { id: 'all', name: 'Tüm Marketler', icon: '🎯' },
+    { id: 'politics', name: 'Siyaset', icon: '🏛️' },
+    { id: 'sports', name: 'Spor', icon: '⚽' },
+    { id: 'crypto', name: 'Kripto', icon: '₿' },
+    { id: 'economy', name: 'Ekonomi', icon: '📈' },
+    { id: 'entertainment', name: 'Eğlence', icon: '🎬' },
+    { id: 'technology', name: 'Teknoloji', icon: '💻' }
+  ];
+
+  // API'den marketleri çek
+  useEffect(() => {
+    fetchMarkets();
+  }, []);
+
+  const fetchMarkets = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('https://api.kahinmarket.com/api/v1/markets');
+      const data = await response.json();
+      
+      if (data.success) {
+        setMarkets(data.data);
+      } else {
+        setError('Marketler yüklenemedi');
       }
+    } catch (err) {
+      setError('Bağlantı hatası: ' + err.message);
+      console.error('Market fetch error:', err);
+    } finally {
+      setLoading(false);
     }
-  })
+  };
+
+  // Kategoriye göre filtrele
+  const filteredMarkets = activeCategory === 'all' 
+    ? markets.filter(m => m.status === 'open')
+    : markets.filter(m => m.status === 'open' && m.category === activeCategory);
+
+  // İstatistikleri hesapla
+  const stats = {
+    totalVolume: markets.reduce((sum, m) => sum + parseFloat(m.volume || 0), 0),
+    activeMarkets: markets.filter(m => m.status === 'open').length,
+    totalTraders: markets.reduce((sum, m) => sum + parseInt(m.tradersCount || 0), 0)
+  };
+
+  const formatVolume = (volume) => {
+    if (!volume) return '₺0';
+    const num = parseFloat(volume);
+    if (num >= 1000000) return `₺${(num / 1000000).toFixed(1)}M`;
+    if (num >= 1000) return `₺${(num / 1000).toFixed(0)}K`;
+    return `₺${num.toFixed(0)}`;
+  };
+
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = date - now;
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays < 0) return 'Kapandı';
+    if (diffDays === 0) return 'Bugün';
+    if (diffDays === 1) return 'Yarın';
+    return `${diffDays} gün`;
+  };
 
   return (
-    <div className="space-y-20 pb-20">
-      {/* Hero Section */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-brand-600 via-brand-700 to-brand-900 text-white">
-        <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]"></div>
-        <div className="absolute inset-0 bg-gradient-to-t from-brand-900/50"></div>
-        
-        <div className="relative container mx-auto px-4 py-24 md:py-32">
-          <div className="max-w-4xl mx-auto text-center">
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-white/10 backdrop-blur-sm rounded-full border border-white/20 mb-6 animate-fade-in">
-              <Sparkles className="w-4 h-4 text-yellow-300" />
-              <span className="text-sm font-medium">Türkiye'nin İlk Tahmin Pazarı</span>
-            </div>
+    <div className="min-h-screen bg-gray-50">
+      {/* Category Navigation */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="container mx-auto px-4">
+          <div className="flex items-center justify-between h-14">
+            <nav className="hidden md:flex space-x-1">
+              {categories.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    activeCategory === cat.id
+                      ? 'bg-brand-50 text-brand-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <span className="mr-2">{cat.icon}</span>
+                  {cat.name}
+                </button>
+              ))}
+            </nav>
 
-            {/* Main Heading */}
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-slide-up">
-              Geleceği Tahmin Et,
-              <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-200 via-yellow-300 to-yellow-400">
-                Kazanmaya Başla
-              </span>
-            </h1>
-
-            {/* Subtitle */}
-            <p className="text-xl md:text-2xl text-brand-100 mb-10 max-w-2xl mx-auto animate-slide-up" style={{ animationDelay: '0.1s' }}>
-              Görüşlerini paylaş, doğru tahminlerle kazan. Blockchain tabanlı, şeffaf ve adil tahmin platformu.
-            </p>
-
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 justify-center animate-slide-up" style={{ animationDelay: '0.2s' }}>
-              <Link 
-                to="/markets" 
-                className="group inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-brand-600 rounded-xl font-bold text-lg hover:bg-yellow-50 hover:shadow-xl transition-all transform hover:scale-105"
-              >
-                Pazarları Keşfet
-                <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
-              </Link>
-              <Link 
-                to="/register" 
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-xl font-bold text-lg border-2 border-white/30 hover:bg-white/20 hover:border-white/50 transition-all"
-              >
-                Ücretsiz Başla
-              </Link>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-8 max-w-2xl mx-auto mt-16 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-              <div className="text-center">
-                <div className="text-3xl md:text-4xl font-bold mb-1">{stats?.totalMarkets || 0}</div>
-                <div className="text-sm text-brand-200">Aktif Pazar</div>
-              </div>
-              <div className="text-center border-x border-white/20">
-                <div className="text-3xl md:text-4xl font-bold mb-1">{stats?.activeTraders || 0}</div>
-                <div className="text-sm text-brand-200">Katılımcı</div>
-              </div>
-              <div className="text-center">
-                <div className="text-3xl md:text-4xl font-bold mb-1">{stats?.totalVolume || '₺0'}</div>
-                <div className="text-sm text-brand-200">İşlem Hacmi</div>
-              </div>
-            </div>
+            <button 
+              className="md:hidden"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+            </button>
           </div>
-        </div>
 
-        {/* Wave SVG */}
-        <div className="absolute bottom-0 left-0 right-0">
-          <svg className="w-full h-16 md:h-24 text-gray-50" viewBox="0 0 1440 74" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M0 24.3125L60 32.1094C120 39.9062 240 55.5 360 63.2969C480 71.0938 600 71.0938 720 63.2969C840 55.5 960 39.9062 1080 32.1094C1200 24.3125 1320 24.3125 1380 24.3125H1440V74H1380C1320 74 1200 74 1080 74C960 74 840 74 720 74C600 74 480 74 360 74C240 74 120 74 60 74H0V24.3125Z" fill="currentColor"/>
-          </svg>
+          {/* Mobile Menu */}
+          {mobileMenuOpen && (
+            <div className="md:hidden py-4 space-y-2">
+              {categories.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => {
+                    setActiveCategory(cat.id);
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    activeCategory === cat.id
+                      ? 'bg-brand-50 text-brand-700'
+                      : 'text-gray-700 hover:bg-gray-100'
+                  }`}
+                >
+                  <span className="mr-2">{cat.icon}</span>
+                  {cat.name}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-      </section>
+      </div>
 
-      {/* Features Section */}
-      <section className="container mx-auto px-4">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
-            Neden Kahin Market?
+      {/* Hero Section */}
+      <div className="container mx-auto px-4 py-12">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
+            Geleceği Tahmin Et, Kazan
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Modern teknoloji ile güvenli, şeffaf ve adil bir tahmin deneyimi
+          <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+            Siyaset, spor, ekonomi ve daha fazlası hakkında tahminlerde bulun. 
+            Bilgini paraya çevir.
           </p>
         </div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {[
-            {
-              icon: TrendingUp,
-              title: 'Gerçek Zamanlı',
-              description: 'Anlık fiyat güncellemeleri ve order book ile pazarın nabzını tut',
-              color: 'from-blue-500 to-cyan-500',
-              iconBg: 'bg-blue-100',
-              iconColor: 'text-blue-600'
-            },
-            {
-              icon: Target,
-              title: 'Detaylı Analiz',
-              description: 'Portfolio takibi, performans metrikleri ve kar/zarar raporları',
-              color: 'from-purple-500 to-pink-500',
-              iconBg: 'bg-purple-100',
-              iconColor: 'text-purple-600'
-            },
-            {
-              icon: Shield,
-              title: 'Güvenli',
-              description: 'Şifreli veri, güvenli işlemler ve kullanıcı dostu arayüz',
-              color: 'from-green-500 to-emerald-500',
-              iconBg: 'bg-green-100',
-              iconColor: 'text-green-600'
-            },
-            {
-              icon: Zap,
-              title: 'Hızlı',
-              description: 'Anında emir eşleştirme ve düşük latency ile kesintisiz işlem',
-              color: 'from-orange-500 to-red-500',
-              iconBg: 'bg-orange-100',
-              iconColor: 'text-orange-600'
-            }
-          ].map((feature, index) => (
-            <div 
-              key={index} 
-              className="group relative bg-white rounded-2xl p-8 shadow-sm hover:shadow-2xl transition-all duration-300 border border-gray-100 hover:border-transparent overflow-hidden"
-              style={{ animationDelay: `${index * 0.1}s` }}
+        {/* Stats */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
+          <div className="card text-center">
+            <div className="text-3xl font-bold text-gray-900 mb-1">
+              {formatVolume(stats.totalVolume)}
+            </div>
+            <div className="text-gray-600 text-sm">Toplam Hacim</div>
+          </div>
+          <div className="card text-center">
+            <div className="text-3xl font-bold text-gray-900 mb-1">
+              {stats.totalTraders.toLocaleString()}+
+            </div>
+            <div className="text-gray-600 text-sm">Aktif Kullanıcı</div>
+          </div>
+          <div className="card text-center">
+            <div className="text-3xl font-bold text-gray-900 mb-1">
+              {stats.activeMarkets}
+            </div>
+            <div className="text-gray-600 text-sm">Aktif Market</div>
+          </div>
+          <div className="card text-center">
+            <div className="text-3xl font-bold text-gray-900 mb-1">%99.2</div>
+            <div className="text-gray-600 text-sm">Başarı Oranı</div>
+          </div>
+        </div>
+
+        {/* Markets Grid */}
+        <div className="mb-8">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-2xl font-bold text-gray-900 flex items-center">
+              <TrendingUp className="w-6 h-6 mr-2 text-brand-600" />
+              {categories.find(c => c.id === activeCategory)?.name}
+            </h3>
+            <button 
+              onClick={fetchMarkets}
+              className="text-brand-600 hover:text-brand-700 text-sm font-medium flex items-center"
             >
-              {/* Gradient Background on Hover */}
-              <div className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
-              
-              <div className="relative">
-                <div className={`inline-flex p-4 ${feature.iconBg} rounded-xl mb-6 group-hover:scale-110 transition-transform duration-300`}>
-                  <feature.icon className={`w-8 h-8 ${feature.iconColor}`} />
-                </div>
-                <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-r group-hover:from-blue-600 group-hover:to-purple-600 transition-all">
-                  {feature.title}
-                </h3>
-                <p className="text-gray-600 leading-relaxed">
-                  {feature.description}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="container mx-auto px-4">
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-3xl p-8 md:p-16">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-5xl font-bold text-gray-900 mb-4">
-              Nasıl Çalışır?
-            </h2>
-            <p className="text-xl text-gray-600">
-              3 basit adımda tahmin yapmaya başla
-            </p>
+              Yenile
+              <ChevronRight className="w-4 h-4 ml-1" />
+            </button>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-12 max-w-5xl mx-auto">
-            {[
-              {
-                step: '01',
-                title: 'Hesap Oluştur',
-                description: 'Ücretsiz kayıt ol ve hesabına para yükle. İlk üyelere hoş geldin bonusu!',
-                icon: Users
-              },
-              {
-                step: '02',
-                title: 'Pazar Seç',
-                description: 'İlgi alanına göre spor, politika, ekonomi veya eğlence kategorilerinden seç.',
-                icon: BarChart3
-              },
-              {
-                step: '03',
-                title: 'Tahmin Yap',
-                description: 'EVET veya HAYIR hissesi satın al. Doğru tahmin edersen kazanırsın!',
-                icon: TrendingUp
-              }
-            ].map((step, index) => (
-              <div key={index} className="relative text-center">
-                {/* Step Number */}
-                <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-600 text-white rounded-full text-2xl font-bold mb-6">
-                  {step.step}
+          {/* Loading State */}
+          {loading && (
+            <div className="text-center py-12">
+              <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-brand-600 border-t-transparent"></div>
+              <p className="text-gray-600 mt-4">Marketler yükleniyor...</p>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && (
+            <div className="card bg-red-50 border-red-200 text-center">
+              <p className="text-red-600 font-medium">{error}</p>
+              <button 
+                onClick={fetchMarkets}
+                className="mt-4 btn btn-primary"
+              >
+                Tekrar Dene
+              </button>
+            </div>
+          )}
+
+          {/* Markets Grid */}
+          {!loading && !error && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+              {filteredMarkets.length === 0 ? (
+                <div className="col-span-full text-center py-12">
+                  <p className="text-gray-500 text-lg">Bu kategoride market bulunamadı</p>
                 </div>
+              ) : (
+                filteredMarkets.map(market => (
+                  <div
+                    key={market.id}
+                    className="card hover:shadow-md transition-all cursor-pointer group"
+                  >
+                    <div className="flex items-start justify-between mb-4">
+                      <h4 className="text-gray-900 font-semibold text-lg group-hover:text-brand-600 transition-colors flex-1">
+                        {market.title}
+                      </h4>
+                      {market.trending && (
+                        <span className="bg-orange-100 text-orange-600 text-xs px-2 py-1 rounded-full font-medium ml-2">
+                          🔥 Trend
+                        </span>
+                      )}
+                    </div>
 
-                {/* Icon */}
-                <div className="flex justify-center mb-4">
-                  <step.icon className="w-12 h-12 text-brand-600" />
-                </div>
+                    {market.description && (
+                      <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                        {market.description}
+                      </p>
+                    )}
 
-                {/* Content */}
-                <h3 className="text-xl font-bold text-gray-900 mb-3">
-                  {step.title}
-                </h3>
-                <p className="text-gray-600">
-                  {step.description}
-                </p>
+                    <div className="flex items-center space-x-4 mb-4 text-sm text-gray-600">
+                      <span className="flex items-center">
+                        💰 {formatVolume(market.volume)}
+                      </span>
+                      <span className="flex items-center">
+                        <Users className="w-4 h-4 mr-1" />
+                        {parseInt(market.tradersCount || 0).toLocaleString()}
+                      </span>
+                      <span className="flex items-center">
+                        <Clock className="w-4 h-4 mr-1" />
+                        {formatDate(market.closing_date)}
+                      </span>
+                    </div>
 
-                {/* Arrow (except last) */}
-                {index < 2 && (
-                  <div className="hidden md:block absolute top-8 left-full w-full">
-                    <ChevronRight className="w-8 h-8 text-gray-300 mx-auto" />
+                    <div className="grid grid-cols-2 gap-3">
+                      <button className="btn btn-yes py-3">
+                        <div className="text-xs opacity-90 mb-1">EVET</div>
+                        <div className="text-xl font-bold">
+                          {market.yesPrice || '50'}₺
+                        </div>
+                      </button>
+                      <button className="btn btn-no py-3">
+                        <div className="text-xs opacity-90 mb-1">HAYIR</div>
+                        <div className="text-xl font-bold">
+                          {market.noPrice || '50'}₺
+                        </div>
+                      </button>
+                    </div>
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="container mx-auto px-4">
-        <div className="relative overflow-hidden bg-gradient-to-r from-brand-600 to-brand-800 rounded-3xl p-12 md:p-20 text-center text-white">
-          <div className="absolute inset-0 bg-grid-white/[0.05] bg-[size:20px_20px]"></div>
-          
-          <div className="relative">
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">
-              Hazır mısın?
-            </h2>
-            <p className="text-xl text-brand-100 mb-10 max-w-2xl mx-auto">
-              Hemen kayıt ol, ilk pazarında tahminini paylaş ve kazanmaya başla!
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link 
-                to="/register" 
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-brand-600 rounded-xl font-bold text-lg hover:bg-yellow-50 hover:shadow-xl transition-all transform hover:scale-105"
-              >
-                Ücretsiz Kayıt Ol
-                <Sparkles className="w-5 h-5" />
-              </Link>
-              <Link 
-                to="/markets" 
-                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-xl font-bold text-lg border-2 border-white/30 hover:bg-white/20 transition-all"
-              >
-                Pazarlara Göz At
-              </Link>
+                ))
+              )}
             </div>
-          </div>
+          )}
         </div>
-      </section>
+      </div>
     </div>
-  )
-}
+  );
+};
+
+export default KahinMarket;

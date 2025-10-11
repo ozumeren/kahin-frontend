@@ -5,6 +5,10 @@ import { ArrowLeft, Clock } from 'lucide-react'
 import apiClient from '../api/client'
 import { format } from 'date-fns'
 import { tr } from 'date-fns/locale'
+import { useAuth } from '../context/AuthContext'
+import toast from 'react-hot-toast' 
+
+
 
 export default function MarketDetailPage() {
   const { id } = useParams()
@@ -184,11 +188,10 @@ function TradingPanel({ marketId, market }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState('')
+  const { refreshUser } = useAuth()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
-    setError('')
-    setSuccess('')
     setLoading(true)
 
     try {
@@ -199,11 +202,17 @@ function TradingPanel({ marketId, market }) {
         quantity: parseInt(quantity),
         price: parseFloat(price)
       })
-      setSuccess('Emir başarıyla oluşturuldu!')
+      
+      toast.success('Emir başarıyla oluşturuldu! ✅')
+      
+      // ✅ YENİ: Bakiyeyi yenile
+      await refreshUser()
+      
       setQuantity('')
       setPrice('')
     } catch (err) {
-      setError(err.response?.data?.message || 'Bir hata oluştu')
+      const errorMsg = err.response?.data?.message || 'Bir hata oluştu'
+      toast.error(errorMsg)
     } finally {
       setLoading(false)
     }

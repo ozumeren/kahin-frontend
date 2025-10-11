@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { UserPlus, Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react'
+import toast from 'react-hot-toast'
 
 export default function RegisterPage() {
   const [formData, setFormData] = useState({
@@ -31,12 +32,12 @@ export default function RegisterPage() {
 
     // Validation
     if (formData.password !== formData.confirmPassword) {
-      setError('Şifreler eşleşmiyor')
+      toast.error('Şifreler eşleşmiyor')  // ← YENİ
       return
     }
 
     if (formData.password.length < 6) {
-      setError('Şifre en az 6 karakter olmalıdır')
+      toast.error('Şifre en az 6 karakter olmalıdır')
       return
     }
 
@@ -50,7 +51,7 @@ export default function RegisterPage() {
         navigate('/login')
       }, 2000)
     } catch (err) {
-      setError(err.response?.data?.message || 'Kayıt başarısız. Lütfen tekrar deneyin.')
+      toast.error(err.response?.data?.message || 'Kayıt başarısız. Lütfen tekrar deneyin.')
     } finally {
       setLoading(false)
     }
