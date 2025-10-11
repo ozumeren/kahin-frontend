@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { TrendingUp, ChevronRight, Search, Menu, X, Clock, Users, Wifi } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { TrendingUp, ChevronRight, Menu, X, Clock, Users, Wifi } from 'lucide-react';
 import { useWebSocket } from '../hooks/useWebSocket';
 
-const KahinMarket = () => {
+const HomePage = () => {
   const [activeCategory, setActiveCategory] = useState('all');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [markets, setMarkets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   
-  // WebSocket hook'unu kullan
   const { isConnected: wsConnected } = useWebSocket();
 
   const categories = [
@@ -22,7 +22,6 @@ const KahinMarket = () => {
     { id: 'technology', name: 'Teknoloji', icon: '💻' }
   ];
 
-  // API'den marketleri çek
   useEffect(() => {
     fetchMarkets();
   }, []);
@@ -46,12 +45,10 @@ const KahinMarket = () => {
     }
   };
 
-  // Kategoriye göre filtrele
   const filteredMarkets = activeCategory === 'all' 
     ? markets.filter(m => m.status === 'open')
     : markets.filter(m => m.status === 'open' && m.category === activeCategory);
 
-  // İstatistikleri hesapla
   const stats = {
     totalVolume: markets.reduce((sum, m) => sum + parseFloat(m.volume || 0), 0),
     activeMarkets: markets.filter(m => m.status === 'open').length,
@@ -163,25 +160,25 @@ const KahinMarket = () => {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-          <div className="card text-center">
+          <div className="bg-white rounded-xl shadow-md p-6 text-center">
             <div className="text-3xl font-bold text-gray-900 mb-1">
               {formatVolume(stats.totalVolume)}
             </div>
             <div className="text-gray-600 text-sm">Toplam Hacim</div>
           </div>
-          <div className="card text-center">
+          <div className="bg-white rounded-xl shadow-md p-6 text-center">
             <div className="text-3xl font-bold text-gray-900 mb-1">
               {stats.totalTraders.toLocaleString()}+
             </div>
             <div className="text-gray-600 text-sm">Aktif Kullanıcı</div>
           </div>
-          <div className="card text-center">
+          <div className="bg-white rounded-xl shadow-md p-6 text-center">
             <div className="text-3xl font-bold text-gray-900 mb-1">
               {stats.activeMarkets}
             </div>
             <div className="text-gray-600 text-sm">Aktif Market</div>
           </div>
-          <div className="card text-center">
+          <div className="bg-white rounded-xl shadow-md p-6 text-center">
             <div className="text-3xl font-bold text-gray-900 mb-1">%99.2</div>
             <div className="text-gray-600 text-sm">Başarı Oranı</div>
           </div>
@@ -213,11 +210,11 @@ const KahinMarket = () => {
 
           {/* Error State */}
           {error && (
-            <div className="card bg-red-50 border-red-200 text-center">
+            <div className="bg-white rounded-xl shadow-md p-6 bg-red-50 border-red-200 text-center">
               <p className="text-red-600 font-medium">{error}</p>
               <button 
                 onClick={fetchMarkets}
-                className="mt-4 btn btn-primary"
+                className="mt-4 px-4 py-2 bg-brand-600 text-white rounded-lg hover:bg-brand-700 transition-colors"
               >
                 Tekrar Dene
               </button>
@@ -233,9 +230,10 @@ const KahinMarket = () => {
                 </div>
               ) : (
                 filteredMarkets.map(market => (
-                  <div
+                  <Link
                     key={market.id}
-                    className="card hover:shadow-md transition-all cursor-pointer group"
+                    to={`/markets/${market.id}`}
+                    className="bg-white rounded-xl shadow-md p-6 hover:shadow-lg transition-all cursor-pointer group block"
                   >
                     <div className="flex items-start justify-between mb-4">
                       <h4 className="text-gray-900 font-semibold text-lg group-hover:text-brand-600 transition-colors flex-1">
@@ -269,20 +267,20 @@ const KahinMarket = () => {
                     </div>
 
                     <div className="grid grid-cols-2 gap-3">
-                      <button className="btn btn-yes py-3">
-                        <div className="text-xs opacity-90 mb-1">EVET</div>
-                        <div className="text-xl font-bold">
-                          {market.yesPrice || '50'}₺
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                        <div className="text-xs text-green-600 font-medium mb-1">EVET</div>
+                        <div className="text-xl font-bold text-green-700">
+                          ₺{market.yesPrice || '50'}
                         </div>
-                      </button>
-                      <button className="btn btn-no py-3">
-                        <div className="text-xs opacity-90 mb-1">HAYIR</div>
-                        <div className="text-xl font-bold">
-                          {market.noPrice || '50'}₺
+                      </div>
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+                        <div className="text-xs text-red-600 font-medium mb-1">HAYIR</div>
+                        <div className="text-xl font-bold text-red-700">
+                          ₺{market.noPrice || '50'}
                         </div>
-                      </button>
+                      </div>
                     </div>
-                  </div>
+                  </Link>
                 ))
               )}
             </div>
@@ -300,4 +298,4 @@ const KahinMarket = () => {
   );
 };
 
-export default KahinMarket;
+export default HomePage;

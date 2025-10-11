@@ -1,121 +1,173 @@
-import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
-import { ArrowLeft, TrendingUp, Users, Clock, Wifi, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, TrendingUp, Users, Clock, Wifi, RefreshCw, X, BarChart3 } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { useMarketWebSocket } from '../hooks/useWebSocket';
+import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
-const MarketDetailWithWebSocket = () => {
+const MarketDetailPage = () => {
   const { id: marketId } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [market, setMarket] = useState(null);
-  const [orderBook, setOrderBook] = useState(null);
   const [trades, setTrades] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [wsConnected, setWsConnected] = useState(false);
-  const [lastUpdate, setLastUpdate] = useState(null);
+  const [initialOrderBook, setInitialOrderBook] = useState(null);
 
-  // Fetch initial market data
+  // Modal states
+  const [showBuyModal, setShowBuyModal] = useState(false);
+  const [selectedOutcome, setSelectedOutcome] = useState(null);
+  const [orderType, setOrderType] = useState('BUY');
+  const [orderQuantity, setOrderQuantity] = useState('');
+  const [orderPrice, setOrderPrice] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  // Chart tab
+  const [chartTimeframe, setChartTimeframe] = useState('1h'); // 1h, 4h, 1d, all
+
+  // WebSocket hook
+  const { isConnected: wsConnected, orderBook: liveOrderBook, lastUpdate } = useMarketWebSocket(marketId);
+
   useEffect(() => {
-    fetchMarketData();
-  }, [marketId]);
-
-  // WebSocket connection
-  useEffect(() => {
-    if (!marketId) return;
-
-    let ws = null;
-    let isCleaningUp = false;
-
-    const connect = () => {
-      try {
-        ws = new WebSocket('wss://api.kahinmarket.com/ws');
-
-        ws.onopen = () => {
-          if (isCleaningUp) {
-            ws.close();
-            return;
-          }
-          console.log('✅ WebSocket connected to market:', marketId);
-          setWsConnected(true);
-
-          // Subscribe to this market
-          ws.send(JSON.stringify({
-            type: 'subscribe',
-            marketId: marketId
-          }));
-        };
-
-        ws.onmessage = (event) => {
-          if (isCleaningUp) return;
-          
-          try {
-            const data = JSON.parse(event.data);
-            
-            if (data.type === 'orderbook_update' && data.marketId === marketId) {
-              setOrderBook(data.orderBook);
-              setLastUpdate(new Date());
-            }
-
-            if (data.type === 'trade' && data.marketId === marketId) {
-              setTrades(prev => [data.trade, ...prev].slice(0, 20));
-            }
-          } catch (error) {
-            console.error('WebSocket message error:', error);
-          }
-        };
-
-        ws.onclose = () => {
-          if (isCleaningUp) return;
-          console.log('🔴 WebSocket disconnected from market');
-          setWsConnected(false);
-        };
-
-        ws.onerror = (error) => {
-          console.warn('⚠️ WebSocket error (backend may not be ready):', error.type);
-          setWsConnected(false);
-        };
-      } catch (error) {
-        console.warn('⚠️ WebSocket connection failed:', error);
-        setWsConnected(false);
-      }
-    };
-
-    connect();
-
-    return () => {
-      isCleaningUp = true;
-      if (ws) {
-        if (ws.readyState === WebSocket.OPEN) {
-          ws.send(JSON.stringify({
-            type: 'unsubscribe',
-            marketId: marketId
-          }));
-        }
-        ws.close();
-      }
-    };
+    if (marketId) {
+      fetchMarketData();
+    }
   }, [marketId]);
 
   const fetchMarketData = async () => {
+    if (!marketId) return;
+    
     try {
       setLoading(true);
       
-      // Fetch market
       const marketRes = await fetch(`https://api.kahinmarket.com/api/v1/markets/${marketId}`);
       const marketData = await marketRes.json();
       setMarket(marketData.data);
 
-      // Fetch order book
-      const obRes = await fetch(`https://api.kahinmarket.com/api/v1/markets/${marketId}/orderbook`);
-      const obData = await obRes.json();
-      setOrderBook(obData.data);
+      const orderBookRes = await fetch(`https://api.kahinmarket.com/api/v1/markets/${marketId}/orderbook`);
+      const orderBookData = await orderBookRes.json();
+      setInitialOrderBook(orderBookData.data);
 
-      // Fetch recent trades
-      const tradesRes = await fetch(`https://api.kahinmarket.com/api/v1/trades/market/${marketId}?limit=20`);
+      const tradesRes = await fetch(`https://api.kahinmarket.com/api/v1/trades/market/${marketId}?limit=100`);
       const tradesData = await tradesRes.json();
       setTrades(tradesData.trades || []);
 
     } catch (error) {
       console.error('Error fetching market data:', error);
+      toast.error('Market verileri yüklenemedi');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Prepare chart data from trades
+  const chartData = useMemo(() => {
+    if (!trades || trades.length === 0) return [];
+
+    // Sort trades by time (oldest first for chart)
+    const sortedTrades = [...trades].sort((a, b) => 
+      new Date(a.createdAt) - new Date(b.createdAt)
+    );
+
+    // Group by outcome and create price points
+    const data = sortedTrades.map((trade, idx) => ({
+      time: new Date(trade.createdAt).toLocaleTimeString('tr-TR', { 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      }),
+      timestamp: new Date(trade.createdAt).getTime(),
+      yes: trade.outcome ? parseFloat(trade.price) : null,
+      no: !trade.outcome ? parseFloat(trade.price) : null,
+    }));
+
+    // Fill in missing values (carry forward last known price)
+    let lastYes = 50;
+    let lastNo = 50;
+    
+    return data.map(point => ({
+      ...point,
+      yes: point.yes !== null ? (lastYes = point.yes) : lastYes,
+      no: point.no !== null ? (lastNo = point.no) : lastNo,
+    }));
+  }, [trades]);
+
+  const handleOpenBuyModal = (outcome) => {
+    if (!user) {
+      toast.error('Lütfen önce giriş yapın');
+      navigate('/login');
+      return;
+    }
+    setSelectedOutcome(outcome);
+    setOrderType('BUY');
+    setOrderQuantity('');
+    setOrderPrice('');
+    setShowBuyModal(true);
+  };
+
+  const handleCloseBuyModal = () => {
+    setShowBuyModal(false);
+    setSelectedOutcome(null);
+    setOrderQuantity('');
+    setOrderPrice('');
+  };
+
+  const handleSubmitOrder = async (e) => {
+    e.preventDefault();
+    
+    if (!user) {
+      toast.error('Lütfen giriş yapın');
+      navigate('/login');
+      return;
+    }
+
+    const quantity = parseInt(orderQuantity);
+    const price = parseFloat(orderPrice);
+
+    if (!quantity || quantity <= 0) {
+      toast.error('Geçerli bir miktar girin');
+      return;
+    }
+
+    if (!price || price <= 0 || price > 100) {
+      toast.error('Fiyat 0-100 arasında olmalıdır');
+      return;
+    }
+
+    try {
+      setSubmitting(true);
+
+      const token = localStorage.getItem('token');
+      const response = await fetch('https://api.kahinmarket.com/api/v1/orders', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          marketId,
+          type: orderType,
+          outcome: selectedOutcome,
+          quantity,
+          price
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Emir oluşturulamadı');
+      }
+
+      toast.success(data.message || 'Emir başarıyla oluşturuldu!');
+      handleCloseBuyModal();
+      fetchMarketData();
+
+    } catch (error) {
+      console.error('Order error:', error);
+      toast.error(error.message || 'Emir oluşturulurken bir hata oluştu');
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -138,6 +190,7 @@ const MarketDetailWithWebSocket = () => {
     );
   }
 
+  const orderBook = liveOrderBook || initialOrderBook;
   const yesPrice = orderBook?.yes?.midPrice || 50;
   const noPrice = orderBook?.no?.midPrice || 50;
 
@@ -162,15 +215,112 @@ const MarketDetailWithWebSocket = () => {
         </div>
       </div>
 
+      {/* Buy Modal */}
+      {showBuyModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-2xl font-bold text-gray-900">
+                {selectedOutcome ? 'EVET' : 'HAYIR'} Emri
+              </h3>
+              <button onClick={handleCloseBuyModal} className="text-gray-400 hover:text-gray-600">
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSubmitOrder} className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Emir Tipi</label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setOrderType('BUY')}
+                    className={`py-2 px-4 rounded-lg font-medium transition-colors ${
+                      orderType === 'BUY' ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    ALIŞ
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setOrderType('SELL')}
+                    className={`py-2 px-4 rounded-lg font-medium transition-colors ${
+                      orderType === 'SELL' ? 'bg-red-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                    }`}
+                  >
+                    SATIŞ
+                  </button>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Miktar</label>
+                <input
+                  type="number"
+                  min="1"
+                  value={orderQuantity}
+                  onChange={(e) => setOrderQuantity(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                  placeholder="Örn: 10"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Fiyat (₺)</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  min="0.01"
+                  max="100"
+                  value={orderPrice}
+                  onChange={(e) => setOrderPrice(e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+                  placeholder="Örn: 50.00"
+                  required
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Mevcut fiyat: ₺{selectedOutcome ? yesPrice.toFixed(2) : noPrice.toFixed(2)}
+                </p>
+              </div>
+
+              {orderQuantity && orderPrice && (
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-gray-600">Toplam Tutar:</span>
+                    <span className="text-xl font-bold text-gray-900">
+                      ₺{(parseFloat(orderQuantity) * parseFloat(orderPrice)).toFixed(2)}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={submitting}
+                className={`w-full py-3 rounded-lg font-semibold text-white transition-colors ${
+                  submitting ? 'bg-gray-400 cursor-not-allowed' :
+                  selectedOutcome ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'
+                }`}
+              >
+                {submitting ? 'İşleniyor...' : `${orderType === 'BUY' ? 'Satın Al' : 'Sat'}`}
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
       <div className="container mx-auto px-4 py-8">
-        {/* Back Button */}
-        <a href="/" className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6">
+        <button
+          onClick={() => navigate('/')}
+          className="inline-flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
+        >
           <ArrowLeft className="w-4 h-4" />
           <span>Geri Dön</span>
-        </a>
+        </button>
 
         {/* Market Header */}
-        <div className="card mb-6">
+        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
               <h1 className="text-3xl font-bold text-gray-900 mb-2">{market.title}</h1>
@@ -178,76 +328,143 @@ const MarketDetailWithWebSocket = () => {
                 <p className="text-gray-600">{market.description}</p>
               )}
             </div>
-            <span className={`badge ${
-              market.status === 'open' ? 'badge-success' : 
-              market.status === 'closed' ? 'badge-info' : 'badge-error'
+            <span className={`px-4 py-2 rounded-full text-sm font-medium ${
+              market.status === 'open' ? 'bg-green-100 text-green-700' : 
+              market.status === 'closed' ? 'bg-blue-100 text-blue-700' : 
+              'bg-gray-100 text-gray-700'
             }`}>
               {market.status === 'open' ? 'Açık' : 
                market.status === 'closed' ? 'Kapandı' : 'Sonuçlandı'}
             </span>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div>
-              <div className="text-sm text-gray-600 mb-1">Hacim</div>
-              <div className="text-lg font-bold">₺{parseFloat(market.volume || 0).toLocaleString()}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">Kullanıcılar</div>
-              <div className="text-lg font-bold">{market.tradersCount || 0}</div>
-            </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">Bitiş</div>
-              <div className="text-lg font-bold">
-                {new Date(market.closing_date).toLocaleDateString('tr-TR')}
+          <div className="grid grid-cols-3 gap-4 pt-4 border-t">
+            <div className="flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-brand-600" />
+              <div>
+                <p className="text-sm text-gray-600">Hacim</p>
+                <p className="font-bold">₺{parseFloat(market.volume || 0).toLocaleString('tr-TR')}</p>
               </div>
             </div>
-            <div>
-              <div className="text-sm text-gray-600 mb-1">Kategori</div>
-              <div className="text-lg font-bold capitalize">{market.category || 'Genel'}</div>
+            <div className="flex items-center gap-2">
+              <Users className="w-5 h-5 text-brand-600" />
+              <div>
+                <p className="text-sm text-gray-600">Katılımcılar</p>
+                <p className="font-bold">{market.tradersCount || 0}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Clock className="w-5 h-5 text-brand-600" />
+              <div>
+                <p className="text-sm text-gray-600">Kapanış</p>
+                <p className="font-bold">
+                  {market.closing_date ? new Date(market.closing_date).toLocaleDateString('tr-TR') : 'Belirsiz'}
+                </p>
+              </div>
             </div>
           </div>
+        </div>
+
+        {/* Price Chart */}
+        <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-bold flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-brand-600" />
+              Fiyat Grafiği
+            </h3>
+            {wsConnected && <RefreshCw className="w-4 h-4 animate-spin text-brand-600" />}
+          </div>
+
+          {chartData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={chartData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis 
+                  dataKey="time" 
+                  tick={{ fontSize: 12 }}
+                  stroke="#6b7280"
+                />
+                <YAxis 
+                  domain={[0, 100]}
+                  tick={{ fontSize: 12 }}
+                  stroke="#6b7280"
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: '#fff',
+                    border: '1px solid #e5e7eb',
+                    borderRadius: '8px',
+                    padding: '8px 12px'
+                  }}
+                  formatter={(value) => `₺${value.toFixed(2)}`}
+                />
+                <Legend />
+                <Line 
+                  type="monotone" 
+                  dataKey="yes" 
+                  stroke="#22c55e" 
+                  strokeWidth={2}
+                  name="EVET"
+                  dot={false}
+                  activeDot={{ r: 6 }}
+                />
+                <Line 
+                  type="monotone" 
+                  dataKey="no" 
+                  stroke="#ef4444" 
+                  strokeWidth={2}
+                  name="HAYIR"
+                  dot={false}
+                  activeDot={{ r: 6 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="text-center py-12 text-gray-500">
+              <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-50" />
+              <p>Henüz yeterli veri yok</p>
+            </div>
+          )}
         </div>
 
         {/* Trading Panels */}
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-          {/* YES Panel */}
-          <div className="card bg-green-50 border-green-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-green-800">EVET</h3>
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-green-600" />
-                <span className="text-3xl font-bold text-green-600">
-                  ₺{parseFloat(yesPrice).toFixed(2)}
-                </span>
-              </div>
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-md p-6 border-2 border-green-200">
+            <h3 className="text-lg font-bold mb-2 text-green-800">EVET</h3>
+            <div className="text-4xl font-bold text-green-700 mb-4">
+              ₺{yesPrice.toFixed(2)}
             </div>
-            <button className="w-full btn btn-yes py-4 text-lg">
-              EVET Satın Al
+            <button
+              onClick={() => handleOpenBuyModal(true)}
+              disabled={market.status !== 'open'}
+              className={`w-full py-3 rounded-lg font-semibold text-white transition-colors ${
+                market.status === 'open' ? 'bg-green-600 hover:bg-green-700' : 'bg-gray-400 cursor-not-allowed'
+              }`}
+            >
+              {market.status === 'open' ? 'EVET Satın Al' : 'Market Kapalı'}
             </button>
           </div>
 
-          {/* NO Panel */}
-          <div className="card bg-red-50 border-red-200">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-red-800">HAYIR</h3>
-              <div className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-red-600" />
-                <span className="text-3xl font-bold text-red-600">
-                  ₺{parseFloat(noPrice).toFixed(2)}
-                </span>
-              </div>
+          <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl shadow-md p-6 border-2 border-red-200">
+            <h3 className="text-lg font-bold mb-2 text-red-800">HAYIR</h3>
+            <div className="text-4xl font-bold text-red-700 mb-4">
+              ₺{noPrice.toFixed(2)}
             </div>
-            <button className="w-full btn btn-no py-4 text-lg">
-              HAYIR Satın Al
+            <button
+              onClick={() => handleOpenBuyModal(false)}
+              disabled={market.status !== 'open'}
+              className={`w-full py-3 rounded-lg font-semibold text-white transition-colors ${
+                market.status === 'open' ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-400 cursor-not-allowed'
+              }`}
+            >
+              {market.status === 'open' ? 'HAYIR Satın Al' : 'Market Kapalı'}
             </button>
           </div>
         </div>
 
-        {/* Order Book */}
-        <div className="grid md:grid-cols-2 gap-6 mb-6">
-          {/* YES Order Book */}
-          <div className="card">
+        {/* Order Books */}
+        <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="bg-white rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold mb-4 flex items-center justify-between">
               <span>EVET Emir Defteri</span>
               {wsConnected && <RefreshCw className="w-4 h-4 animate-spin text-green-600" />}
@@ -266,15 +483,12 @@ const MarketDetailWithWebSocket = () => {
                 </div>
               ))}
               {(!orderBook?.yes?.bids || orderBook.yes.bids.length === 0) && (
-                <div className="text-center text-gray-500 py-4 text-sm">
-                  Emir yok
-                </div>
+                <div className="text-center text-gray-500 py-4 text-sm">Emir yok</div>
               )}
             </div>
           </div>
 
-          {/* NO Order Book */}
-          <div className="card">
+          <div className="bg-white rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold mb-4 flex items-center justify-between">
               <span>HAYIR Emir Defteri</span>
               {wsConnected && <RefreshCw className="w-4 h-4 animate-spin text-red-600" />}
@@ -293,16 +507,14 @@ const MarketDetailWithWebSocket = () => {
                 </div>
               ))}
               {(!orderBook?.no?.bids || orderBook.no.bids.length === 0) && (
-                <div className="text-center text-gray-500 py-4 text-sm">
-                  Emir yok
-                </div>
+                <div className="text-center text-gray-500 py-4 text-sm">Emir yok</div>
               )}
             </div>
           </div>
         </div>
 
         {/* Recent Trades */}
-        <div className="card">
+        <div className="bg-white rounded-xl shadow-md p-6">
           <h3 className="text-lg font-bold mb-4">Son İşlemler</h3>
           <div className="space-y-2">
             <div className="text-sm font-medium text-gray-600 grid grid-cols-4 gap-2 pb-2 border-b">
@@ -324,9 +536,7 @@ const MarketDetailWithWebSocket = () => {
               </div>
             ))}
             {trades.length === 0 && (
-              <div className="text-center text-gray-500 py-8">
-                Henüz işlem yok
-              </div>
+              <div className="text-center text-gray-500 py-8">Henüz işlem yok</div>
             )}
           </div>
         </div>
@@ -335,4 +545,4 @@ const MarketDetailWithWebSocket = () => {
   );
 };
 
-export default MarketDetailWithWebSocket;
+export default MarketDetailPage;

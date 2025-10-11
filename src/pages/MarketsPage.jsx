@@ -1,19 +1,14 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { Search, Filter, Clock, Users } from 'lucide-react'
-import { useEffect } from 'react'
+import { Search, Filter, Clock, Users, TrendingUp } from 'lucide-react'
 import apiClient from '../api/client'
-import { formatDistanceToNow } from 'date-fns'
-import { tr } from 'date-fns/locale'
-import { useWebSocket } from '../hooks/useWebSocket'
 
 export default function MarketsPage() {
   const [statusFilter, setStatusFilter] = useState('all')
   const [searchQuery, setSearchQuery] = useState('')
-  const ws = useWebSocket()
 
-  // Fetch markets
+  // Fetch markets - WebSocket'i kaldırdık çünkü gereksiz
   const { data, isLoading, error } = useQuery({
     queryKey: ['markets', statusFilter],
     queryFn: async () => {
@@ -22,20 +17,6 @@ export default function MarketsPage() {
       return response.data.data
     }
   })
-
-  useEffect(() => {
-    if (data && data.length > 0) {
-      data.forEach(market => {
-        ws.subscribeToMarket(market.id)
-      })
-
-      return () => {
-        data.forEach(market => {
-          ws.unsubscribeFromMarket(market.id)
-        })
-      }
-    }
-  }, [data])
 
   // Filter markets by search
   const filteredMarkets = data?.filter(market =>
@@ -60,7 +41,7 @@ export default function MarketsPage() {
             placeholder="Pazar ara..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="input pl-10 w-full"
+            className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
           />
         </div>
 
@@ -91,7 +72,7 @@ export default function MarketsPage() {
       {isLoading && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="card animate-pulse">
+            <div key={i} className="bg-white rounded-xl shadow-md p-6 animate-pulse">
               <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
               <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
               <div className="h-4 bg-gray-200 rounded w-2/3 mb-4"></div>
@@ -103,7 +84,7 @@ export default function MarketsPage() {
 
       {/* Error State */}
       {error && (
-        <div className="card bg-red-50 border-red-200">
+        <div className="bg-red-50 border border-red-200 rounded-xl p-6">
           <p className="text-red-800">
             Pazarlar yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.
           </p>
@@ -112,7 +93,7 @@ export default function MarketsPage() {
 
       {/* Empty State */}
       {!isLoading && !error && filteredMarkets.length === 0 && (
-        <div className="card text-center py-12">
+        <div className="bg-white rounded-xl shadow-md p-12 text-center">
           <Filter className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold mb-2">Pazar bulunamadı</h3>
           <p className="text-gray-600">Arama kriterlerinize uygun pazar bulunamadı.</p>
@@ -132,88 +113,101 @@ export default function MarketsPage() {
 }
 
 function MarketCard({ market }) {
-  // Calculate probability (placeholder - will be real data from order book later)
+  // Calculate probability from market data
   const yesProb = 50 // TODO: Get from order book
   const noProb = 50
 
   const getStatusBadge = (status) => {
     const badges = {
-      open: 'badge-success',
-      closed: 'badge-info',
-      resolved: 'badge-error'
+      open: 'bg-green-100 text-green-700',
+      closed: 'bg-blue-100 text-blue-700',
+      resolved: 'bg-gray-100 text-gray-700'
     }
     const labels = {
       open: 'Açık',
       closed: 'Kapandı',
       resolved: 'Sonuçlandı'
     }
-    return (
-      <span className={`badge ${badges[status]}`}>
-        {labels[status]}
-      </span>
-    )
+    return { badge: badges[status] || badges.open, label: labels[status] || 'Açık' }
+  }
+
+  const { badge, label } = getStatusBadge(market.status)
+
+  const formatVolume = (volume) => {
+    if (!volume) return '₺0'
+    const num = parseFloat(volume)
+    if (num >= 1000000) return `₺${(num / 1000000).toFixed(1)}M`
+    if (num >= 1000) return `₺${(num / 1000).toFixed(0)}K`
+    return `₺${num.toFixed(0)}`
+  }
+
+  const formatDate = (dateString) => {
+    if (!dateString) return ''
+    const date = new Date(dateString)
+    const now = new Date()
+    const diffTime = date - now
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+    
+    if (diffDays < 0) return 'Kapandı'
+    if (diffDays === 0) return 'Bugün'
+    if (diffDays === 1) return 'Yarın'
+    return `${diffDays} gün`
   }
 
   return (
-    <Link to={`/markets/${market.id}`} className="card hover:shadow-lg transition-shadow group">
+    <Link 
+      to={`/markets/${market.id}`}
+      className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all p-6 block group"
+    >
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
-        <h3 className="text-lg font-semibold group-hover:text-brand-600 transition-colors flex-1">
-          {market.title}
-        </h3>
-        {getStatusBadge(market.status)}
+        <span className={`px-3 py-1 rounded-full text-xs font-medium ${badge}`}>
+          {label}
+        </span>
+        {market.category && (
+          <span className="text-xs text-gray-500 capitalize">
+            {market.category}
+          </span>
+        )}
       </div>
+
+      {/* Title */}
+      <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-brand-600 transition-colors line-clamp-2">
+        {market.title}
+      </h3>
 
       {/* Description */}
-      <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-        {market.description || 'Açıklama yok'}
-      </p>
+      {market.description && (
+        <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+          {market.description}
+        </p>
+      )}
 
-      {/* Probability Bars */}
-      <div className="space-y-3 mb-4">
-        {/* YES */}
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-sm font-medium text-yes">EVET</span>
-            <span className="text-sm font-bold text-yes">{yesProb}%</span>
-          </div>
-          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-yes transition-all"
-              style={{ width: `${yesProb}%` }}
-            ></div>
-          </div>
+      {/* Probabilities */}
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="bg-green-50 rounded-lg p-3 border border-green-200">
+          <div className="text-xs text-green-600 font-medium mb-1">EVET</div>
+          <div className="text-2xl font-bold text-green-700">{yesProb}%</div>
         </div>
-
-        {/* NO */}
-        <div>
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-sm font-medium text-no">HAYIR</span>
-            <span className="text-sm font-bold text-no">{noProb}%</span>
-          </div>
-          <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-no transition-all"
-              style={{ width: `${noProb}%` }}
-            ></div>
-          </div>
+        <div className="bg-red-50 rounded-lg p-3 border border-red-200">
+          <div className="text-xs text-red-600 font-medium mb-1">HAYIR</div>
+          <div className="text-2xl font-bold text-red-700">{noProb}%</div>
         </div>
       </div>
 
-      {/* Footer */}
-      <div className="flex items-center justify-between text-xs text-gray-500 pt-4 border-t border-gray-100">
+      {/* Stats */}
+      <div className="flex items-center justify-between text-sm text-gray-600 pt-4 border-t border-gray-100">
         <div className="flex items-center gap-1">
-          <Clock className="w-4 h-4" />
-          <span>
-            {formatDistanceToNow(new Date(market.closing_date), {
-              addSuffix: true,
-              locale: tr
-            })}
-          </span>
+          <TrendingUp className="w-4 h-4" />
+          <span>{formatVolume(market.volume)}</span>
         </div>
         <div className="flex items-center gap-1">
           <Users className="w-4 h-4" />
-          <span>125</span> {/* TODO: Get real trader count */}
+          <span>{market.tradersCount || 0}</span>
+        </div>
+        <div className="flex items-center gap-1">
+          <Clock className="w-4 h-4" />
+          <span>{formatDate(market.closingDate)}</span>
         </div>
       </div>
     </Link>
