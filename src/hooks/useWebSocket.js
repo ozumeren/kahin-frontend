@@ -87,9 +87,6 @@ export function useWebSocket() {
 
   const handleMessage = (data) => {
     const { type, marketId } = data
-    
-    // Debug: Tüm mesajları logla
-    console.log('📨 WebSocket message received:', type, data)
 
     // Orderbook güncellemeleri
     if (type === 'orderbook_update' && marketId) {
@@ -117,23 +114,19 @@ export function useWebSocket() {
 
     // Kişiselleştirilmiş emir dolum bildirimi
     if (type === 'my_order_filled') {
-      console.log('✅ my_order_filled event received:', data)
       const handlers = messageHandlers.current.get('__my_orders__') || []
       handlers.forEach(handler => handler(data))
     }
 
     // Kişiselleştirilmiş emir iptal bildirimi
     if (type === 'my_order_cancelled') {
-      console.log('❌ my_order_cancelled event received:', data)
       const handlers = messageHandlers.current.get('__my_orders__') || []
       handlers.forEach(handler => handler(data))
     }
 
     // Bakiye güncelleme bildirimi
     if (type === 'balance_updated') {
-      console.log('💰 balance_updated event received:', data)
       const handlers = messageHandlers.current.get('__balance_updates__') || []
-      console.log('💰 Number of balance handlers:', handlers.length)
       handlers.forEach(handler => handler(data))
     }
 
@@ -337,18 +330,13 @@ export function useBalanceUpdates(ws, onBalanceUpdate) {
   useEffect(() => {
     if (!ws) return
 
-    console.log('🔔 Balance updates listener registered')
-
     cleanupRef.current = ws.onMessage('__balance_updates__', (data) => {
-      console.log('🔔 Balance update handler called:', data)
       if (data.type === 'balance_updated' && callbackRef.current) {
-        console.log('🔔 Calling balance update callback with:', data.data.balance)
         callbackRef.current(data.data.balance)
       }
     })
 
     return () => {
-      console.log('🔔 Balance updates listener unregistered')
       if (cleanupRef.current) {
         cleanupRef.current()
         cleanupRef.current = null

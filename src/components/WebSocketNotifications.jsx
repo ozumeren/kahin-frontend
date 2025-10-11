@@ -20,15 +20,12 @@ export default function WebSocketNotifications({ marketId = null }) {
   // Kullanıcı giriş yaptığında WebSocket'e subscribe ol
   useEffect(() => {
     if (user && ws.isConnected && ws.subscribeUser) {
-      console.log('👤 Subscribing user to WebSocket:', user.id)
       ws.subscribeUser(user.id)
     }
   }, [user?.id, ws.isConnected, ws.subscribeUser])
 
   // Yeni trade'leri dinle
   useNewTrades(marketId, (trade) => {
-    console.log('🆕 Yeni trade:', trade)
-    
     // Son 5 trade'i sakla
     setRecentTrades(prev => [trade, ...prev].slice(0, 5))
     
@@ -45,8 +42,6 @@ export default function WebSocketNotifications({ marketId = null }) {
   useMyOrderEvents(
     // onOrderFilled
     (orderData) => {
-      console.log('✅ Emir eşleşti:', orderData)
-      
       const status = orderData.status === 'FILLED' ? 'Tamamen' : 'Kısmen'
       const outcome = orderData.outcome ? 'YES' : 'NO'
       
@@ -57,8 +52,6 @@ export default function WebSocketNotifications({ marketId = null }) {
     },
     // onOrderCancelled
     (orderData) => {
-      console.log('❌ Emir iptal edildi:', orderData)
-      
       const outcome = orderData.outcome ? 'YES' : 'NO'
       let reason = 'İptal edildi'
       
@@ -86,13 +79,9 @@ export default function WebSocketNotifications({ marketId = null }) {
 
   // Bakiye güncelleme callback'i
   const handleBalanceUpdate = useCallback((newBalance) => {
-    console.log('💰 Bakiye güncellendi:', newBalance)
-    
     // AuthContext'teki user'ı güncelle
     setUser(prevUser => {
       if (!prevUser) return prevUser
-      
-      console.log('💰 User güncelleniyor - Eski bakiye:', prevUser.balance, 'Yeni bakiye:', newBalance)
       
       return {
         ...prevUser,
