@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import toast from 'react-hot-toast'
-import { useNewTrades, useMyOrderEvents, useBalanceUpdates } from '../hooks/useWebSocket'
+import { useWebSocket, useNewTrades, useMyOrderEvents, useBalanceUpdates } from '../hooks/useWebSocket'
 import { useAuth } from '../context/AuthContext'
 
 /**
@@ -14,7 +14,16 @@ import { useAuth } from '../context/AuthContext'
  */
 export default function WebSocketNotifications({ marketId = null }) {
   const { user, setUser } = useAuth()
+  const ws = useWebSocket()
   const [recentTrades, setRecentTrades] = useState([])
+
+  // Kullanıcı giriş yaptığında WebSocket'e subscribe ol
+  useEffect(() => {
+    if (user && ws.isConnected && ws.subscribeUser) {
+      console.log('👤 Subscribing user to WebSocket:', user.id)
+      ws.subscribeUser(user.id)
+    }
+  }, [user?.id, ws.isConnected, ws.subscribeUser])
 
   // Yeni trade'leri dinle
   useNewTrades(marketId, (trade) => {
@@ -75,18 +84,25 @@ export default function WebSocketNotifications({ marketId = null }) {
     }
   )
 
-  // Bakiye güncellemelerini dinle
-  useBalanceUpdates((newBalance) => {
+  // Bakiye güncelleme callback'i
+  const handleBalanceUpdate = useCallback((newBalance) => {
     console.log('💰 Bakiye güncellendi:', newBalance)
     
     // AuthContext'teki user'ı güncelle
-    if (user) {
-      setUser(prevUser => ({
+    setUser(prevUser => {
+      if (!prevUser) return prevUser
+      
+      console.log('💰 User güncelleniyor - Eski bakiye:', prevUser.balance, 'Yeni bakiye:', newBalance)
+      
+      return {
         ...prevUser,
         balance: newBalance
-      }))
-    }
-  })
+      }
+    })
+  }, [setUser])
+
+  // Bakiye güncellemelerini dinle
+  useBalanceUpdates(handleBalanceUpdate)
 
   // Bu component görsel bir şey render etmez, sadece bildirimleri yönetir
   return null
