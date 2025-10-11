@@ -63,8 +63,8 @@ const MarketDetailPage = () => {
     }));
 
     // Fill in missing values (carry forward last known price)
-    let lastYes = 50;
-    let lastNo = 50;
+    let lastYes = 0.50;
+    let lastNo = 0.50;
 
     return data.map(point => ({
       ...point,
@@ -154,8 +154,8 @@ const MarketDetailPage = () => {
   }
 
   const orderBook = liveOrderBook || initialOrderBook;
-  const yesPrice = parseFloat(orderBook?.yes?.midPrice) || 50;
-  const noPrice = parseFloat(orderBook?.no?.midPrice) || 50;
+  const yesPrice = parseFloat(orderBook?.yes?.midPrice) || 0.50;
+  const noPrice = parseFloat(orderBook?.no?.midPrice) || 0.50;
 
   return (
     <div className="min-h-screen bg-gray-50">

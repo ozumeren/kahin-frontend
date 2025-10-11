@@ -124,6 +124,12 @@ export function useWebSocket() {
       handlers.forEach(handler => handler(data))
     }
 
+    // Bakiye güncelleme bildirimi
+    if (type === 'balance_updated') {
+      const handlers = messageHandlers.current.get('__balance_updates__') || []
+      handlers.forEach(handler => handler(data))
+    }
+
     // Market update (genel)
     if (type === 'market_update') {
       const globalHandlers = messageHandlers.current.get('__market_updates__') || []
@@ -291,6 +297,33 @@ export function useMyOrderEvents(onOrderFilled, onOrderCancelled) {
       }
     }
   }, [ws?.isConnected, onOrderFilled, onOrderCancelled])
+
+  return {
+    isConnected: ws.isConnected
+  }
+}
+
+// Hook for listening to balance updates
+export function useBalanceUpdates(onBalanceUpdate) {
+  const ws = useWebSocket()
+  const cleanupRef = useRef(null)
+
+  useEffect(() => {
+    if (!ws || !onBalanceUpdate) return
+
+    cleanupRef.current = ws.onMessage('__balance_updates__', (data) => {
+      if (data.type === 'balance_updated') {
+        onBalanceUpdate(data.data.balance)
+      }
+    })
+
+    return () => {
+      if (cleanupRef.current) {
+        cleanupRef.current()
+        cleanupRef.current = null
+      }
+    }
+  }, [ws?.isConnected, onBalanceUpdate])
 
   return {
     isConnected: ws.isConnected

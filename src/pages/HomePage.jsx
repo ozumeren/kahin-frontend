@@ -333,13 +333,13 @@ const HomePage = () => {
                       <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
                         <div className="text-xs text-green-600 font-medium mb-1">EVET</div>
                         <div className="text-xl font-bold text-green-700">
-                          ₺{parseFloat(market.yesPrice || 50).toFixed(2)}
+                          ₺{parseFloat(market.yesPrice || 0.50).toFixed(2)}
                         </div>
                       </div>
                       <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
                         <div className="text-xs text-red-600 font-medium mb-1">HAYIR</div>
                         <div className="text-xl font-bold text-red-700">
-                          ₺{parseFloat(market.noPrice || 50).toFixed(2)}
+                          ₺{parseFloat(market.noPrice || 0.50).toFixed(2)}
                         </div>
                       </div>
                     </div>

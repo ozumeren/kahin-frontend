@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { useNewTrades, useMyOrderEvents } from '../hooks/useWebSocket'
+import toast from 'react-hot-toast'
+import { useNewTrades, useMyOrderEvents, useBalanceUpdates } from '../hooks/useWebSocket'
 import { useAuth } from '../context/AuthContext'
-import { useToast } from '../context/ToastContext'
 
 /**
  * WebSocket Notifications Component
@@ -10,10 +10,10 @@ import { useToast } from '../context/ToastContext'
  * - new_trade: Yeni işlem gerçekleştiğinde
  * - my_order_filled: Kullanıcının emri eşleştiğinde
  * - my_order_cancelled: Kullanıcının emri iptal edildiğinde
+ * - balance_updated: Kullanıcının bakiyesi güncellendiğinde
  */
 export default function WebSocketNotifications({ marketId = null }) {
-  const { user } = useAuth()
-  const { showToast } = useToast()
+  const { user, setUser } = useAuth()
   const [recentTrades, setRecentTrades] = useState([])
 
   // Yeni trade'leri dinle
@@ -26,9 +26,8 @@ export default function WebSocketNotifications({ marketId = null }) {
     // Eğer kullanıcı bu trade'de yer alıyorsa bildirim göster
     if (user && (trade.buyerId === user.id || trade.sellerId === user.id)) {
       const isBuyer = trade.buyerId === user.id
-      showToast(
-        `Trade gerçekleşti! ${trade.quantity} adet @ ${trade.price} TL (${isBuyer ? 'Aldınız' : 'Sattınız'})`,
-        'success'
+      toast.success(
+        `Trade gerçekleşti! ${trade.quantity} adet @ ${trade.price} TL (${isBuyer ? 'Aldınız' : 'Sattınız'})`
       )
     }
   })
@@ -42,10 +41,9 @@ export default function WebSocketNotifications({ marketId = null }) {
       const status = orderData.status === 'FILLED' ? 'Tamamen' : 'Kısmen'
       const outcome = orderData.outcome ? 'YES' : 'NO'
       
-      showToast(
+      toast.success(
         `${status} eşleşti! ${orderData.orderType} ${orderData.filledQuantity} ${outcome} @ ${orderData.avgFillPrice} TL`,
-        'success',
-        5000
+        { duration: 5000 }
       )
     },
     // onOrderCancelled
@@ -70,13 +68,25 @@ export default function WebSocketNotifications({ marketId = null }) {
         refundMsg = ` ${orderData.quantity} ${outcome} hisse iade edildi.`
       }
       
-      showToast(
+      toast(
         `${reason}: ${orderData.orderType} ${orderData.quantity} ${outcome} @ ${orderData.price} TL${refundMsg}`,
-        'info',
-        7000
+        { duration: 7000, icon: 'ℹ️' }
       )
     }
   )
+
+  // Bakiye güncellemelerini dinle
+  useBalanceUpdates((newBalance) => {
+    console.log('💰 Bakiye güncellendi:', newBalance)
+    
+    // AuthContext'teki user'ı güncelle
+    if (user) {
+      setUser(prevUser => ({
+        ...prevUser,
+        balance: newBalance
+      }))
+    }
+  })
 
   // Bu component görsel bir şey render etmez, sadece bildirimleri yönetir
   return null

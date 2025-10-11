@@ -1,10 +1,12 @@
 import { Outlet } from 'react-router-dom'
 import Navbar from './Navbar'
+import WebSocketNotifications from './WebSocketNotifications'
 
 export default function Layout() {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
+      <WebSocketNotifications />
       <main className="flex-1">
         <Outlet />
       </main>

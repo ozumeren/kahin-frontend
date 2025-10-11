@@ -73,6 +73,7 @@ export function AuthProvider({ children }) {
 
   const value = {
     user,
+    setUser,  // ✅ YENİ: Diğer componentlerin user'ı güncellemesine izin ver
     loading,
     login,
     register,
