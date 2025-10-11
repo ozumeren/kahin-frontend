@@ -70,9 +70,96 @@ export default function Navbar() {
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
           </button>
         </div>
-      </div>
 
-      {/* Mobile Menu - aynı kalacak, sadece user bilgisi güncellenecek */}
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden border-t border-gray-200 py-4">
+            <div className="flex flex-col space-y-2">
+              <Link
+                to="/"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`px-4 py-2 rounded-lg font-medium ${
+                  isActive('/') ? 'bg-brand-50 text-brand-700' : 'hover:bg-gray-100'
+                }`}
+              >
+                Ana Sayfa
+              </Link>
+              <Link
+                to="/markets"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`px-4 py-2 rounded-lg font-medium ${
+                  isActive('/markets') ? 'bg-brand-50 text-brand-700' : 'hover:bg-gray-100'
+                }`}
+              >
+                Pazarlar
+              </Link>
+              {user && (
+                <Link
+                  to="/portfolio"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`px-4 py-2 rounded-lg font-medium ${
+                    isActive('/portfolio') ? 'bg-brand-50 text-brand-700' : 'hover:bg-gray-100'
+                  }`}
+                >
+                  Portfolyo
+                </Link>
+              )}
+              {user?.role === 'admin' && (
+                <Link
+                  to="/admin"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`px-4 py-2 rounded-lg font-medium flex items-center gap-1 ${
+                    isActive('/admin') ? 'bg-purple-50 text-purple-700' : 'hover:bg-purple-50 hover:text-purple-700'
+                  }`}
+                >
+                  <Shield className="w-4 h-4" />
+                  Admin
+                </Link>
+              )}
+
+              <div className="pt-4 border-t border-gray-200 mt-2 space-y-2">
+                {user ? (
+                  <>
+                    <div className="px-4 py-2 bg-gray-100 rounded-lg">
+                      <div className="flex items-center gap-2 mb-1">
+                        <User className="w-4 h-4 text-gray-600" />
+                        <span className="text-sm font-medium">{user.username}</span>
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        Bakiye: ₺{parseFloat(user.balance || 0).toFixed(2)}
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full px-4 py-2 bg-red-50 text-red-600 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-red-100"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Çıkış Yap
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <Link
+                      to="/login"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block w-full px-4 py-2 text-center border border-brand-600 text-brand-600 rounded-lg font-medium hover:bg-brand-50"
+                    >
+                      Giriş
+                    </Link>
+                    <Link
+                      to="/register"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="block w-full px-4 py-2 text-center bg-brand-600 text-white rounded-lg font-medium hover:bg-brand-700"
+                    >
+                      Kayıt Ol
+                    </Link>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </nav>
   )
 }
