@@ -91,6 +91,11 @@ const HomePage = () => {
       const data = await response.json();
       
       if (data.success) {
+        console.log('📊 Market data received:', data.data);
+        console.log('📊 First market prices:', {
+          yesPrice: data.data[0]?.yesPrice,
+          noPrice: data.data[0]?.noPrice
+        });
         setMarkets(data.data);
       } else {
         setError('Marketler yüklenemedi');
