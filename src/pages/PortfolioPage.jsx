@@ -61,7 +61,7 @@ export default function PortfolioPage() {
   if (!isAuthenticated) {
     return (
       <div className="container mx-auto px-4 py-16">
-        <div className="card text-center py-12">
+        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm text-center py-12">
           <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-2">Giriş Yapın</h2>
           <p className="text-gray-600 mb-6">
@@ -101,7 +101,7 @@ export default function PortfolioPage() {
       {/* Summary Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
         {/* Current Balance */}
-        <div className="card">
+        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-brand-100 rounded-lg">
               <Wallet className="w-5 h-5 text-brand-600" />
@@ -114,7 +114,7 @@ export default function PortfolioPage() {
         </div>
 
         {/* Total Invested */}
-        <div className="card">
+        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-2">
             <div className="p-2 bg-blue-100 rounded-lg">
               <Target className="w-5 h-5 text-blue-600" />
@@ -127,7 +127,7 @@ export default function PortfolioPage() {
         </div>
 
         {/* Unrealized P&L */}
-        <div className="card">
+        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-2">
             <div className={`p-2 rounded-lg ${
               parseFloat(summary.totalUnrealizedPnL || 0) >= 0 
@@ -152,7 +152,7 @@ export default function PortfolioPage() {
         </div>
 
         {/* Total P&L */}
-        <div className="card">
+        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-2">
             <div className={`p-2 rounded-lg ${
               parseFloat(summary.totalPnL || 0) >= 0 
@@ -221,7 +221,7 @@ export default function PortfolioPage() {
 function PositionsPanel({ positions }) {
   if (!positions || positions.length === 0) {
     return (
-      <div className="card text-center py-12">
+      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm text-center py-12">
         <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
         <h3 className="text-lg font-semibold mb-2">Henüz pozisyon yok</h3>
         <p className="text-gray-600 mb-6">Pazarlara göz atın ve ilk pozisyonunuzu açın</p>
@@ -238,7 +238,7 @@ function PositionsPanel({ positions }) {
         <Link
           key={index}
           to={`/markets/${position.marketId}`}
-          className="card hover:shadow-lg transition-shadow group block"
+          className="block rounded-lg border border-gray-200 bg-white p-6 shadow-sm hover:shadow-lg transition-shadow group"
         >
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
@@ -306,7 +306,7 @@ function OrdersPanel({ orders }) {
 
   if (openOrders.length === 0) {
     return (
-      <div className="card text-center py-12">
+      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm text-center py-12">
         <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
         <h3 className="text-lg font-semibold mb-2">Açık emir yok</h3>
         <p className="text-gray-600">Tüm emirleriniz eşleşmiş veya iptal edilmiş</p>
@@ -317,7 +317,7 @@ function OrdersPanel({ orders }) {
   return (
     <div className="space-y-4">
       {openOrders.map((order) => (
-        <div key={order.id} className="card">
+        <div key={order.id} className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
           <div className="flex items-start justify-between mb-4">
             <div>
               <Link 
@@ -378,14 +378,14 @@ function OrdersPanel({ orders }) {
 function TradeHistoryPanel({ trades }) {
   if (!trades || trades.length === 0) {
     return (
-      <div className="card text-center py-12">
+      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm text-center py-12">
         <p className="text-gray-600">Henüz işlem geçmişiniz yok</p>
       </div>
     )
   }
 
   return (
-    <div className="card overflow-x-auto">
+    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm overflow-x-auto">
       <table className="w-full">
         <thead>
           <tr className="border-b border-gray-200">
