@@ -5,7 +5,7 @@ import { Search, Filter, Clock, Users, TrendingUp } from 'lucide-react'
 import apiClient from '../api/client'
 
 export default function MarketsPage() {
-  const [statusFilter, setStatusFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('open') // Default: açık pazarlar
   const [searchQuery, setSearchQuery] = useState('')
 
   // Fetch markets - WebSocket'i kaldırdık çünkü gereksiz
