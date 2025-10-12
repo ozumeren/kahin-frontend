@@ -192,13 +192,15 @@ const MarketDetailPage = () => {
   console.log('🔍 DEBUG - User:', user);
   
   const yesPosition = portfolio?.positions?.find(p => {
-    const marketIdMatch = p.marketId === parseInt(marketId);
+    // marketId UUID string olabilir, direkt karşılaştır (parseInt kullanma!)
+    const marketIdMatch = String(p.marketId) === String(marketId);
     const outcomeMatch = p.outcome === 'YES';
     console.log(`🔍 Checking position:`, {
       position: p,
+      pMarketId: p.marketId,
+      currentMarketId: marketId,
       marketIdMatch,
       outcomeMatch,
-      pMarketId: p.marketId,
       pOutcome: p.outcome,
       pQuantity: p.quantity
     });
@@ -206,7 +208,7 @@ const MarketDetailPage = () => {
   });
   
   const noPosition = portfolio?.positions?.find(p => {
-    return p.marketId === parseInt(marketId) && p.outcome === 'NO';
+    return String(p.marketId) === String(marketId) && p.outcome === 'NO';
   });
   
   console.log('✅ Found YES Position:', yesPosition);
