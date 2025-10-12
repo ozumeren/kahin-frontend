@@ -2,6 +2,18 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import apiClient from '../api/client';
 import toast from 'react-hot-toast';
 
+// Portfolio verilerini getir
+export function usePortfolio() {
+  return useQuery({
+    queryKey: ['portfolio'],
+    queryFn: async () => {
+      const response = await apiClient.get('/portfolio');
+      return response.data.data;
+    },
+    staleTime: 10000, // 10 saniye
+  });
+}
+
 // Market detaylarını getir
 export function useMarket(marketId) {
   return useQuery({

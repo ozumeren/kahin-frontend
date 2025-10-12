@@ -3,9 +3,10 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { ArrowLeft, TrendingUp, Users, Clock, Wifi, RefreshCw, X, BarChart3 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { useQueryClient } from '@tanstack/react-query';
+import toast from 'react-hot-toast';
 import { useMarketWebSocket, useNewTrades } from '../hooks/useWebSocket';
 import { useAuth } from '../context/AuthContext';
-import { useMarket, useOrderBook, useMarketTrades, useCreateOrder } from '../hooks/useMarketQueries';
+import { useMarket, useOrderBook, useMarketTrades, useCreateOrder, usePortfolio } from '../hooks/useMarketQueries';
 
 const MarketDetailPage = () => {
   const { id: marketId } = useParams();
@@ -17,6 +18,7 @@ const MarketDetailPage = () => {
   const { data: market, isLoading: marketLoading, error: marketError } = useMarket(marketId);
   const { data: initialOrderBook, isLoading: orderBookLoading } = useOrderBook(marketId);
   const { data: trades = [], isLoading: tradesLoading } = useMarketTrades(marketId, 100);
+  const { data: portfolio } = usePortfolio();
   const createOrderMutation = useCreateOrder();
 
   // Modal states
@@ -123,6 +125,15 @@ const MarketDetailPage = () => {
       return; // React Query mutation otomatik olarak hata yönetir
     }
 
+    // SELL emri için hisse kontrolü
+    if (orderType === 'SELL') {
+      const availableShares = selectedOutcome ? yesShares : noShares;
+      if (quantity > availableShares) {
+        toast.error(`Yeterli hisse yok! Sahip olduğunuz: ${availableShares} adet`);
+        return;
+      }
+    }
+
     // React Query mutation kullanarak order oluştur
     createOrderMutation.mutate(
       {
@@ -173,6 +184,12 @@ const MarketDetailPage = () => {
   // Fallback: midPrice veya default 0.50
   const yesMidPrice = parseFloat(orderBook?.yes?.midPrice) || 0.50;
   const noMidPrice = parseFloat(orderBook?.no?.midPrice) || 0.50;
+
+  // Kullanıcının bu marketteki hisse miktarını bul
+  const yesPosition = portfolio?.positions?.find(p => p.marketId === parseInt(marketId) && p.outcome === 'YES');
+  const noPosition = portfolio?.positions?.find(p => p.marketId === parseInt(marketId) && p.outcome === 'NO');
+  const yesShares = yesPosition?.quantity || 0;
+  const noShares = noPosition?.quantity || 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -238,12 +255,20 @@ const MarketDetailPage = () => {
                 <input
                   type="number"
                   min="1"
+                  max={orderType === 'SELL' ? (selectedOutcome ? yesShares : noShares) : undefined}
                   value={orderQuantity}
                   onChange={(e) => setOrderQuantity(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
                   placeholder="Örn: 10"
                   required
                 />
+                {orderType === 'SELL' && (
+                  <p className="text-xs text-gray-600 mt-1">
+                    Sahip olduğunuz: <span className="font-semibold text-brand-600">
+                      {selectedOutcome ? yesShares : noShares} adet
+                    </span>
+                  </p>
+                )}
               </div>
 
               <div>
