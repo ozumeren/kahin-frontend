@@ -186,10 +186,23 @@ const MarketDetailPage = () => {
   const noMidPrice = parseFloat(orderBook?.no?.midPrice) || 0.50;
 
   // Kullanıcının bu marketteki hisse miktarını bul
-  const yesPosition = portfolio?.positions?.find(p => p.marketId === parseInt(marketId) && p.outcome === 'YES');
+  console.log('🔍 Portfolio positions:', portfolio?.positions);
+  console.log('🔍 Current marketId:', marketId, 'Type:', typeof marketId);
+  
+  const yesPosition = portfolio?.positions?.find(p => {
+    console.log('Checking position:', p, 'marketId match:', p.marketId === parseInt(marketId), 'outcome:', p.outcome);
+    return p.marketId === parseInt(marketId) && p.outcome === 'YES';
+  });
   const noPosition = portfolio?.positions?.find(p => p.marketId === parseInt(marketId) && p.outcome === 'NO');
-  const yesShares = yesPosition?.quantity || 0;
-  const noShares = noPosition?.quantity || 0;
+  
+  console.log('🔍 YES Position:', yesPosition);
+  console.log('🔍 NO Position:', noPosition);
+  
+  const yesShares = parseInt(yesPosition?.quantity) || 0;
+  const noShares = parseInt(noPosition?.quantity) || 0;
+  
+  console.log('🔍 YES Shares:', yesShares);
+  console.log('🔍 NO Shares:', noShares);
 
   return (
     <div className="min-h-screen bg-gray-50">
