@@ -3,14 +3,16 @@ import apiClient from '../api/client';
 import toast from 'react-hot-toast';
 
 // Portfolio verilerini getir
-export function usePortfolio() {
+export function usePortfolio(enabled = true) {
   return useQuery({
     queryKey: ['portfolio'],
     queryFn: async () => {
       const response = await apiClient.get('/portfolio');
       return response.data.data;
     },
+    enabled: enabled, // Sadece enabled=true ise çalış
     staleTime: 10000, // 10 saniye
+    retry: 1, // Hata durumunda sadece 1 kez tekrar dene
   });
 }
 

@@ -18,7 +18,7 @@ const MarketDetailPage = () => {
   const { data: market, isLoading: marketLoading, error: marketError } = useMarket(marketId);
   const { data: initialOrderBook, isLoading: orderBookLoading } = useOrderBook(marketId);
   const { data: trades = [], isLoading: tradesLoading } = useMarketTrades(marketId, 100);
-  const { data: portfolio } = usePortfolio();
+  const { data: portfolio } = usePortfolio(!!user); // Sadece giriş yapmışsa portfolio çek
   const createOrderMutation = useCreateOrder();
 
   // Modal states
@@ -186,23 +186,37 @@ const MarketDetailPage = () => {
   const noMidPrice = parseFloat(orderBook?.no?.midPrice) || 0.50;
 
   // Kullanıcının bu marketteki hisse miktarını bul
-  console.log('🔍 Portfolio positions:', portfolio?.positions);
-  console.log('🔍 Current marketId:', marketId, 'Type:', typeof marketId);
+  console.log('🔍 DEBUG - Portfolio data:', portfolio);
+  console.log('🔍 DEBUG - All positions:', portfolio?.positions);
+  console.log('🔍 DEBUG - Current marketId:', marketId, 'Type:', typeof marketId);
+  console.log('🔍 DEBUG - User:', user);
   
   const yesPosition = portfolio?.positions?.find(p => {
-    console.log('Checking position:', p, 'marketId match:', p.marketId === parseInt(marketId), 'outcome:', p.outcome);
-    return p.marketId === parseInt(marketId) && p.outcome === 'YES';
+    const marketIdMatch = p.marketId === parseInt(marketId);
+    const outcomeMatch = p.outcome === 'YES';
+    console.log(`🔍 Checking position:`, {
+      position: p,
+      marketIdMatch,
+      outcomeMatch,
+      pMarketId: p.marketId,
+      pOutcome: p.outcome,
+      pQuantity: p.quantity
+    });
+    return marketIdMatch && outcomeMatch;
   });
-  const noPosition = portfolio?.positions?.find(p => p.marketId === parseInt(marketId) && p.outcome === 'NO');
   
-  console.log('🔍 YES Position:', yesPosition);
-  console.log('🔍 NO Position:', noPosition);
+  const noPosition = portfolio?.positions?.find(p => {
+    return p.marketId === parseInt(marketId) && p.outcome === 'NO';
+  });
   
-  const yesShares = parseInt(yesPosition?.quantity) || 0;
-  const noShares = parseInt(noPosition?.quantity) || 0;
+  console.log('✅ Found YES Position:', yesPosition);
+  console.log('✅ Found NO Position:', noPosition);
   
-  console.log('🔍 YES Shares:', yesShares);
-  console.log('🔍 NO Shares:', noShares);
+  const yesShares = yesPosition ? parseInt(yesPosition.quantity) : 0;
+  const noShares = noPosition ? parseInt(noPosition.quantity) : 0;
+  
+  console.log('� Final YES Shares:', yesShares, 'Type:', typeof yesShares);
+  console.log('� Final NO Shares:', noShares, 'Type:', typeof noShares);
 
   return (
     <div className="min-h-screen bg-gray-50">
