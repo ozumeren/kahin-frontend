@@ -238,7 +238,7 @@ function PositionsPanel({ positions }) {
         <Link
           key={index}
           to={`/markets/${position.marketId}`}
-          className="card hover:shadow-lg transition-shadow group"
+          className="card hover:shadow-lg transition-shadow group block"
         >
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
