@@ -83,8 +83,17 @@ const MarketDetailPage = () => {
     setOrderType(type);
     setOrderQuantity('');
     // Mevcut piyasa fiyatını default olarak ayarla
-    const currentPrice = outcome ? yesPrice : noPrice;
-    setOrderPrice(currentPrice.toFixed(2));
+    let defaultPrice;
+    if (type === 'BUY') {
+      // BUY için best ask (en düşük satış fiyatı) kullan
+      defaultPrice = outcome ? yesBestAsk : noBestAsk;
+    } else {
+      // SELL için best bid (en yüksek alış fiyatı) kullan
+      defaultPrice = outcome ? yesBestBid : noBestBid;
+    }
+    // Fiyat yoksa midPrice kullan
+    const fallbackPrice = outcome ? yesMidPrice : noMidPrice;
+    setOrderPrice((defaultPrice || fallbackPrice).toFixed(2));
     setShowBuyModal(true);
   };
 
@@ -154,8 +163,16 @@ const MarketDetailPage = () => {
   }
 
   const orderBook = liveOrderBook || initialOrderBook;
-  const yesPrice = parseFloat(orderBook?.yes?.midPrice) || 0.50;
-  const noPrice = parseFloat(orderBook?.no?.midPrice) || 0.50;
+  
+  // Best bid (en yüksek alış fiyatı) ve best ask (en düşük satış fiyatı)
+  const yesBestBid = orderBook?.yes?.spread?.bestBid ? parseFloat(orderBook.yes.spread.bestBid) : null;
+  const yesBestAsk = orderBook?.yes?.spread?.bestAsk ? parseFloat(orderBook.yes.spread.bestAsk) : null;
+  const noBestBid = orderBook?.no?.spread?.bestBid ? parseFloat(orderBook.no.spread.bestBid) : null;
+  const noBestAsk = orderBook?.no?.spread?.bestAsk ? parseFloat(orderBook.no.spread.bestAsk) : null;
+  
+  // Fallback: midPrice veya default 0.50
+  const yesMidPrice = parseFloat(orderBook?.yes?.midPrice) || 0.50;
+  const noMidPrice = parseFloat(orderBook?.no?.midPrice) || 0.50;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -243,7 +260,21 @@ const MarketDetailPage = () => {
                   required
                 />
                 <p className="text-xs text-gray-500 mt-1">
-                  Mevcut fiyat: ₺{selectedOutcome ? yesPrice.toFixed(2) : noPrice.toFixed(2)}
+                  {selectedOutcome ? (
+                    <>
+                      {yesBestBid && <span>En Yüksek Alış: ₺{yesBestBid.toFixed(2)}</span>}
+                      {yesBestBid && yesBestAsk && <span> | </span>}
+                      {yesBestAsk && <span>En Düşük Satış: ₺{yesBestAsk.toFixed(2)}</span>}
+                      {!yesBestBid && !yesBestAsk && <span>Orta Fiyat: ₺{yesMidPrice.toFixed(2)}</span>}
+                    </>
+                  ) : (
+                    <>
+                      {noBestBid && <span>En Yüksek Alış: ₺{noBestBid.toFixed(2)}</span>}
+                      {noBestBid && noBestAsk && <span> | </span>}
+                      {noBestAsk && <span>En Düşük Satış: ₺{noBestAsk.toFixed(2)}</span>}
+                      {!noBestBid && !noBestAsk && <span>Orta Fiyat: ₺{noMidPrice.toFixed(2)}</span>}
+                    </>
+                  )}
                   <br />
                   <span className="text-brand-600 font-medium">Kazanan hisse değeri: 1.00 TL</span>
                 </p>
@@ -395,10 +426,29 @@ const MarketDetailPage = () => {
         {/* Trading Panels */}
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-md p-6 border-2 border-green-200">
-            <h3 className="text-lg font-bold mb-2 text-green-800">EVET</h3>
-            <div className="text-4xl font-bold text-green-700 mb-2">
-              ₺{yesPrice.toFixed(2)}
+            <h3 className="text-lg font-bold mb-3 text-green-800">EVET</h3>
+            
+            {/* Fiyat Bilgileri */}
+            <div className="mb-4 space-y-2">
+              {yesBestBid && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-green-700 font-medium">En Yüksek Alış:</span>
+                  <span className="text-green-900 font-bold">₺{yesBestBid.toFixed(2)}</span>
+                </div>
+              )}
+              {yesBestAsk && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-green-700 font-medium">En Düşük Satış:</span>
+                  <span className="text-green-900 font-bold">₺{yesBestAsk.toFixed(2)}</span>
+                </div>
+              )}
+              {!yesBestBid && !yesBestAsk && (
+                <div className="text-center text-2xl font-bold text-green-700">
+                  ₺{yesMidPrice.toFixed(2)}
+                </div>
+              )}
             </div>
+            
             <p className="text-xs text-green-600 mb-4">Kazanç: ₺1.00</p>
             <div className="grid grid-cols-2 gap-2">
               <button
@@ -423,10 +473,29 @@ const MarketDetailPage = () => {
           </div>
 
           <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl shadow-md p-6 border-2 border-red-200">
-            <h3 className="text-lg font-bold mb-2 text-red-800">HAYIR</h3>
-            <div className="text-4xl font-bold text-red-700 mb-2">
-              ₺{noPrice.toFixed(2)}
+            <h3 className="text-lg font-bold mb-3 text-red-800">HAYIR</h3>
+            
+            {/* Fiyat Bilgileri */}
+            <div className="mb-4 space-y-2">
+              {noBestBid && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-red-700 font-medium">En Yüksek Alış:</span>
+                  <span className="text-red-900 font-bold">₺{noBestBid.toFixed(2)}</span>
+                </div>
+              )}
+              {noBestAsk && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="text-red-700 font-medium">En Düşük Satış:</span>
+                  <span className="text-red-900 font-bold">₺{noBestAsk.toFixed(2)}</span>
+                </div>
+              )}
+              {!noBestBid && !noBestAsk && (
+                <div className="text-center text-2xl font-bold text-red-700">
+                  ₺{noMidPrice.toFixed(2)}
+                </div>
+              )}
             </div>
+            
             <p className="text-xs text-red-600 mb-4">Kazanç: ₺1.00</p>
             <div className="grid grid-cols-2 gap-2">
               <button
