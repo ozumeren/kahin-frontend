@@ -171,10 +171,28 @@ function MarketCard({ market }) {
         )}
       </div>
 
-      {/* Title */}
-      <h3 className="text-lg font-bold text-gray-900 mb-2 group-hover:text-brand-600 transition-colors line-clamp-2">
-        {market.title}
-      </h3>
+      {/* Avatar and Title */}
+      <div className="flex items-start gap-3 mb-2">
+        {/* Avatar */}
+        <div className="flex-shrink-0">
+          {market.image_url ? (
+            <img 
+              src={market.image_url} 
+              alt={market.title}
+              className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+            />
+          ) : (
+            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white font-bold text-lg">
+              {market.title.charAt(0).toUpperCase()}
+            </div>
+          )}
+        </div>
+
+        {/* Title */}
+        <h3 className="flex-1 text-lg font-bold text-gray-900 group-hover:text-brand-600 transition-colors line-clamp-2">
+          {market.title}
+        </h3>
+      </div>
 
       {/* Description */}
       {market.description && (
