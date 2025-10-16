@@ -411,7 +411,8 @@ function CreateMarketPanel() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    closing_date: ''
+    closing_date: '',
+    image_url: ''
   })
 
   const createMarketMutation = useMutation({
@@ -422,7 +423,7 @@ function CreateMarketPanel() {
     onSuccess: () => {
       toast.success('Pazar başarıyla oluşturuldu')
       queryClient.invalidateQueries(['adminMarkets'])
-      setFormData({ title: '', description: '', closing_date: '' })
+      setFormData({ title: '', description: '', closing_date: '', image_url: '' })
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Pazar oluşturulurken hata oluştu')
@@ -483,6 +484,36 @@ function CreateMarketPanel() {
               className="input w-full min-h-[100px]"
               placeholder="Pazarın detaylı açıklaması..."
             />
+          </div>
+
+          {/* Image URL */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Görsel URL
+            </label>
+            <input
+              type="url"
+              value={formData.image_url}
+              onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+              className="input w-full"
+              placeholder="https://example.com/image.jpg"
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Pazar kartında gösterilecek avatar görseli (opsiyonel)
+            </p>
+            {formData.image_url && (
+              <div className="mt-3 flex items-center gap-3">
+                <p className="text-xs text-gray-600">Önizleme:</p>
+                <img 
+                  src={formData.image_url} 
+                  alt="Preview"
+                  className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+                  onError={(e) => {
+                    e.target.style.display = 'none'
+                  }}
+                />
+              </div>
+            )}
           </div>
 
           {/* Closing Date */}
