@@ -325,7 +325,8 @@ export function useMyOrderEvents(onOrderFilled, onOrderCancelled) {
 }
 
 // Hook for listening to balance updates
-export function useBalanceUpdates(ws, onBalanceUpdate) {
+export function useBalanceUpdates(onBalanceUpdate) {
+  const { isConnected, onMessage } = useWebSocket()
   const cleanupRef = useRef(null)
   const callbackRef = useRef(onBalanceUpdate)
 
@@ -335,10 +336,12 @@ export function useBalanceUpdates(ws, onBalanceUpdate) {
   }, [onBalanceUpdate])
 
   useEffect(() => {
-    if (!ws) return
+    if (!isConnected || !callbackRef.current) return
 
-    cleanupRef.current = ws.onMessage('__balance_updates__', (data) => {
+    cleanupRef.current = onMessage('__balance_updates__', (data) => {
+      console.log('📊 useBalanceUpdates - Received message:', data)
       if (data.type === 'balance_updated' && callbackRef.current) {
+        console.log('💰 Calling onBalanceUpdate with:', data.data.balance)
         callbackRef.current(data.data.balance)
       }
     })
@@ -349,9 +352,9 @@ export function useBalanceUpdates(ws, onBalanceUpdate) {
         cleanupRef.current = null
       }
     }
-  }, [ws?.isConnected])
+  }, [isConnected])
 
   return {
-    isConnected: ws?.isConnected
+    isConnected
   }
 }
