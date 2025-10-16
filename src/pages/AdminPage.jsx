@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import { 
   Users, DollarSign, Plus, TrendingUp, 
   Settings, Search, X, Check, AlertCircle,
-  Target, Clock, CheckCircle, Package
+  Target, Clock, CheckCircle, Package, Image as ImageIcon
 } from 'lucide-react'
 import apiClient from '../api/client'
 import { format } from 'date-fns'
@@ -345,6 +345,11 @@ function MarketsPanel() {
                       Sonuç: {market.outcome ? 'EVET' : 'HAYIR'}
                     </span>
                   )}
+                  {market.market_type && (
+                    <span className="badge badge-info">
+                      {market.market_type === 'binary' ? 'Binary' : 'Multiple Choice'}
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -359,7 +364,7 @@ function MarketsPanel() {
                     Kapat
                   </button>
                 )}
-                {market.status === 'closed' && (
+                {market.status === 'closed' && market.market_type === 'binary' && (
                   <>
                     <button
                       onClick={() => handleResolveMarket(market.id, true)}
@@ -412,7 +417,13 @@ function CreateMarketPanel() {
     title: '',
     description: '',
     closing_date: '',
-    image_url: ''
+    category: '',
+    image_url: '',
+    market_type: 'binary',
+    options: [
+      { option_text: '', option_image_url: '', option_order: 0 },
+      { option_text: '', option_image_url: '', option_order: 1 }
+    ]
   })
 
   const createMarketMutation = useMutation({
@@ -423,12 +434,57 @@ function CreateMarketPanel() {
     onSuccess: () => {
       toast.success('Pazar başarıyla oluşturuldu')
       queryClient.invalidateQueries(['adminMarkets'])
-      setFormData({ title: '', description: '', closing_date: '', image_url: '' })
+      setFormData({ 
+        title: '', 
+        description: '', 
+        closing_date: '',
+        category: '',
+        image_url: '',
+        market_type: 'binary',
+        options: [
+          { option_text: '', option_image_url: '', option_order: 0 },
+          { option_text: '', option_image_url: '', option_order: 1 }
+        ]
+      })
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Pazar oluşturulurken hata oluştu')
     }
   })
+
+  const addOption = () => {
+    setFormData(prev => ({
+      ...prev,
+      options: [
+        ...prev.options,
+        { 
+          option_text: '', 
+          option_image_url: '', 
+          option_order: prev.options.length 
+        }
+      ]
+    }))
+  }
+
+  const removeOption = (index) => {
+    if (formData.options.length <= 2) {
+      toast.error('En az 2 seçenek olmalıdır')
+      return
+    }
+    setFormData(prev => ({
+      ...prev,
+      options: prev.options.filter((_, i) => i !== index)
+    }))
+  }
+
+  const updateOption = (index, field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      options: prev.options.map((opt, i) => 
+        i === index ? { ...opt, [field]: value } : opt
+      )
+    }))
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -438,7 +494,29 @@ function CreateMarketPanel() {
       return
     }
 
-    createMarketMutation.mutate(formData)
+    if (formData.market_type === 'multiple_choice') {
+      const validOptions = formData.options.filter(opt => opt.option_text.trim())
+      if (validOptions.length < 2) {
+        toast.error('Multiple choice market için en az 2 seçenek gereklidir')
+        return
+      }
+
+      const isoDate = new Date(formData.closing_date).toISOString()
+      
+      createMarketMutation.mutate({
+        ...formData,
+        closing_date: isoDate,
+        options: validOptions
+      })
+    } else {
+      const { options, ...binaryMarketData } = formData
+      const isoDate = new Date(formData.closing_date).toISOString()
+      
+      createMarketMutation.mutate({
+        ...binaryMarketData,
+        closing_date: isoDate
+      })
+    }
   }
 
   return (
@@ -459,6 +537,37 @@ function CreateMarketPanel() {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
+          {/* Market Tipi */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Market Tipi <span className="text-red-500">*</span>
+            </label>
+            <div className="flex gap-4">
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="market_type"
+                  value="binary"
+                  checked={formData.market_type === 'binary'}
+                  onChange={(e) => setFormData(prev => ({ ...prev, market_type: e.target.value }))}
+                  className="mr-2"
+                />
+                <span className="text-sm font-medium">Binary (Evet/Hayır)</span>
+              </label>
+              <label className="flex items-center cursor-pointer">
+                <input
+                  type="radio"
+                  name="market_type"
+                  value="multiple_choice"
+                  checked={formData.market_type === 'multiple_choice'}
+                  onChange={(e) => setFormData(prev => ({ ...prev, market_type: e.target.value }))}
+                  className="mr-2"
+                />
+                <span className="text-sm font-medium">Multiple Choice (Çoklu Seçenek)</span>
+              </label>
+            </div>
+          </div>
+
           {/* Title */}
           <div>
             <label className="block text-sm font-medium mb-2">
@@ -486,35 +595,55 @@ function CreateMarketPanel() {
             />
           </div>
 
-          {/* Image URL */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Görsel URL
-            </label>
-            <input
-              type="url"
-              value={formData.image_url}
-              onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-              className="input w-full"
-              placeholder="https://example.com/image.jpg"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Pazar kartında gösterilecek avatar görseli (opsiyonel)
-            </p>
-            {formData.image_url && (
-              <div className="mt-3 flex items-center gap-3">
-                <p className="text-xs text-gray-600">Önizleme:</p>
-                <img 
-                  src={formData.image_url} 
-                  alt="Preview"
-                  className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
-                  onError={(e) => {
-                    e.target.style.display = 'none'
-                  }}
-                />
-              </div>
-            )}
+          {/* Category ve Image URL */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Kategori
+              </label>
+              <select
+                value={formData.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                className="input w-full"
+              >
+                <option value="">Seçiniz...</option>
+                <option value="crypto">Kripto</option>
+                <option value="sports">Spor</option>
+                <option value="politics">Siyaset</option>
+                <option value="entertainment">Eğlence</option>
+                <option value="technology">Teknoloji</option>
+                <option value="economics">Ekonomi</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Görsel URL
+              </label>
+              <input
+                type="url"
+                value={formData.image_url}
+                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
+                className="input w-full"
+                placeholder="https://example.com/image.jpg"
+              />
+            </div>
           </div>
+
+          {/* Image Preview */}
+          {formData.image_url && (
+            <div className="flex items-center gap-3">
+              <p className="text-xs text-gray-600">Önizleme:</p>
+              <img 
+                src={formData.image_url} 
+                alt="Preview"
+                className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
+                onError={(e) => {
+                  e.target.style.display = 'none'
+                }}
+              />
+            </div>
+          )}
 
           {/* Closing Date */}
           <div>
@@ -531,6 +660,72 @@ function CreateMarketPanel() {
               Bu tarihte pazar otomatik olarak kapatılacaktır
             </p>
           </div>
+
+          {/* Multiple Choice Options */}
+          {formData.market_type === 'multiple_choice' && (
+            <div className="border-t pt-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">Seçenekler (En az 2)</h3>
+                <button
+                  type="button"
+                  onClick={addOption}
+                  className="btn btn-sm btn-success flex items-center gap-2"
+                >
+                  <Plus size={18} />
+                  Seçenek Ekle
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                {formData.options.map((option, index) => (
+                  <div key={index} className="border rounded-lg p-4 bg-gray-50">
+                    <div className="flex items-start gap-4">
+                      <div className="flex-1 space-y-3">
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Seçenek {index + 1} *
+                          </label>
+                          <input
+                            type="text"
+                            value={option.option_text}
+                            onChange={(e) => updateOption(index, 'option_text', e.target.value)}
+                            className="input w-full"
+                            placeholder="Örn: Zohran Mamdani"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="block text-xs font-medium text-gray-700 mb-1">
+                            Görsel URL (Opsiyonel)
+                          </label>
+                          <div className="flex gap-2 items-center">
+                            <ImageIcon className="text-gray-400" size={20} />
+                            <input
+                              type="url"
+                              value={option.option_image_url}
+                              onChange={(e) => updateOption(index, 'option_image_url', e.target.value)}
+                              className="input flex-1"
+                              placeholder="https://example.com/candidate.jpg"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {formData.options.length > 2 && (
+                        <button
+                          type="button"
+                          onClick={() => removeOption(index)}
+                          className="mt-6 p-2 text-red-500 hover:bg-red-50 rounded-lg transition"
+                        >
+                          <X size={20} />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Submit */}
           <button
