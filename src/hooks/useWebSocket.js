@@ -14,6 +14,7 @@ class WebSocketManager {
     this.isCleaningUp = false
     this.isConnected = false
     this.listeners = new Set()
+    this.pendingUserSubscription = null // Bekleyen user subscription
   }
 
   subscribe(listener) {
@@ -32,6 +33,8 @@ class WebSocketManager {
   connect() {
     if (this.isCleaningUp || this.ws?.readyState === WebSocket.OPEN) return
     
+    console.log('🔌 Connecting to WebSocket:', WS_URL)
+    
     try {
       this.ws = new WebSocket(WS_URL)
 
@@ -40,12 +43,28 @@ class WebSocketManager {
           this.ws.close()
           return
         }
+        console.log('✅ WebSocket connected successfully')
         this.isConnected = true
         this.notify()
         
-        this.subscribedMarkets.forEach(marketId => {
-          this.subscribeToMarketInternal(marketId)
-        })
+        // Bir sonraki event loop'ta gönder (WebSocket tam OPEN state'e geçsin diye)
+        setTimeout(() => {
+          if (!this.ws || this.ws.readyState !== WebSocket.OPEN) return
+          
+          // Market subscriptions'ları yeniden yap
+          this.subscribedMarkets.forEach(marketId => {
+            this.subscribeToMarketInternal(marketId)
+          })
+          
+          // Bekleyen user subscription varsa hemen gönder
+          if (this.pendingUserSubscription) {
+            console.log('📡 Sending pending user subscription:', this.pendingUserSubscription)
+            this.ws.send(JSON.stringify({
+              type: 'subscribe_user',
+              userId: this.pendingUserSubscription
+            }))
+          }
+        }, 0)
       }
 
       this.ws.onmessage = (event) => {
@@ -63,14 +82,21 @@ class WebSocketManager {
         console.warn('⚠️ WebSocket error:', error.type)
       }
 
-      this.ws.onclose = () => {
+      this.ws.onclose = (event) => {
         if (this.isCleaningUp) return
+        
+        console.log('❌ WebSocket closed', { 
+          code: event.code, 
+          reason: event.reason, 
+          wasClean: event.wasClean 
+        })
         
         this.isConnected = false
         this.notify()
         this.ws = null
         
         if (!this.reconnectTimeout && !this.isCleaningUp) {
+          console.log('⏳ Scheduling reconnect in 5 seconds...')
           this.reconnectTimeout = setTimeout(() => {
             this.reconnectTimeout = null
             this.connect()
@@ -153,14 +179,28 @@ class WebSocketManager {
   }
 
   subscribeUser(userId) {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+    if (!userId) {
+      console.log('⚠️ subscribeUser: No userId provided')
       return
     }
 
-    this.ws.send(JSON.stringify({
-      type: 'subscribe_user',
-      userId
-    }))
+    // userId'yi sakla (WebSocket reconnect olduğunda tekrar subscribe olmak için)
+    this.pendingUserSubscription = userId
+
+    // Eğer WebSocket açıksa hemen gönder
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      console.log('📡 subscribeUser: Sending subscription immediately', { userId, type: typeof userId })
+      this.ws.send(JSON.stringify({
+        type: 'subscribe_user',
+        userId
+      }))
+    } else {
+      console.log('⏳ subscribeUser: WebSocket not ready yet, subscription will be sent when connected', { 
+        ws: !!this.ws, 
+        readyState: this.ws?.readyState,
+        userId 
+      })
+    }
   }
 
   unsubscribeFromMarket(marketId) {
@@ -217,7 +257,8 @@ export function useWebSocket() {
     subscribeToMarket: (marketId, userId) => wsManager.subscribeToMarketInternal(marketId, userId),
     subscribeUser: (userId) => wsManager.subscribeUser(userId),
     unsubscribeFromMarket: (marketId) => wsManager.unsubscribeFromMarket(marketId),
-    onMessage: (marketId, handler) => wsManager.onMessage(marketId, handler)
+    onMessage: (marketId, handler) => wsManager.onMessage(marketId, handler),
+    ws: wsManager // Manager'ı da expose et
   }
 }
 
@@ -336,27 +377,42 @@ export function useBalanceUpdates(onBalanceUpdate) {
   }, [onBalanceUpdate])
 
   useEffect(() => {
-    if (!isConnected || !callbackRef.current) return
+    if (!isConnected) return
+
+    // Her seferinde kontrol et
+    if (!onBalanceUpdate || typeof onBalanceUpdate !== 'function') {
+      console.warn('⚠️ useBalanceUpdates: Invalid callback', typeof onBalanceUpdate)
+      return
+    }
+
+    console.log('🔧 useBalanceUpdates: Setting up listener')
 
     cleanupRef.current = onMessage('__balance_updates__', (data) => {
       if (import.meta.env.DEV) {
         console.log('📊 useBalanceUpdates - Received message:', data)
       }
-      if (data.type === 'balance_updated' && callbackRef.current) {
-        if (import.meta.env.DEV) {
-          console.log('💰 Calling onBalanceUpdate with:', data.data.balance)
+      
+      if (data.type === 'balance_updated') {
+        const callback = callbackRef.current
+        if (callback && typeof callback === 'function') {
+          if (import.meta.env.DEV) {
+            console.log('💰 Calling onBalanceUpdate with:', data.data.balance)
+          }
+          callback(data.data.balance)
+        } else {
+          console.warn('⚠️ callbackRef.current is not a function:', typeof callback)
         }
-        callbackRef.current(data.data.balance)
       }
     })
 
     return () => {
+      console.log('🔧 useBalanceUpdates: Cleaning up listener')
       if (cleanupRef.current) {
         cleanupRef.current()
         cleanupRef.current = null
       }
     }
-  }, [isConnected])
+  }, [isConnected, onMessage, onBalanceUpdate])
 
   return {
     isConnected

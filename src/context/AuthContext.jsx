@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import apiClient from '../api/client'
 import { useWebSocket, useBalanceUpdates } from '../hooks/useWebSocket'
 
@@ -9,30 +9,28 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true)
   
   // WebSocket hook'unu al
-  const ws = useWebSocket()
+  const { isConnected, subscribeUser } = useWebSocket()
 
   // Bakiye güncellemelerini dinle
-  useBalanceUpdates((newBalance) => {
-    if (import.meta.env.DEV) {
-      console.log('🔄 AuthContext - WebSocket bakiye güncellendi:', newBalance, 'Current user:', user?.id)
-    }
-    if (user) {
-      setUser(prevUser => {
-        const updated = {
-          ...prevUser,
-          balance: newBalance
-        }
-        if (import.meta.env.DEV) {
-          console.log('👤 User state güncellendi:', { oldBalance: prevUser.balance, newBalance })
-        }
-        return updated
-      })
-    } else {
-      if (import.meta.env.DEV) {
+  const handleBalanceUpdate = useCallback((newBalance) => {
+    console.log('🔄 AuthContext - WebSocket bakiye güncellendi:', newBalance)
+    
+    setUser(prevUser => {
+      if (!prevUser) {
         console.log('⚠️ User yok, bakiye güncellemesi atlanıyor')
+        return prevUser
       }
-    }
-  })
+      
+      const updated = {
+        ...prevUser,
+        balance: newBalance
+      }
+      console.log('👤 User state güncellendi:', { oldBalance: prevUser.balance, newBalance })
+      return updated
+    })
+  }, []) // Dependency yok - sadece setUser kullanıyoruz
+  
+  useBalanceUpdates(handleBalanceUpdate)
 
   // Check if user is logged in on mount
   useEffect(() => {
@@ -55,13 +53,18 @@ export function AuthProvider({ children }) {
 
   // Kullanıcı giriş yaptığında WebSocket'e subscribe ol
   useEffect(() => {
-    if (user && ws.isConnected) {
-      if (import.meta.env.DEV) {
-        console.log('👤 WebSocket user subscription:', user.id)
-      }
-      ws.subscribeUser(user.id)
+    console.log('🔍 AuthContext useEffect triggered', { 
+      hasUser: !!user, 
+      userId: user?.id,
+      isConnected, 
+      hasSubscribeUser: typeof subscribeUser === 'function'
+    })
+    
+    if (user && isConnected) {
+      console.log('👤 Calling subscribeUser with userId:', user.id)
+      subscribeUser(user.id)
     }
-  }, [user, ws.isConnected])
+  }, [user, isConnected, subscribeUser])
 
   const login = async (email, password) => {
     const response = await apiClient.post('/auth/login', { email, password })
@@ -74,11 +77,11 @@ export function AuthProvider({ children }) {
       setUser(userData)
       
       // Kullanıcı giriş yaptıktan sonra WebSocket'e subscribe ol
-      if (ws.isConnected) {
+      if (isConnected) {
         if (import.meta.env.DEV) {
           console.log('👤 Login sonrası WebSocket user subscription:', userData.id)
         }
-        ws.subscribeUser(userData.id)
+        subscribeUser(userData.id)
       }
     } catch (error) {
       console.error('Failed to fetch user after login:', error)
