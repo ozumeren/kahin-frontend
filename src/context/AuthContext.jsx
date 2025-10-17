@@ -13,18 +13,24 @@ export function AuthProvider({ children }) {
 
   // Bakiye güncellemelerini dinle
   useBalanceUpdates((newBalance) => {
-    console.log('🔄 AuthContext - WebSocket bakiye güncellendi:', newBalance, 'Current user:', user?.id)
+    if (import.meta.env.DEV) {
+      console.log('🔄 AuthContext - WebSocket bakiye güncellendi:', newBalance, 'Current user:', user?.id)
+    }
     if (user) {
       setUser(prevUser => {
         const updated = {
           ...prevUser,
           balance: newBalance
         }
-        console.log('👤 User state güncellendi:', { oldBalance: prevUser.balance, newBalance })
+        if (import.meta.env.DEV) {
+          console.log('👤 User state güncellendi:', { oldBalance: prevUser.balance, newBalance })
+        }
         return updated
       })
     } else {
-      console.log('⚠️ User yok, bakiye güncellemesi atlanıyor')
+      if (import.meta.env.DEV) {
+        console.log('⚠️ User yok, bakiye güncellemesi atlanıyor')
+      }
     }
   })
 
@@ -50,7 +56,9 @@ export function AuthProvider({ children }) {
   // Kullanıcı giriş yaptığında WebSocket'e subscribe ol
   useEffect(() => {
     if (user && ws.isConnected) {
-      console.log('👤 WebSocket user subscription:', user.id)
+      if (import.meta.env.DEV) {
+        console.log('👤 WebSocket user subscription:', user.id)
+      }
       ws.subscribeUser(user.id)
     }
   }, [user, ws.isConnected])
@@ -67,7 +75,9 @@ export function AuthProvider({ children }) {
       
       // Kullanıcı giriş yaptıktan sonra WebSocket'e subscribe ol
       if (ws.isConnected) {
-        console.log('👤 Login sonrası WebSocket user subscription:', userData.id)
+        if (import.meta.env.DEV) {
+          console.log('👤 Login sonrası WebSocket user subscription:', userData.id)
+        }
         ws.subscribeUser(userData.id)
       }
     } catch (error) {

@@ -40,6 +40,20 @@ export function useOrderBook(marketId) {
     enabled: !!marketId,
     staleTime: 10000, // 10 saniye - WebSocket varsa daha güncel data gelir
     refetchInterval: 15000, // 15 saniyede bir otomatik refresh (WebSocket olmadığında)
+    retry: (failureCount, error) => {
+      // 400/404 hatalarında tekrar deneme
+      if (error?.response?.status === 400 || error?.response?.status === 404) {
+        return failureCount < 2; // 2 kere daha dene
+      }
+      // Diğer hatalar için normal retry logic
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 5000), // Exponential backoff
+    onError: (error) => {
+      if (import.meta.env.DEV) {
+        console.error('OrderBook fetch hatası:', error.response?.status, error.response?.data?.message);
+      }
+    }
   });
 }
 

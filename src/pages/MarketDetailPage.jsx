@@ -36,7 +36,6 @@ const MarketDetailPage = () => {
   
   // WebSocket'ten yeni trade geldiğinde trades listesini güncelle
   const handleNewTrade = useCallback((newTrade) => {
-    console.log('🆕 Yeni trade alındı:', newTrade);
     // Trades listesini invalidate et, böylece yeniden fetch edilir
     queryClient.invalidateQueries({ queryKey: ['trades', marketId] });
   }, [queryClient, marketId]);
@@ -77,7 +76,6 @@ const MarketDetailPage = () => {
 
   const handleOpenBuyModal = (outcome, type = 'BUY') => {
     if (!user) {
-      createOrderMutation.reset(); // Önceki hataları temizle
       navigate('/login');
       return;
     }
@@ -154,7 +152,8 @@ const MarketDetailPage = () => {
     );
   };
 
-  if (marketLoading || orderBookLoading || tradesLoading) {
+  // Sadece market loading'de bekle, diğerleri progressive loading yapsın
+  if (marketLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-brand-600 border-t-transparent"></div>
@@ -186,24 +185,10 @@ const MarketDetailPage = () => {
   const noMidPrice = parseFloat(orderBook?.no?.midPrice) || 0.50;
 
   // Kullanıcının bu marketteki hisse miktarını bul
-  console.log('🔍 DEBUG - Portfolio data:', portfolio);
-  console.log('🔍 DEBUG - All positions:', portfolio?.positions);
-  console.log('🔍 DEBUG - Current marketId:', marketId, 'Type:', typeof marketId);
-  console.log('🔍 DEBUG - User:', user);
-  
   const yesPosition = portfolio?.positions?.find(p => {
     // marketId UUID string olabilir, direkt karşılaştır (parseInt kullanma!)
     const marketIdMatch = String(p.marketId) === String(marketId);
     const outcomeMatch = p.outcome === 'YES';
-    console.log(`🔍 Checking position:`, {
-      position: p,
-      pMarketId: p.marketId,
-      currentMarketId: marketId,
-      marketIdMatch,
-      outcomeMatch,
-      pOutcome: p.outcome,
-      pQuantity: p.quantity
-    });
     return marketIdMatch && outcomeMatch;
   });
   
@@ -211,14 +196,8 @@ const MarketDetailPage = () => {
     return String(p.marketId) === String(marketId) && p.outcome === 'NO';
   });
   
-  console.log('✅ Found YES Position:', yesPosition);
-  console.log('✅ Found NO Position:', noPosition);
-  
   const yesShares = yesPosition ? parseInt(yesPosition.quantity) : 0;
   const noShares = noPosition ? parseInt(noPosition.quantity) : 0;
-  
-  console.log('� Final YES Shares:', yesShares, 'Type:', typeof yesShares);
-  console.log('� Final NO Shares:', noShares, 'Type:', typeof noShares);
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -580,7 +559,7 @@ const MarketDetailPage = () => {
           <div className="bg-white rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold mb-4 flex items-center justify-between">
               <span>EVET Emir Defteri</span>
-              {wsConnected && <RefreshCw className="w-4 h-4 animate-spin text-green-600" />}
+              {(orderBookLoading || wsConnected) && <RefreshCw className="w-4 h-4 animate-spin text-green-600" />}
             </h3>
             
             {/* ALIŞ EMİRLERİ (BIDS) */}
@@ -602,7 +581,10 @@ const MarketDetailPage = () => {
                     <span className="text-right text-gray-600">₺{bid.total}</span>
                   </div>
                 ))}
-                {(!orderBook?.yes?.bids || orderBook.yes.bids.length === 0) && (
+                {orderBookLoading && (
+                  <div className="text-center text-gray-400 py-2 text-xs">Yükleniyor...</div>
+                )}
+                {!orderBookLoading && (!orderBook?.yes?.bids || orderBook.yes.bids.length === 0) && (
                   <div className="text-center text-gray-400 py-2 text-xs">Emir yok</div>
                 )}
               </div>
@@ -638,7 +620,7 @@ const MarketDetailPage = () => {
           <div className="bg-white rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold mb-4 flex items-center justify-between">
               <span>HAYIR Emir Defteri</span>
-              {wsConnected && <RefreshCw className="w-4 h-4 animate-spin text-red-600" />}
+              {(orderBookLoading || wsConnected) && <RefreshCw className="w-4 h-4 animate-spin text-red-600" />}
             </h3>
             
             {/* ALIŞ EMİRLERİ (BIDS) */}

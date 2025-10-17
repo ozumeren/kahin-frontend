@@ -339,9 +339,13 @@ export function useBalanceUpdates(onBalanceUpdate) {
     if (!isConnected || !callbackRef.current) return
 
     cleanupRef.current = onMessage('__balance_updates__', (data) => {
-      console.log('📊 useBalanceUpdates - Received message:', data)
+      if (import.meta.env.DEV) {
+        console.log('📊 useBalanceUpdates - Received message:', data)
+      }
       if (data.type === 'balance_updated' && callbackRef.current) {
-        console.log('💰 Calling onBalanceUpdate with:', data.data.balance)
+        if (import.meta.env.DEV) {
+          console.log('💰 Calling onBalanceUpdate with:', data.data.balance)
+        }
         callbackRef.current(data.data.balance)
       }
     })
