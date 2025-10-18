@@ -46,22 +46,31 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <>
-                <div className="flex items-center gap-2 px-4 py-2 bg-gray-100 rounded-lg">
-                  <User className="w-4 h-4 text-gray-600" />
-                  <span className="text-sm font-medium">{user.username}</span>
-                  <span className="text-xs text-gray-500">
-                    ₺{parseFloat(user.balance || 0).toFixed(2)}
-                  </span>
+                <div className="flex items-center gap-3 px-4 py-2 bg-gray-100 rounded-lg">
+                  <User className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                  <div className="flex flex-col min-w-0">
+                    <span className="text-sm font-medium truncate">{user.username}</span>
+                    <span className="text-xs text-gray-500 whitespace-nowrap">
+                      ₺{parseFloat(user.balance || 0).toFixed(2)}
+                    </span>
+                  </div>
                 </div>
-                <button onClick={handleLogout} className="btn btn-ghost">
+                <button 
+                  onClick={handleLogout} 
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-transparent text-gray-700 hover:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                >
                   <LogOut className="w-4 h-4" />
-                  Çıkış
+                  <span>Çıkış</span>
                 </button>
               </>
             ) : (
               <>
-                <Link to="/login" className="btn btn-ghost">Giriş</Link>
-                <Link to="/register" className="btn btn-primary">Kayıt Ol</Link>
+                <Link to="/login" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-transparent text-gray-700 hover:bg-gray-100 transition-all duration-200">
+                  Giriş
+                </Link>
+                <Link to="/register" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-brand-600 text-white hover:bg-brand-700 shadow-sm hover:shadow-md transition-all duration-200">
+                  Kayıt Ol
+                </Link>
               </>
             )}
           </div>

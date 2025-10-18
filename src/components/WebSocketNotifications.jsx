@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { useWebSocket, useNewTrades, useMyOrderEvents, useBalanceUpdates } from '../hooks/useWebSocket'
+import { useWebSocket, useNewTrades, useMyOrderEvents } from '../hooks/useWebSocket'
 import { useAuth } from '../context/AuthContext'
 
 /**
@@ -13,7 +13,7 @@ import { useAuth } from '../context/AuthContext'
  * - balance_updated: Kullanıcının bakiyesi güncellendiğinde
  */
 export default function WebSocketNotifications({ marketId = null }) {
-  const { user, setUser } = useAuth()
+  const { user } = useAuth()
   const ws = useWebSocket()
   const [recentTrades, setRecentTrades] = useState([])
 
@@ -77,21 +77,8 @@ export default function WebSocketNotifications({ marketId = null }) {
     }
   )
 
-  // Bakiye güncelleme callback'i
-  const handleBalanceUpdate = useCallback((newBalance) => {
-    // AuthContext'teki user'ı güncelle
-    setUser(prevUser => {
-      if (!prevUser) return prevUser
-      
-      return {
-        ...prevUser,
-        balance: newBalance
-      }
-    })
-  }, [setUser])
-
-  // Bakiye güncellemelerini dinle (ws instance'ını geç)
-  useBalanceUpdates(ws, handleBalanceUpdate)
+  // ❌ Bakiye güncellemesi AuthContext'te yapılıyor, buradan kaldırıldı
+  // AuthContext.jsx zaten useBalanceUpdates kullanıyor
 
   // Bu component görsel bir şey render etmez, sadece bildirimleri yönetir
   return null

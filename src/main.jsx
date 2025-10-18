@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast'  // ✅ Import ekle
 import { AuthProvider } from './context/AuthContext'
 import App from './App'
 import './index.css'
+import './styles/chart-animations.css'
 
 const queryClient = new QueryClient({
   defaultOptions: {

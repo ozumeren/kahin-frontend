@@ -96,26 +96,68 @@ const MarketDetailPage = () => {
   const probabilities = useMemo(() => {
     const orderBook = liveOrderBook || initialOrderBook;
     
-    if (orderBook?.yes_orders && orderBook.yes_orders.length > 0) {
-      const yesPrice = parseFloat(orderBook.yes_orders[0].price);
-      return { yes: yesPrice, no: 100 - yesPrice };
+    // Önce emir defterinden orta noktayı hesapla (spread'in ortası)
+    if (orderBook?.yes?.bids || orderBook?.yes?.asks || orderBook?.no?.bids || orderBook?.no?.asks) {
+      const prices = [];
+      
+      // EVET tarafı - en iyi alış ve satış
+      if (orderBook.yes?.bids && orderBook.yes.bids.length > 0) {
+        prices.push(parseFloat(orderBook.yes.bids[0].price));
+      }
+      if (orderBook.yes?.asks && orderBook.yes.asks.length > 0) {
+        prices.push(parseFloat(orderBook.yes.asks[0].price));
+      }
+      
+      // HAYIR tarafı - fiyatı EVET'e çevir (100 - hayır_fiyatı)
+      if (orderBook.no?.bids && orderBook.no.bids.length > 0) {
+        const noPrice = parseFloat(orderBook.no.bids[0].price);
+        prices.push(100 - noPrice);
+      }
+      if (orderBook.no?.asks && orderBook.no.asks.length > 0) {
+        const noPrice = parseFloat(orderBook.no.asks[0].price);
+        prices.push(100 - noPrice);
+      }
+      
+      // Tüm fiyatların ortalamasını al
+      if (prices.length > 0) {
+        const avgPrice = prices.reduce((sum, p) => sum + p, 0) / prices.length;
+        return { 
+          yes: Math.round(avgPrice * 10) / 10, 
+          no: Math.round((100 - avgPrice) * 10) / 10 
+        };
+      }
     }
     
+    // Emir yoksa son işlemlere bak
     if (chartData.length > 0) {
-      const lastData = chartData[chartData.length - 1];
-      const lastPrice = lastData.yes || lastData.no || 50;
-      return {
-        yes: lastData.yes ? lastPrice : 100 - lastPrice,
-        no: lastData.no ? lastPrice : 100 - lastPrice
-      };
+      const recentTrades = chartData.slice(-10); // Son 10 işlem
+      const yesTrades = recentTrades.filter(t => t.yes !== null);
+      const noTrades = recentTrades.filter(t => t.no !== null);
+      
+      if (yesTrades.length > 0 || noTrades.length > 0) {
+        const prices = [];
+        
+        yesTrades.forEach(t => prices.push(t.yes));
+        noTrades.forEach(t => prices.push(100 - t.no));
+        
+        const avgPrice = prices.reduce((sum, p) => sum + p, 0) / prices.length;
+        return { 
+          yes: Math.round(avgPrice * 10) / 10, 
+          no: Math.round((100 - avgPrice) * 10) / 10 
+        };
+      }
     }
     
+    // Hiç veri yoksa 50-50
     return { yes: 50, no: 50 };
   }, [liveOrderBook, initialOrderBook, chartData]);
 
   // Mevcut order book'u al (WebSocket veya initial)
   const orderBook = useMemo(() => {
-    return liveOrderBook || initialOrderBook || { yes_orders: [], no_orders: [] };
+    return liveOrderBook || initialOrderBook || { 
+      yes: { bids: [], asks: [] }, 
+      no: { bids: [], asks: [] } 
+    };
   }, [liveOrderBook, initialOrderBook]);
 
   if (marketLoading) {
@@ -147,8 +189,8 @@ const MarketDetailPage = () => {
     );
   }
 
-  const yesBestBid = orderBook.yes_orders?.[0];
-  const noBestBid = orderBook.no_orders?.[0];
+  const yesBestBid = orderBook.yes?.bids?.[0];
+  const noBestBid = orderBook.no?.bids?.[0];
 
   const handleCreateOrder = async (e) => {
     e.preventDefault();
@@ -451,8 +493,9 @@ const MarketDetailPage = () => {
 
         {/* Trading Panels */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+          {/* EVET Panel */}
           <div className="bg-gradient-to-br from-green-50 to-green-100 rounded-xl shadow-md p-6 border-2 border-green-200">
-            <h3 className="text-lg font-bold mb-3 text-green-800">EVET</h3>
+            <h3 className="text-lg font-bold mb-4 text-green-800">EVET</h3>
             
             <div className="mb-4 space-y-2">
               {yesBestBid && (
@@ -467,7 +510,7 @@ const MarketDetailPage = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 mb-6">
               <button
                 onClick={() => {
                   setSelectedOutcome(true);
@@ -491,10 +534,48 @@ const MarketDetailPage = () => {
                 EVET Sat
               </button>
             </div>
+
+            {/* EVET Order Book */}
+            <div className="pt-4 border-t border-green-300">
+              <h4 className="text-sm font-bold text-green-800 mb-3">Emir Defteri</h4>
+              
+              <div className="space-y-3">
+                <div>
+                  <h5 className="text-xs font-semibold text-green-700 mb-1.5">Alış Emirleri (Bids)</h5>
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    {(orderBook.yes?.bids || []).slice(0, 5).map((order, idx) => (
+                      <div key={idx} className="flex justify-between text-xs py-1 px-2 bg-white/60 rounded">
+                        <span className="font-medium text-green-800">₺{parseFloat(order.price).toFixed(2)}</span>
+                        <span className="text-gray-600">{order.quantity}</span>
+                      </div>
+                    ))}
+                    {(!orderBook.yes?.bids || orderBook.yes.bids.length === 0) && (
+                      <p className="text-xs text-gray-500 italic py-2">Emir yok</p>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h5 className="text-xs font-semibold text-green-700 mb-1.5">Satış Emirleri (Asks)</h5>
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    {(orderBook.yes?.asks || []).slice(0, 5).map((order, idx) => (
+                      <div key={idx} className="flex justify-between text-xs py-1 px-2 bg-white/60 rounded">
+                        <span className="font-medium text-green-800">₺{parseFloat(order.price).toFixed(2)}</span>
+                        <span className="text-gray-600">{order.quantity}</span>
+                      </div>
+                    ))}
+                    {(!orderBook.yes?.asks || orderBook.yes.asks.length === 0) && (
+                      <p className="text-xs text-gray-500 italic py-2">Emir yok</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
 
+          {/* HAYIR Panel */}
           <div className="bg-gradient-to-br from-red-50 to-red-100 rounded-xl shadow-md p-6 border-2 border-red-200">
-            <h3 className="text-lg font-bold mb-3 text-red-800">HAYIR</h3>
+            <h3 className="text-lg font-bold mb-4 text-red-800">HAYIR</h3>
             
             <div className="mb-4 space-y-2">
               {noBestBid && (
@@ -509,7 +590,7 @@ const MarketDetailPage = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 mb-6">
               <button
                 onClick={() => {
                   setSelectedOutcome(false);
@@ -533,48 +614,48 @@ const MarketDetailPage = () => {
                 HAYIR Sat
               </button>
             </div>
-          </div>
-        </div>
 
-        {/* Order Book & Recent Trades */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Order Book */}
-          <div className="bg-white rounded-xl shadow-md p-6">
-            <h3 className="text-lg font-bold mb-4">Emir Defteri</h3>
-            <div className="space-y-4">
-              <div>
-                <h4 className="text-sm font-semibold text-green-700 mb-2">EVET Emirleri</h4>
-                <div className="space-y-1">
-                  {(orderBook.yes_orders || []).slice(0, 5).map((order, idx) => (
-                    <div key={idx} className="flex justify-between text-sm py-1 px-2 bg-green-50 rounded">
-                      <span className="font-medium">₺{parseFloat(order.price).toFixed(2)}</span>
-                      <span className="text-gray-600">{order.quantity} adet</span>
-                    </div>
-                  ))}
-                  {(!orderBook.yes_orders || orderBook.yes_orders.length === 0) && (
-                    <p className="text-sm text-gray-500 italic">Emir yok</p>
-                  )}
+            {/* HAYIR Order Book */}
+            <div className="pt-4 border-t border-red-300">
+              <h4 className="text-sm font-bold text-red-800 mb-3">Emir Defteri</h4>
+              
+              <div className="space-y-3">
+                <div>
+                  <h5 className="text-xs font-semibold text-red-700 mb-1.5">Alış Emirleri (Bids)</h5>
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    {(orderBook.no?.bids || []).slice(0, 5).map((order, idx) => (
+                      <div key={idx} className="flex justify-between text-xs py-1 px-2 bg-white/60 rounded">
+                        <span className="font-medium text-red-800">₺{parseFloat(order.price).toFixed(2)}</span>
+                        <span className="text-gray-600">{order.quantity}</span>
+                      </div>
+                    ))}
+                    {(!orderBook.no?.bids || orderBook.no.bids.length === 0) && (
+                      <p className="text-xs text-gray-500 italic py-2">Emir yok</p>
+                    )}
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <h4 className="text-sm font-semibold text-red-700 mb-2">HAYIR Emirleri</h4>
-                <div className="space-y-1">
-                  {(orderBook.no_orders || []).slice(0, 5).map((order, idx) => (
-                    <div key={idx} className="flex justify-between text-sm py-1 px-2 bg-red-50 rounded">
-                      <span className="font-medium">₺{parseFloat(order.price).toFixed(2)}</span>
-                      <span className="text-gray-600">{order.quantity} adet</span>
-                    </div>
-                  ))}
-                  {(!orderBook.no_orders || orderBook.no_orders.length === 0) && (
-                    <p className="text-sm text-gray-500 italic">Emir yok</p>
-                  )}
+                <div>
+                  <h5 className="text-xs font-semibold text-red-700 mb-1.5">Satış Emirleri (Asks)</h5>
+                  <div className="space-y-1 max-h-32 overflow-y-auto">
+                    {(orderBook.no?.asks || []).slice(0, 5).map((order, idx) => (
+                      <div key={idx} className="flex justify-between text-xs py-1 px-2 bg-white/60 rounded">
+                        <span className="font-medium text-red-800">₺{parseFloat(order.price).toFixed(2)}</span>
+                        <span className="text-gray-600">{order.quantity}</span>
+                      </div>
+                    ))}
+                    {(!orderBook.no?.asks || orderBook.no.asks.length === 0) && (
+                      <p className="text-xs text-gray-500 italic py-2">Emir yok</p>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Recent Trades */}
+        {/* Recent Trades */}
+        <div className="grid grid-cols-1 gap-4">
           <div className="bg-white rounded-xl shadow-md p-6">
             <h3 className="text-lg font-bold mb-4">Son İşlemler</h3>
             <div className="space-y-2">
