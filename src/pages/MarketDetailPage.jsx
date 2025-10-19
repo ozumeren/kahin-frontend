@@ -45,122 +45,120 @@ const MarketDetailPage = () => {
   
   useNewTrades(marketId, handleNewTrade);
 
-// Prepare chart data from trades with timeframe filtering
-// Prepare chart data from trades with timeframe filtering
-const chartData = useMemo(() => {
-  if (!trades || trades.length === 0) return [];
+  // Prepare chart data from trades with timeframe filtering
+  const chartData = useMemo(() => {
+    if (!trades || trades.length === 0) return [];
 
-  const sortedTrades = [...trades].sort((a, b) => 
-    new Date(a.createdAt) - new Date(b.createdAt)
-  );
-
-  let filteredTrades = sortedTrades;
-  const now = new Date();
-  
-  if (chartTimeframe !== 'all') {
-    const cutoffTime = new Date(now);
-    
-    switch (chartTimeframe) {
-      case '1h':
-        cutoffTime.setHours(now.getHours() - 1);
-        break;
-      case '6h':
-        cutoffTime.setHours(now.getHours() - 6);
-        break;
-      case '24h':
-        cutoffTime.setHours(now.getHours() - 24);
-        break;
-      case '7d':
-        cutoffTime.setDate(now.getDate() - 7);
-        break;
-      default:
-        break;
-    }
-    
-    filteredTrades = sortedTrades.filter(trade => 
-      new Date(trade.createdAt) >= cutoffTime
+    const sortedTrades = [...trades].sort((a, b) => 
+      new Date(a.createdAt) - new Date(b.createdAt)
     );
-  }
 
-  // ✅ DÜZELTME: Backend'den 0-1 arası geliyorsa 0-100'e çevir
-  return filteredTrades.map((trade) => {
-    let tradePrice = parseFloat(trade.price);
+    let filteredTrades = sortedTrades;
+    const now = new Date();
     
-    // Eğer fiyat 0-1 arasındaysa (0.499 gibi), 100 ile çarp
-    if (tradePrice <= 1) {
-      tradePrice = tradePrice * 100;
+    if (chartTimeframe !== 'all') {
+      const cutoffTime = new Date(now);
+      
+      switch (chartTimeframe) {
+        case '1h':
+          cutoffTime.setHours(now.getHours() - 1);
+          break;
+        case '6h':
+          cutoffTime.setHours(now.getHours() - 6);
+          break;
+        case '24h':
+          cutoffTime.setHours(now.getHours() - 24);
+          break;
+        case '7d':
+          cutoffTime.setDate(now.getDate() - 7);
+          break;
+        default:
+          break;
+      }
+      
+      filteredTrades = sortedTrades.filter(trade => 
+        new Date(trade.createdAt) >= cutoffTime
+      );
     }
-    
-    // EVET olasılığı
-    const yesProbability = trade.outcome ? tradePrice : (100 - tradePrice);
-    const noProbability = 100 - yesProbability;
-    
-    return {
-      time: new Date(trade.createdAt).toLocaleTimeString('tr-TR', { 
-        hour: '2-digit', 
-        minute: '2-digit' 
-      }),
-      timestamp: new Date(trade.createdAt).getTime(),
-      yes: yesProbability,
-      no: noProbability,
-    };
-  });
-}, [trades, chartTimeframe]);
+
+    // Trade'lerden chart data oluştur
+    const tradeData = filteredTrades.map((trade) => {
+      let tradePrice = parseFloat(trade.price);
+      
+      // Eğer fiyat 0-1 arasındaysa (0.499 gibi), 100 ile çarp
+      if (tradePrice <= 1) {
+        tradePrice = tradePrice * 100;
+      }
+      
+      // EVET olasılığı
+      const yesProbability = trade.outcome ? tradePrice : (100 - tradePrice);
+      const noProbability = 100 - yesProbability;
+      
+      return {
+        time: new Date(trade.createdAt).toLocaleTimeString('tr-TR', { 
+          hour: '2-digit', 
+          minute: '2-digit' 
+        }),
+        timestamp: new Date(trade.createdAt).getTime(),
+        yes: yesProbability,
+        no: noProbability,
+      };
+    });
+
+    return tradeData;
+  }, [trades, chartTimeframe]);
 
   // Calculate probabilities from order book or latest trades
-  
-  // Calculate probabilities from order book or latest trades
-const probabilities = useMemo(() => {
-  const orderBook = liveOrderBook || initialOrderBook;
-  
-  if (orderBook?.yes?.bids || orderBook?.yes?.asks || orderBook?.no?.bids || orderBook?.no?.asks) {
-    const prices = [];
+  const probabilities = useMemo(() => {
+    const orderBook = liveOrderBook || initialOrderBook;
     
-    // EVET tarafı
-    if (orderBook.yes?.bids && orderBook.yes.bids.length > 0) {
-      let price = parseFloat(orderBook.yes.bids[0].price);
-      // 0-1 arasıysa 100 ile çarp
-      if (price <= 1) price *= 100;
-      prices.push(price);
-    }
-    if (orderBook.yes?.asks && orderBook.yes.asks.length > 0) {
-      let price = parseFloat(orderBook.yes.asks[0].price);
-      if (price <= 1) price *= 100;
-      prices.push(price);
-    }
-    
-    // HAYIR tarafı
-    if (orderBook.no?.bids && orderBook.no.bids.length > 0) {
-      let noPrice = parseFloat(orderBook.no.bids[0].price);
-      if (noPrice <= 1) noPrice *= 100;
-      prices.push(100 - noPrice);
-    }
-    if (orderBook.no?.asks && orderBook.no.asks.length > 0) {
-      let noPrice = parseFloat(orderBook.no.asks[0].price);
-      if (noPrice <= 1) noPrice *= 100;
-      prices.push(100 - noPrice);
-    }
-    
-    if (prices.length > 0) {
-      const avgPrice = prices.reduce((sum, p) => sum + p, 0) / prices.length;
-      return { 
-        yes: Math.round(avgPrice * 10) / 10, 
-        no: Math.round((100 - avgPrice) * 10) / 10 
+    if (orderBook?.yes?.bids || orderBook?.yes?.asks || orderBook?.no?.bids || orderBook?.no?.asks) {
+      const prices = [];
+      
+      // EVET tarafı
+      if (orderBook.yes?.bids && orderBook.yes.bids.length > 0) {
+        let price = parseFloat(orderBook.yes.bids[0].price);
+        if (price <= 1) price *= 100;
+        prices.push(price);
+      }
+      if (orderBook.yes?.asks && orderBook.yes.asks.length > 0) {
+        let price = parseFloat(orderBook.yes.asks[0].price);
+        if (price <= 1) price *= 100;
+        prices.push(price);
+      }
+      
+      // HAYIR tarafı
+      if (orderBook.no?.bids && orderBook.no.bids.length > 0) {
+        let noPrice = parseFloat(orderBook.no.bids[0].price);
+        if (noPrice <= 1) noPrice *= 100;
+        prices.push(100 - noPrice);
+      }
+      if (orderBook.no?.asks && orderBook.no.asks.length > 0) {
+        let noPrice = parseFloat(orderBook.no.asks[0].price);
+        if (noPrice <= 1) noPrice *= 100;
+        prices.push(100 - noPrice);
+      }
+      
+      if (prices.length > 0) {
+        const avgPrice = prices.reduce((sum, p) => sum + p, 0) / prices.length;
+        return { 
+          yes: Math.round(avgPrice * 10) / 10, 
+          no: Math.round((100 - avgPrice) * 10) / 10 
         };
+      }
     }
-  }
-  
-  // chartData'dan al
-  if (chartData.length > 0) {
-    const lastTrade = chartData[chartData.length - 1];
-    return {
-      yes: Math.round(lastTrade.yes * 10) / 10,
-      no: Math.round(lastTrade.no * 10) / 10
-    };
-  }
-  
-  return { yes: 50, no: 50 };
-}, [liveOrderBook, initialOrderBook, chartData]);
+    
+    // chartData'dan al
+    if (chartData.length > 0) {
+      const lastTrade = chartData[chartData.length - 1];
+      return {
+        yes: Math.round(lastTrade.yes * 10) / 10,
+        no: Math.round(lastTrade.no * 10) / 10
+      };
+    }
+    
+    return { yes: 50, no: 50 };
+  }, [liveOrderBook, initialOrderBook, chartData]);
 
   // Mevcut order book'u al (WebSocket veya initial)
   const orderBook = useMemo(() => {
