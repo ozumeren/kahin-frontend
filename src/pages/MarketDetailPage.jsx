@@ -81,9 +81,15 @@ const chartData = useMemo(() => {
     );
   }
 
-  // ✅ DÜZELTME: Her trade için hem EVET hem HAYIR fiyatını hesapla
+  // ✅ DOĞRU: Fiyatlar olasılık yüzdesini temsil ediyor
+  // Her trade için EVET ve HAYIR olasılıklarını hesapla
   return filteredTrades.map((trade) => {
     const tradePrice = parseFloat(trade.price);
+    
+    // Trade outcome=true ise EVET için işlem, outcome=false ise HAYIR için işlem
+    // EVET olasılığı = EVET işlem fiyatı veya (100 - HAYIR işlem fiyatı)
+    const yesProbability = trade.outcome ? tradePrice : (100 - tradePrice);
+    const noProbability = 100 - yesProbability;
     
     return {
       time: new Date(trade.createdAt).toLocaleTimeString('tr-TR', { 
@@ -91,10 +97,8 @@ const chartData = useMemo(() => {
         minute: '2-digit' 
       }),
       timestamp: new Date(trade.createdAt).getTime(),
-      // EVET fiyatı: outcome=true ise direkt fiyat, false ise 100-fiyat
-      yes: trade.outcome ? tradePrice : (100 - tradePrice),
-      // HAYIR fiyatı: outcome=false ise direkt fiyat, true ise 100-fiyat
-      no: !trade.outcome ? tradePrice : (100 - tradePrice),
+      yes: yesProbability,  // EVET olasılığı (%)
+      no: noProbability,    // HAYIR olasılığı (%)
     };
   });
 }, [trades, chartTimeframe]);

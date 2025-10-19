@@ -77,14 +77,14 @@ const MarketChart = ({
   );
 
   const yScale = useMemo(
-    () =>
-      scaleLinear({
-        range: [innerHeight, 0],
-        domain: [0, 100],
-        nice: true,
-      }),
-    [innerHeight]
-  );
+  () =>
+    scaleLinear({
+      range: [innerHeight, 0],
+      domain: [0, 100],  // ✅ 0-100% aralığı
+      nice: true,
+    }),
+  [innerHeight]
+);
 
   // Event handlers
   const handleTooltip = useCallback(
@@ -266,15 +266,15 @@ const MarketChart = ({
             numTicks={5}
             stroke="#9ca3af"
             tickStroke="#9ca3af"
-            tickLabelProps={() => ({
+              tickLabelProps={() => ({
               fill: '#6b7280',
               fontSize: 11,
               textAnchor: 'end',
               dx: -4,
               fontFamily: 'system-ui, -apple-system, sans-serif',
-            })}
-            tickFormat={(value) => `₺${value}`}
-          />
+          })}
+  tickFormat={(value) => `${value}%`}  // ✅ ₺ yerine % göster
+/>
 
           {/* Hover overlay */}
           <Bar
@@ -300,30 +300,31 @@ const MarketChart = ({
                 strokeDasharray="4,4"
                 pointerEvents="none"
               />
-              {tooltipData.yes !== null && (
-                <circle
-                  cx={xScale(getDate(tooltipData))}
-                  cy={yScale(getYesPrice(tooltipData))}
-                  r={4}
-                  fill="#22c55e"
-                  stroke="white"
-                  strokeWidth={2}
-                  pointerEvents="none"
-                />
-              )}
-              {tooltipData.no !== null && (
-                <circle
-                  cx={xScale(getDate(tooltipData))}
-                  cy={yScale(getNoPrice(tooltipData))}
-                  r={4}
-                  fill="#ef4444"
-                  stroke="white"
-                  strokeWidth={2}
-                  pointerEvents="none"
-                />
-              )}
-            </>
+    {tooltipData.yes !== null && (
+      <circle
+        cx={tooltipLeft - margin.left}
+        cy={yScale(tooltipData.yes)}
+        r={4}
+        fill="#22c55e"
+        stroke="white"
+        strokeWidth={2}
+        pointerEvents="none"
+      />
+    )}
+    {tooltipData.no !== null && (
+      <circle
+        cx={tooltipLeft - margin.left}
+        cy={yScale(tooltipData.no)}
+        r={4}
+        fill="#ef4444"
+        stroke="white"
+        strokeWidth={2}
+        pointerEvents="none"
+      />
+        )}
+        </>
           )}
+
         </g>
       </svg>
 
