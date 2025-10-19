@@ -46,6 +46,7 @@ const MarketDetailPage = () => {
   useNewTrades(marketId, handleNewTrade);
 
 // Prepare chart data from trades with timeframe filtering
+// Prepare chart data from trades with timeframe filtering
 const chartData = useMemo(() => {
   if (!trades || trades.length === 0) return [];
 
@@ -81,13 +82,16 @@ const chartData = useMemo(() => {
     );
   }
 
-  // ✅ DOĞRU: Fiyatlar olasılık yüzdesini temsil ediyor
-  // Her trade için EVET ve HAYIR olasılıklarını hesapla
+  // ✅ DÜZELTME: Backend'den 0-1 arası geliyorsa 0-100'e çevir
   return filteredTrades.map((trade) => {
-    const tradePrice = parseFloat(trade.price);
+    let tradePrice = parseFloat(trade.price);
     
-    // Trade outcome=true ise EVET için işlem, outcome=false ise HAYIR için işlem
-    // EVET olasılığı = EVET işlem fiyatı veya (100 - HAYIR işlem fiyatı)
+    // Eğer fiyat 0-1 arasındaysa (0.499 gibi), 100 ile çarp
+    if (tradePrice <= 1) {
+      tradePrice = tradePrice * 100;
+    }
+    
+    // EVET olasılığı
     const yesProbability = trade.outcome ? tradePrice : (100 - tradePrice);
     const noProbability = 100 - yesProbability;
     
@@ -97,71 +101,66 @@ const chartData = useMemo(() => {
         minute: '2-digit' 
       }),
       timestamp: new Date(trade.createdAt).getTime(),
-      yes: yesProbability,  // EVET olasılığı (%)
-      no: noProbability,    // HAYIR olasılığı (%)
+      yes: yesProbability,
+      no: noProbability,
     };
   });
 }, [trades, chartTimeframe]);
 
   // Calculate probabilities from order book or latest trades
-  const probabilities = useMemo(() => {
-    const orderBook = liveOrderBook || initialOrderBook;
+  
+  // Calculate probabilities from order book or latest trades
+const probabilities = useMemo(() => {
+  const orderBook = liveOrderBook || initialOrderBook;
+  
+  if (orderBook?.yes?.bids || orderBook?.yes?.asks || orderBook?.no?.bids || orderBook?.no?.asks) {
+    const prices = [];
     
-    // Önce emir defterinden orta noktayı hesapla (spread'in ortası)
-    if (orderBook?.yes?.bids || orderBook?.yes?.asks || orderBook?.no?.bids || orderBook?.no?.asks) {
-      const prices = [];
-      
-      // EVET tarafı - en iyi alış ve satış
-      if (orderBook.yes?.bids && orderBook.yes.bids.length > 0) {
-        prices.push(parseFloat(orderBook.yes.bids[0].price));
-      }
-      if (orderBook.yes?.asks && orderBook.yes.asks.length > 0) {
-        prices.push(parseFloat(orderBook.yes.asks[0].price));
-      }
-      
-      // HAYIR tarafı - fiyatı EVET'e çevir (100 - hayır_fiyatı)
-      if (orderBook.no?.bids && orderBook.no.bids.length > 0) {
-        const noPrice = parseFloat(orderBook.no.bids[0].price);
-        prices.push(100 - noPrice);
-      }
-      if (orderBook.no?.asks && orderBook.no.asks.length > 0) {
-        const noPrice = parseFloat(orderBook.no.asks[0].price);
-        prices.push(100 - noPrice);
-      }
-      
-      // Tüm fiyatların ortalamasını al
-      if (prices.length > 0) {
-        const avgPrice = prices.reduce((sum, p) => sum + p, 0) / prices.length;
-        return { 
-          yes: Math.round(avgPrice * 10) / 10, 
-          no: Math.round((100 - avgPrice) * 10) / 10 
-        };
-      }
+    // EVET tarafı
+    if (orderBook.yes?.bids && orderBook.yes.bids.length > 0) {
+      let price = parseFloat(orderBook.yes.bids[0].price);
+      // 0-1 arasıysa 100 ile çarp
+      if (price <= 1) price *= 100;
+      prices.push(price);
+    }
+    if (orderBook.yes?.asks && orderBook.yes.asks.length > 0) {
+      let price = parseFloat(orderBook.yes.asks[0].price);
+      if (price <= 1) price *= 100;
+      prices.push(price);
     }
     
-    // Emir yoksa son işlemlere bak
-    if (chartData.length > 0) {
-      const recentTrades = chartData.slice(-10); // Son 10 işlem
-      const yesTrades = recentTrades.filter(t => t.yes !== null);
-      const noTrades = recentTrades.filter(t => t.no !== null);
-      
-      if (yesTrades.length > 0 || noTrades.length > 0) {
-        const prices = [];
-        
-        yesTrades.forEach(t => prices.push(t.yes));
-        noTrades.forEach(t => prices.push(100 - t.no));
-        
-        const avgPrice = prices.reduce((sum, p) => sum + p, 0) / prices.length;
-        return { 
-          yes: Math.round(avgPrice * 10) / 10, 
-          no: Math.round((100 - avgPrice) * 10) / 10 
-        };
-      }
+    // HAYIR tarafı
+    if (orderBook.no?.bids && orderBook.no.bids.length > 0) {
+      let noPrice = parseFloat(orderBook.no.bids[0].price);
+      if (noPrice <= 1) noPrice *= 100;
+      prices.push(100 - noPrice);
+    }
+    if (orderBook.no?.asks && orderBook.no.asks.length > 0) {
+      let noPrice = parseFloat(orderBook.no.asks[0].price);
+      if (noPrice <= 1) noPrice *= 100;
+      prices.push(100 - noPrice);
     }
     
-    // Hiç veri yoksa 50-50
-    return { yes: 50, no: 50 };
-  }, [liveOrderBook, initialOrderBook, chartData]);
+    if (prices.length > 0) {
+      const avgPrice = prices.reduce((sum, p) => sum + p, 0) / prices.length;
+      return { 
+        yes: Math.round(avgPrice * 10) / 10, 
+        no: Math.round((100 - avgPrice) * 10) / 10 
+        };
+    }
+  }
+  
+  // chartData'dan al
+  if (chartData.length > 0) {
+    const lastTrade = chartData[chartData.length - 1];
+    return {
+      yes: Math.round(lastTrade.yes * 10) / 10,
+      no: Math.round(lastTrade.no * 10) / 10
+    };
+  }
+  
+  return { yes: 50, no: 50 };
+}, [liveOrderBook, initialOrderBook, chartData]);
 
   // Mevcut order book'u al (WebSocket veya initial)
   const orderBook = useMemo(() => {
