@@ -1,76 +1,72 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useAuth } from '../context/AuthContext'
+import apiClient from '../api/client'
 import toast from 'react-hot-toast'
 import { 
-  Users, DollarSign, Plus, TrendingUp, 
-  Settings, Search, X, Check, AlertCircle,
-  Target, Clock, CheckCircle, Package, Image as ImageIcon
+  Users, 
+  TrendingUp, 
+  PlusCircle, 
+  Search,
+  DollarSign,
+  CheckCircle,
+  XCircle,
+  Edit,
+  Trash2,
+  Award,
+  Shield
 } from 'lucide-react'
-import apiClient from '../api/client'
-import { format } from 'date-fns'
-import { tr } from 'date-fns/locale'
-import { Link, Navigate } from 'react-router-dom'
 
 export default function AdminPage() {
-  const { user, loading } = useAuth()
-  const queryClient = useQueryClient()
-  const [activeTab, setActiveTab] = useState('users') // users, markets, create-market, add-shares
+  const [activeTab, setActiveTab] = useState('users')
   const [searchQuery, setSearchQuery] = useState('')
 
-  // Authentication ve authorization kontrolü
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-32 bg-gray-200 rounded-lg"></div>
-          <div className="h-64 bg-gray-200 rounded-lg"></div>
-        </div>
-      </div>
-    )
-  }
-
-  if (!user || user.role !== 'admin') {
-    return <Navigate to="/" replace />
-  }
+  const tabs = [
+    { id: 'users', label: 'Kullanıcılar', icon: Users },
+    { id: 'markets', label: 'Marketler', icon: TrendingUp },
+    { id: 'add-shares', label: 'Hisse Ekle', icon: PlusCircle },
+    { id: 'create-market', label: 'Market Oluştur', icon: Award },
+  ]
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Admin Panel</h1>
-        <p className="text-gray-600">Pazarları ve kullanıcıları yönetin</p>
-      </div>
+      <div className="bg-white border-b border-gray-200">
+        <div className="container mx-auto px-4 py-6">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-12 h-12 bg-purple-100 rounded-xl flex items-center justify-center">
+              <Shield className="w-6 h-6 text-purple-600" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold">Admin Panel</h1>
+              <p className="text-gray-600">Sistem yönetimi ve kontrol paneli</p>
+            </div>
+          </div>
 
-      {/* Tabs */}
-      <div className="mb-6">
-        <div className="border-b border-gray-200">
-          <nav className="flex space-x-8">
-            {[
-              { id: 'users', label: 'Kullanıcılar', icon: Users },
-              { id: 'markets', label: 'Pazarlar', icon: Target },
-              { id: 'add-shares', label: 'Hisse Ekle', icon: Package },
-              { id: 'create-market', label: 'Pazar Oluştur', icon: Plus }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === tab.id
-                    ? 'border-brand-600 text-brand-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <tab.icon className="w-4 h-4" />
-                {tab.label}
-              </button>
-            ))}
+          {/* Tabs */}
+          <nav className="flex gap-6">
+            {tabs.map((tab) => {
+              const Icon = tab.icon
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 py-3 border-b-2 font-medium transition-all ${
+                    activeTab === tab.id
+                      ? 'border-purple-600 text-purple-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {tab.label}
+                </button>
+              )
+            })}
           </nav>
         </div>
       </div>
 
       {/* Tab Content */}
-      <div>
+      <div className="container mx-auto px-4 py-8">
         {activeTab === 'users' && <UsersPanel searchQuery={searchQuery} setSearchQuery={setSearchQuery} />}
         {activeTab === 'markets' && <MarketsPanel />}
         {activeTab === 'add-shares' && <AddSharesPanel />}
@@ -86,7 +82,6 @@ function UsersPanel({ searchQuery, setSearchQuery }) {
   const [selectedUser, setSelectedUser] = useState(null)
   const [balanceAmount, setBalanceAmount] = useState('')
 
-  // Fetch users
   const { data: usersData, isLoading } = useQuery({
     queryKey: ['adminUsers', searchQuery],
     queryFn: async () => {
@@ -95,7 +90,6 @@ function UsersPanel({ searchQuery, setSearchQuery }) {
     }
   })
 
-  // Add balance mutation
   const addBalanceMutation = useMutation({
     mutationFn: async ({ userId, amount }) => {
       const response = await apiClient.post(`/admin/users/${userId}/add-balance`, {
@@ -124,7 +118,12 @@ function UsersPanel({ searchQuery, setSearchQuery }) {
   }
 
   if (isLoading) {
-    return <div className="card"><p>Yükleniyor...</p></div>
+    return (
+      <div className="bg-white rounded-2xl shadow-md p-12 text-center">
+        <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-gray-600">Yükleniyor...</p>
+      </div>
+    )
   }
 
   const users = usersData?.users || []
@@ -133,104 +132,115 @@ function UsersPanel({ searchQuery, setSearchQuery }) {
     <div>
       {/* Search */}
       <div className="mb-6">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+        <div className="relative max-w-xl">
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
           <input
             type="text"
             placeholder="Kullanıcı ara (isim veya email)..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="input pl-10 w-full"
+            className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
           />
         </div>
       </div>
 
       {/* Users Table */}
-      <div className="card overflow-x-auto">
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-gray-200">
-              <th className="text-left py-3 px-4 text-sm font-semibold">ID</th>
-              <th className="text-left py-3 px-4 text-sm font-semibold">Kullanıcı Adı</th>
-              <th className="text-left py-3 px-4 text-sm font-semibold">Email</th>
-              <th className="text-left py-3 px-4 text-sm font-semibold">Rol</th>
-              <th className="text-right py-3 px-4 text-sm font-semibold">Bakiye</th>
-              <th className="text-right py-3 px-4 text-sm font-semibold">Kayıt Tarihi</th>
-              <th className="text-right py-3 px-4 text-sm font-semibold">İşlemler</th>
-            </tr>
-          </thead>
-          <tbody>
-            {users.map((user) => (
-              <tr key={user.id} className="border-b border-gray-100 hover:bg-gray-50">
-                <td className="py-3 px-4 text-sm text-gray-600">#{user.id}</td>
-                <td className="py-3 px-4 text-sm font-medium">{user.username}</td>
-                <td className="py-3 px-4 text-sm text-gray-600">{user.email}</td>
-                <td className="py-3 px-4">
-                  <span className={`badge ${user.role === 'admin' ? 'badge-error' : 'badge-info'}`}>
-                    {user.role}
-                  </span>
-                </td>
-                <td className="py-3 px-4 text-right text-sm font-mono">
-                  ₺{parseFloat(user.balance).toFixed(2)}
-                </td>
-                <td className="py-3 px-4 text-right text-sm text-gray-600">
-                  {format(new Date(user.createdAt), 'dd MMM yyyy', { locale: tr })}
-                </td>
-                <td className="py-3 px-4 text-right">
-                  <button
-                    onClick={() => setSelectedUser(user)}
-                    className="btn btn-sm btn-secondary"
-                  >
-                    <DollarSign className="w-4 h-4 mr-1" />
-                    Para Ekle
-                  </button>
-                </td>
+      <div className="bg-white rounded-2xl shadow-md overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full">
+            <thead className="bg-gray-50 border-b border-gray-200">
+              <tr>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Kullanıcı</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Email</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Bakiye</th>
+                <th className="px-6 py-4 text-left text-sm font-semibold text-gray-900">Rol</th>
+                <th className="px-6 py-4 text-right text-sm font-semibold text-gray-900">İşlemler</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
+            </thead>
+            <tbody className="divide-y divide-gray-200">
+              {users.map((user) => (
+                <tr key={user.id} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center">
+                        <Users className="w-5 h-5 text-purple-600" />
+                      </div>
+                      <span className="font-medium text-gray-900">{user.username}</span>
+                    </div>
+                  </td>
+                  <td className="px-6 py-4 text-gray-600">{user.email}</td>
+                  <td className="px-6 py-4">
+                    <span className="font-semibold text-gray-900">
+                      ₺{parseFloat(user.balance || 0).toFixed(2)}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4">
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      user.role === 'admin' 
+                        ? 'bg-purple-100 text-purple-700' 
+                        : 'bg-gray-100 text-gray-700'
+                    }`}>
+                      {user.role === 'admin' ? 'Admin' : 'Kullanıcı'}
+                    </span>
+                  </td>
+                  <td className="px-6 py-4 text-right">
+                    <button
+                      onClick={() => setSelectedUser(user)}
+                      className="inline-flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
+                    >
+                      <DollarSign className="w-4 h-4" />
+                      Bakiye Ekle
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+
+        {users.length === 0 && (
+          <div className="p-12 text-center">
+            <Users className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <p className="text-gray-500">Kullanıcı bulunamadı</p>
+          </div>
+        )}
       </div>
 
       {/* Add Balance Modal */}
       {selectedUser && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold">Para Ekle</h3>
-              <button onClick={() => setSelectedUser(null)} className="text-gray-400 hover:text-gray-600">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6">
+            <h3 className="text-xl font-bold mb-4">Bakiye Ekle</h3>
             <div className="mb-4">
-              <p className="text-sm text-gray-600 mb-2">Kullanıcı: <strong>{selectedUser.username}</strong></p>
-              <p className="text-sm text-gray-600">Mevcut Bakiye: <strong>₺{parseFloat(selectedUser.balance).toFixed(2)}</strong></p>
+              <p className="text-sm text-gray-600 mb-2">
+                Kullanıcı: <span className="font-semibold text-gray-900">{selectedUser.username}</span>
+              </p>
+              <p className="text-sm text-gray-600">
+                Mevcut Bakiye: <span className="font-semibold text-gray-900">₺{parseFloat(selectedUser.balance || 0).toFixed(2)}</span>
+              </p>
             </div>
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium mb-2">Eklenecek Miktar (₺)</label>
-              <input
-                type="number"
-                min="0"
-                step="0.01"
-                value={balanceAmount}
-                onChange={(e) => setBalanceAmount(e.target.value)}
-                className="input w-full"
-                placeholder="Örn: 1000"
-              />
-            </div>
-
+            <input
+              type="number"
+              step="0.01"
+              placeholder="Eklenecek miktar"
+              value={balanceAmount}
+              onChange={(e) => setBalanceAmount(e.target.value)}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent mb-4"
+            />
             <div className="flex gap-3">
               <button
-                onClick={() => setSelectedUser(null)}
-                className="btn btn-secondary flex-1"
+                onClick={() => {
+                  setSelectedUser(null)
+                  setBalanceAmount('')
+                }}
+                className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 font-medium transition-colors"
               >
                 İptal
               </button>
               <button
                 onClick={handleAddBalance}
                 disabled={addBalanceMutation.isPending}
-                className="btn btn-primary flex-1"
+                className="flex-1 px-4 py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 font-medium transition-colors disabled:opacity-50"
               >
                 {addBalanceMutation.isPending ? 'Ekleniyor...' : 'Ekle'}
               </button>
@@ -245,166 +255,246 @@ function UsersPanel({ searchQuery, setSearchQuery }) {
 // Markets Panel
 function MarketsPanel() {
   const queryClient = useQueryClient()
-  const [statusFilter, setStatusFilter] = useState('all')
 
-  // Fetch markets
-  const { data: markets, isLoading } = useQuery({
-    queryKey: ['adminMarkets', statusFilter],
+  const { data: marketsData, isLoading } = useQuery({
+    queryKey: ['adminMarkets'],
     queryFn: async () => {
-      const url = statusFilter === 'all' 
-        ? '/admin/markets' 
-        : `/admin/markets?status=${statusFilter}`
-      const response = await apiClient.get(url)
+      const response = await apiClient.get('/admin/markets')
       return response.data.data
     }
   })
 
-  // Close market mutation
-  const closeMarketMutation = useMutation({
-    mutationFn: async (marketId) => {
-      const response = await apiClient.post(`/admin/markets/${marketId}/close`)
-      return response.data
-    },
-    onSuccess: () => {
-      toast.success('Pazar başarıyla kapatıldı')
-      queryClient.invalidateQueries(['adminMarkets'])
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || 'Pazar kapatılırken hata oluştu')
-    }
-  })
-
-  // Resolve market mutation
   const resolveMarketMutation = useMutation({
     mutationFn: async ({ marketId, outcome }) => {
       const response = await apiClient.post(`/admin/markets/${marketId}/resolve`, { outcome })
       return response.data
     },
     onSuccess: () => {
-      toast.success('Pazar başarıyla sonuçlandırıldı')
+      toast.success('Market başarıyla sonuçlandırıldı')
       queryClient.invalidateQueries(['adminMarkets'])
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Pazar sonuçlandırılırken hata oluştu')
+      toast.error(error.response?.data?.message || 'Market sonuçlandırılırken hata oluştu')
     }
   })
 
-  const handleResolveMarket = (marketId, outcome) => {
-    if (window.confirm(`Bu pazarı ${outcome ? 'EVET' : 'HAYIR'} olarak sonuçlandırmak istediğinizden emin misiniz?`)) {
-      resolveMarketMutation.mutate({ marketId, outcome })
-    }
-  }
-
-  const handleCloseMarket = (marketId) => {
-    if (window.confirm('Bu pazarı kapatmak istediğinizden emin misiniz?')) {
-      closeMarketMutation.mutate(marketId)
-    }
-  }
-
   if (isLoading) {
-    return <div className="card"><p>Yükleniyor...</p></div>
+    return (
+      <div className="bg-white rounded-2xl shadow-md p-12 text-center">
+        <div className="w-12 h-12 border-4 border-purple-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-gray-600">Yükleniyor...</p>
+      </div>
+    )
   }
+
+  const markets = marketsData?.markets || []
 
   return (
-    <div>
-      {/* Filter */}
-      <div className="mb-6 flex gap-3">
-        {['all', 'open', 'closed', 'resolved'].map((status) => (
-          <button
-            key={status}
-            onClick={() => setStatusFilter(status)}
-            className={`btn btn-sm ${
-              statusFilter === status ? 'btn-primary' : 'btn-secondary'
-            }`}
-          >
-            {status === 'all' ? 'Tümü' : status === 'open' ? 'Açık' : status === 'closed' ? 'Kapalı' : 'Sonuçlanmış'}
-          </button>
-        ))}
-      </div>
-
-      {/* Markets List */}
-      <div className="space-y-4">
-        {markets?.map((market) => (
-          <div key={market.id} className="card">
-            <div className="flex items-start justify-between mb-4">
-              <div className="flex-1">
-                <Link to={`/markets/${market.id}`} className="text-lg font-semibold hover:text-brand-600 transition-colors">
-                  {market.title}
-                </Link>
-                <p className="text-sm text-gray-600 mt-1">{market.description}</p>
-                <div className="flex items-center gap-2 mt-2">
-                  <span className={`badge ${
-                    market.status === 'open' ? 'badge-success' : 
-                    market.status === 'closed' ? 'badge-warning' : 
-                    'badge-info'
-                  }`}>
-                    {market.status === 'open' ? 'Açık' : market.status === 'closed' ? 'Kapalı' : 'Sonuçlanmış'}
-                  </span>
-                  {market.status === 'resolved' && (
-                    <span className={`badge ${market.outcome ? 'badge-success' : 'badge-error'}`}>
-                      Sonuç: {market.outcome ? 'EVET' : 'HAYIR'}
-                    </span>
-                  )}
-                  {market.market_type && (
-                    <span className="badge badge-info">
-                      {market.market_type === 'binary' ? 'Binary' : 'Multiple Choice'}
-                    </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex gap-2">
-                {market.status === 'open' && (
-                  <button
-                    onClick={() => handleCloseMarket(market.id)}
-                    className="btn btn-sm btn-warning"
-                  >
-                    <Clock className="w-4 h-4 mr-1" />
-                    Kapat
-                  </button>
-                )}
-                {market.status === 'closed' && market.market_type === 'binary' && (
-                  <>
-                    <button
-                      onClick={() => handleResolveMarket(market.id, true)}
-                      className="btn btn-sm btn-success"
-                    >
-                      <Check className="w-4 h-4 mr-1" />
-                      EVET
-                    </button>
-                    <button
-                      onClick={() => handleResolveMarket(market.id, false)}
-                      className="btn btn-sm btn-error"
-                    >
-                      <X className="w-4 h-4 mr-1" />
-                      HAYIR
-                    </button>
-                  </>
-                )}
+    <div className="space-y-4">
+      {markets.map((market) => (
+        <div key={market.id} className="bg-white rounded-2xl shadow-md p-6">
+          <div className="flex items-start justify-between mb-4">
+            <div className="flex-1">
+              <h3 className="text-lg font-semibold mb-2">{market.title}</h3>
+              <p className="text-sm text-gray-600 mb-3">{market.description}</p>
+              <div className="flex items-center gap-3">
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  market.status === 'open' 
+                    ? 'bg-green-100 text-green-700' 
+                    : market.status === 'closed'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-gray-100 text-gray-700'
+                }`}>
+                  {market.status === 'open' ? 'Açık' : 
+                   market.status === 'closed' ? 'Kapandı' : 'Sonuçlandı'}
+                </span>
+                <span className="text-sm text-gray-600">
+                  Hacim: ₺{parseFloat(market.volume || 0).toLocaleString('tr-TR')}
+                </span>
               </div>
             </div>
+            {market.status === 'closed' && (
+              <div className="flex gap-2">
+                <button
+                  onClick={() => resolveMarketMutation.mutate({ marketId: market.id, outcome: 'YES' })}
+                  disabled={resolveMarketMutation.isPending}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50"
+                >
+                  EVET
+                </button>
+                <button
+                  onClick={() => resolveMarketMutation.mutate({ marketId: market.id, outcome: 'NO' })}
+                  disabled={resolveMarketMutation.isPending}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium disabled:opacity-50"
+                >
+                  HAYIR
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      ))}
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-gray-100 text-sm">
-              <div>
-                <p className="text-gray-600">ID</p>
-                <p className="font-medium">#{market.id}</p>
-              </div>
-              <div>
-                <p className="text-gray-600">Oluşturulma</p>
-                <p className="font-medium">{format(new Date(market.createdAt), 'dd MMM yyyy', { locale: tr })}</p>
-              </div>
-              <div>
-                <p className="text-gray-600">Kapanış Tarihi</p>
-                <p className="font-medium">{format(new Date(market.closing_date), 'dd MMM yyyy', { locale: tr })}</p>
-              </div>
-              <div>
-                <p className="text-gray-600">Güncellenme</p>
-                <p className="font-medium">{format(new Date(market.updatedAt), 'dd MMM HH:mm', { locale: tr })}</p>
-              </div>
+      {markets.length === 0 && (
+        <div className="bg-white rounded-2xl shadow-md p-12 text-center">
+          <TrendingUp className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+          <p className="text-gray-500">Market bulunamadı</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Add Shares Panel
+function AddSharesPanel() {
+  const queryClient = useQueryClient()
+  const [formData, setFormData] = useState({
+    marketId: '',
+    userId: '',
+    outcome: 'YES',
+    quantity: '',
+    price: '',
+  })
+
+  const { data: marketsData } = useQuery({
+    queryKey: ['markets'],
+    queryFn: async () => {
+      const response = await apiClient.get('/markets')
+      return response.data.data
+    }
+  })
+
+  const addSharesMutation = useMutation({
+    mutationFn: async (data) => {
+      const response = await apiClient.post('/admin/shares/add', {
+        ...data,
+        quantity: parseInt(data.quantity),
+        price: parseFloat(data.price)
+      })
+      return response.data
+    },
+    onSuccess: () => {
+      toast.success('Hisse başarıyla eklendi')
+      setFormData({
+        marketId: '',
+        userId: '',
+        outcome: 'YES',
+        quantity: '',
+        price: '',
+      })
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Hisse eklenirken hata oluştu')
+    }
+  })
+
+  const handleSubmit = (e) => {
+    e.preventDefault()
+    addSharesMutation.mutate(formData)
+  }
+
+  const markets = marketsData?.markets || []
+
+  return (
+    <div className="max-w-2xl mx-auto">
+      <div className="bg-white rounded-2xl shadow-md p-8">
+        <h2 className="text-2xl font-bold mb-6">Kullanıcıya Hisse Ekle</h2>
+        
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Market</label>
+            <select
+              value={formData.marketId}
+              onChange={(e) => setFormData({ ...formData, marketId: e.target.value })}
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            >
+              <option value="">Market seçin</option>
+              {markets.map((market) => (
+                <option key={market.id} value={market.id}>
+                  {market.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Kullanıcı ID</label>
+            <input
+              type="number"
+              value={formData.userId}
+              onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="Kullanıcı ID"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Sonuç</label>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, outcome: 'YES' })}
+                className={`px-4 py-3 rounded-xl font-medium transition-all ${
+                  formData.outcome === 'YES'
+                    ? 'bg-green-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                EVET
+              </button>
+              <button
+                type="button"
+                onClick={() => setFormData({ ...formData, outcome: 'NO' })}
+                className={`px-4 py-3 rounded-xl font-medium transition-all ${
+                  formData.outcome === 'NO'
+                    ? 'bg-red-600 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                HAYIR
+              </button>
             </div>
           </div>
-        ))}
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Miktar</label>
+              <input
+                type="number"
+                value={formData.quantity}
+                onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+                required
+                min="1"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="100"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">Fiyat</label>
+              <input
+                type="number"
+                step="0.01"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                required
+                min="0.01"
+                max="0.99"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                placeholder="0.50"
+              />
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            disabled={addSharesMutation.isPending}
+            className="w-full py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 font-medium transition-colors disabled:opacity-50"
+          >
+            {addSharesMutation.isPending ? 'Ekleniyor...' : 'Hisse Ekle'}
+          </button>
+        </form>
       </div>
     </div>
   )
@@ -416,15 +506,18 @@ function CreateMarketPanel() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
+    category: 'politics',
     closing_date: '',
-    category: '',
-    image_url: '',
-    market_type: 'binary',
-    options: [
-      { option_text: '', option_image_url: '', option_order: 0 },
-      { option_text: '', option_image_url: '', option_order: 1 }
-    ]
   })
+
+  const categories = [
+    { id: 'politics', name: 'Siyaset' },
+    { id: 'sports', name: 'Spor' },
+    { id: 'crypto', name: 'Kripto' },
+    { id: 'economy', name: 'Ekonomi' },
+    { id: 'entertainment', name: 'Eğlence' },
+    { id: 'technology', name: 'Teknoloji' },
+  ]
 
   const createMarketMutation = useMutation({
     mutationFn: async (data) => {
@@ -432,500 +525,88 @@ function CreateMarketPanel() {
       return response.data
     },
     onSuccess: () => {
-      toast.success('Pazar başarıyla oluşturuldu')
+      toast.success('Market başarıyla oluşturuldu')
+      queryClient.invalidateQueries(['markets'])
       queryClient.invalidateQueries(['adminMarkets'])
-      setFormData({ 
-        title: '', 
-        description: '', 
+      setFormData({
+        title: '',
+        description: '',
+        category: 'politics',
         closing_date: '',
-        category: '',
-        image_url: '',
-        market_type: 'binary',
-        options: [
-          { option_text: '', option_image_url: '', option_order: 0 },
-          { option_text: '', option_image_url: '', option_order: 1 }
-        ]
       })
     },
     onError: (error) => {
-      toast.error(error.response?.data?.message || 'Pazar oluşturulurken hata oluştu')
+      toast.error(error.response?.data?.message || 'Market oluşturulurken hata oluştu')
     }
   })
 
-  const addOption = () => {
-    setFormData(prev => ({
-      ...prev,
-      options: [
-        ...prev.options,
-        { 
-          option_text: '', 
-          option_image_url: '', 
-          option_order: prev.options.length 
-        }
-      ]
-    }))
-  }
-
-  const removeOption = (index) => {
-    if (formData.options.length <= 2) {
-      toast.error('En az 2 seçenek olmalıdır')
-      return
-    }
-    setFormData(prev => ({
-      ...prev,
-      options: prev.options.filter((_, i) => i !== index)
-    }))
-  }
-
-  const updateOption = (index, field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      options: prev.options.map((opt, i) => 
-        i === index ? { ...opt, [field]: value } : opt
-      )
-    }))
-  }
-
   const handleSubmit = (e) => {
     e.preventDefault()
-    
-    if (!formData.title || !formData.closing_date) {
-      toast.error('Başlık ve kapanış tarihi gereklidir')
-      return
-    }
-
-    if (formData.market_type === 'multiple_choice') {
-      const validOptions = formData.options.filter(opt => opt.option_text.trim())
-      if (validOptions.length < 2) {
-        toast.error('Multiple choice market için en az 2 seçenek gereklidir')
-        return
-      }
-
-      const isoDate = new Date(formData.closing_date).toISOString()
-      
-      createMarketMutation.mutate({
-        ...formData,
-        closing_date: isoDate,
-        options: validOptions
-      })
-    } else {
-      const { options, ...binaryMarketData } = formData
-      const isoDate = new Date(formData.closing_date).toISOString()
-      
-      createMarketMutation.mutate({
-        ...binaryMarketData,
-        closing_date: isoDate
-      })
-    }
+    createMarketMutation.mutate(formData)
   }
 
   return (
-    <div className="max-w-2xl">
-      <div className="card">
-        <h2 className="text-2xl font-bold mb-6">Yeni Pazar Oluştur</h2>
-
-        {/* Fiyatlandırma Bilgisi */}
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-            <div className="text-sm text-blue-900">
-              <p className="font-semibold mb-1">Fiyatlandırma Bilgisi</p>
-              <p>Hisseler <span className="font-bold">0.01 TL - 0.99 TL</span> arasında işlem görür.</p>
-              <p className="mt-1">Market sonuçlandığında kazanan tarafın hisseleri <span className="font-bold text-green-700">1.00 TL</span> değerinde ödenir.</p>
-            </div>
-          </div>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Market Tipi */}
+    <div className="max-w-2xl mx-auto">
+      <div className="bg-white rounded-2xl shadow-md p-8">
+        <h2 className="text-2xl font-bold mb-6">Yeni Market Oluştur</h2>
+        
+        <form onSubmit={handleSubmit} className="space-y-5">
           <div>
-            <label className="block text-sm font-medium mb-2">
-              Market Tipi <span className="text-red-500">*</span>
-            </label>
-            <div className="flex gap-4">
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  name="market_type"
-                  value="binary"
-                  checked={formData.market_type === 'binary'}
-                  onChange={(e) => setFormData(prev => ({ ...prev, market_type: e.target.value }))}
-                  className="mr-2"
-                />
-                <span className="text-sm font-medium">Binary (Evet/Hayır)</span>
-              </label>
-              <label className="flex items-center cursor-pointer">
-                <input
-                  type="radio"
-                  name="market_type"
-                  value="multiple_choice"
-                  checked={formData.market_type === 'multiple_choice'}
-                  onChange={(e) => setFormData(prev => ({ ...prev, market_type: e.target.value }))}
-                  className="mr-2"
-                />
-                <span className="text-sm font-medium">Multiple Choice (Çoklu Seçenek)</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Title */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Başlık <span className="text-red-500">*</span>
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Başlık</label>
             <input
               type="text"
               value={formData.title}
               onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="input w-full"
-              placeholder="Örn: Bitcoin 2025 sonunda 100k olacak mı?"
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="Market başlığı"
             />
           </div>
 
-          {/* Description */}
           <div>
-            <label className="block text-sm font-medium mb-2">
-              Açıklama
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Açıklama</label>
             <textarea
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="input w-full min-h-[100px]"
-              placeholder="Pazarın detaylı açıklaması..."
+              rows="3"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+              placeholder="Market açıklaması"
             />
           </div>
 
-          {/* Category ve Image URL */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Kategori
-              </label>
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="input w-full"
-              >
-                <option value="">Seçiniz...</option>
-                <option value="crypto">Kripto</option>
-                <option value="sports">Spor</option>
-                <option value="politics">Siyaset</option>
-                <option value="entertainment">Eğlence</option>
-                <option value="technology">Teknoloji</option>
-                <option value="economics">Ekonomi</option>
-              </select>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium mb-2">
-                Görsel URL
-              </label>
-              <input
-                type="url"
-                value={formData.image_url}
-                onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-                className="input w-full"
-                placeholder="https://example.com/image.jpg"
-              />
-            </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Kategori</label>
+            <select
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            >
+              {categories.map((cat) => (
+                <option key={cat.id} value={cat.id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
           </div>
 
-          {/* Image Preview */}
-          {formData.image_url && (
-            <div className="flex items-center gap-3">
-              <p className="text-xs text-gray-600">Önizleme:</p>
-              <img 
-                src={formData.image_url} 
-                alt="Preview"
-                className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
-                onError={(e) => {
-                  e.target.style.display = 'none'
-                }}
-              />
-            </div>
-          )}
-
-          {/* Closing Date */}
           <div>
-            <label className="block text-sm font-medium mb-2">
-              Kapanış Tarihi <span className="text-red-500">*</span>
-            </label>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Kapanış Tarihi</label>
             <input
               type="datetime-local"
               value={formData.closing_date}
               onChange={(e) => setFormData({ ...formData, closing_date: e.target.value })}
-              className="input w-full"
+              required
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
             />
-            <p className="text-xs text-gray-500 mt-1">
-              Bu tarihte pazar otomatik olarak kapatılacaktır
-            </p>
           </div>
 
-          {/* Multiple Choice Options */}
-          {formData.market_type === 'multiple_choice' && (
-            <div className="border-t pt-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold">Seçenekler (En az 2)</h3>
-                <button
-                  type="button"
-                  onClick={addOption}
-                  className="btn btn-sm btn-success flex items-center gap-2"
-                >
-                  <Plus size={18} />
-                  Seçenek Ekle
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                {formData.options.map((option, index) => (
-                  <div key={index} className="border rounded-lg p-4 bg-gray-50">
-                    <div className="flex items-start gap-4">
-                      <div className="flex-1 space-y-3">
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Seçenek {index + 1} *
-                          </label>
-                          <input
-                            type="text"
-                            value={option.option_text}
-                            onChange={(e) => updateOption(index, 'option_text', e.target.value)}
-                            className="input w-full"
-                            placeholder="Örn: Zohran Mamdani"
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-xs font-medium text-gray-700 mb-1">
-                            Görsel URL (Opsiyonel)
-                          </label>
-                          <div className="flex gap-2 items-center">
-                            <ImageIcon className="text-gray-400" size={20} />
-                            <input
-                              type="url"
-                              value={option.option_image_url}
-                              onChange={(e) => updateOption(index, 'option_image_url', e.target.value)}
-                              className="input flex-1"
-                              placeholder="https://example.com/candidate.jpg"
-                            />
-                          </div>
-                        </div>
-                      </div>
-
-                      {formData.options.length > 2 && (
-                        <button
-                          type="button"
-                          onClick={() => removeOption(index)}
-                          className="mt-6 p-2 text-red-500 hover:bg-red-50 rounded-lg transition"
-                        >
-                          <X size={20} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Submit */}
           <button
             type="submit"
             disabled={createMarketMutation.isPending}
-            className="btn btn-primary w-full"
+            className="w-full py-3 bg-purple-600 text-white rounded-xl hover:bg-purple-700 font-medium transition-colors disabled:opacity-50"
           >
-            {createMarketMutation.isPending ? 'Oluşturuluyor...' : 'Pazar Oluştur'}
-          </button>
-        </form>
-      </div>
-    </div>
-  )
-}
-
-// Add Shares Panel
-function AddSharesPanel() {
-  const queryClient = useQueryClient()
-  const [formData, setFormData] = useState({
-    userId: '',
-    marketId: '',
-    outcome: true,
-    quantity: ''
-  })
-
-  // Fetch users
-  const { data: usersData } = useQuery({
-    queryKey: ['adminUsers'],
-    queryFn: async () => {
-      const response = await apiClient.get('/admin/users')
-      return response.data.data
-    }
-  })
-
-  // Fetch markets
-  const { data: marketsData } = useQuery({
-    queryKey: ['adminMarkets'],
-    queryFn: async () => {
-      const response = await apiClient.get('/admin/markets?status=open')
-      return response.data.data
-    }
-  })
-
-  // Add shares mutation
-  const addSharesMutation = useMutation({
-    mutationFn: async (data) => {
-      const response = await apiClient.post(`/admin/users/${data.userId}/add-shares`, {
-        marketId: data.marketId,
-        outcome: data.outcome,
-        quantity: parseInt(data.quantity)
-      })
-      return response.data
-    },
-    onSuccess: () => {
-      toast.success('Hisse başarıyla eklendi')
-      setFormData({ userId: '', marketId: '', outcome: true, quantity: '' })
-    },
-    onError: (error) => {
-      toast.error(error.response?.data?.message || 'Hisse eklenirken hata oluştu')
-    }
-  })
-
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    
-    if (!formData.userId || !formData.marketId || !formData.quantity || formData.quantity <= 0) {
-      toast.error('Tüm alanları doldurun ve pozitif bir miktar girin')
-      return
-    }
-
-    addSharesMutation.mutate(formData)
-  }
-
-  const users = usersData?.users || []
-  const markets = marketsData || []
-
-  return (
-    <div className="max-w-2xl">
-      <div className="card">
-        <h2 className="text-2xl font-bold mb-6">Kullanıcıya Hisse Ekle</h2>
-        <p className="text-gray-600 mb-6">
-          Test ve demo amaçlı kullanıcılara direkt hisse ekleyebilirsiniz.
-        </p>
-
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* User Selection */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Kullanıcı <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={formData.userId}
-              onChange={(e) => setFormData({ ...formData, userId: e.target.value })}
-              className="input w-full"
-            >
-              <option value="">Kullanıcı seçin...</option>
-              {users.map((user) => (
-                <option key={user.id} value={user.id}>
-                  {user.username} ({user.email}) - Bakiye: ₺{parseFloat(user.balance).toFixed(2)}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Market Selection */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Pazar <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={formData.marketId}
-              onChange={(e) => setFormData({ ...formData, marketId: e.target.value })}
-              className="input w-full"
-            >
-              <option value="">Pazar seçin...</option>
-              {markets.map((market) => (
-                <option key={market.id} value={market.id}>
-                  {market.title}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Outcome Selection */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Hisse Tipi <span className="text-red-500">*</span>
-            </label>
-            <div className="flex gap-4">
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="outcome"
-                  checked={formData.outcome === true}
-                  onChange={() => setFormData({ ...formData, outcome: true })}
-                  className="mr-2"
-                />
-                <span className="text-sm font-medium">EVET (Yes)</span>
-              </label>
-              <label className="flex items-center">
-                <input
-                  type="radio"
-                  name="outcome"
-                  checked={formData.outcome === false}
-                  onChange={() => setFormData({ ...formData, outcome: false })}
-                  className="mr-2"
-                />
-                <span className="text-sm font-medium">HAYIR (No)</span>
-              </label>
-            </div>
-          </div>
-
-          {/* Quantity */}
-          <div>
-            <label className="block text-sm font-medium mb-2">
-              Miktar <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="number"
-              min="1"
-              value={formData.quantity}
-              onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
-              className="input w-full"
-              placeholder="Örn: 100"
-            />
-            <p className="text-xs text-gray-500 mt-1">
-              Eklenecek hisse adedi
-            </p>
-          </div>
-
-          {/* Info Box */}
-          {formData.userId && formData.marketId && formData.quantity > 0 && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-                <div className="text-sm text-blue-800">
-                  <p className="font-medium mb-1">Özet:</p>
-                  <ul className="space-y-1">
-                    <li>
-                      <strong>{users.find(u => u.id == formData.userId)?.username}</strong> kullanıcısına
-                    </li>
-                    <li>
-                      <strong>{formData.quantity}</strong> adet <strong>{formData.outcome ? 'EVET' : 'HAYIR'}</strong> hissesi eklenecek
-                    </li>
-                    <li className="text-xs text-blue-600 mt-2">
-                      Not: Bu işlem kullanıcının bakiyesini etkilemez
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Submit */}
-          <button
-            type="submit"
-            disabled={addSharesMutation.isPending}
-            className="btn btn-primary w-full"
-          >
-            {addSharesMutation.isPending ? 'Ekleniyor...' : 'Hisse Ekle'}
+            {createMarketMutation.isPending ? 'Oluşturuluyor...' : 'Market Oluştur'}
           </button>
         </form>
       </div>

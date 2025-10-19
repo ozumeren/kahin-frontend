@@ -1,87 +1,99 @@
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { usePortfolio } from '../hooks/useMarketQueries'
 import { 
-  Wallet, TrendingUp, TrendingDown, Target, 
-  Clock, ChevronRight, AlertCircle, PieChart 
+  TrendingUp, 
+  TrendingDown, 
+  Target, 
+  Clock, 
+  AlertCircle,
+  DollarSign,
+  Activity,
+  CheckCircle,
+  XCircle,
+  Loader
 } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import apiClient from '../api/client'
-import { useCancelOrder } from '../hooks/useMarketQueries'
-import { format } from 'date-fns'
-import { tr } from 'date-fns/locale'
 
 export default function PortfolioPage() {
-  const { user, isAuthenticated, loading } = useAuth()
-  const [activeTab, setActiveTab] = useState('positions') // positions, orders, history
+  const { user, isAuthenticated } = useAuth()
+  const [activeTab, setActiveTab] = useState('positions')
 
-  // Fetch portfolio
-  const { data: portfolio, isLoading: portfolioLoading } = useQuery({
-    queryKey: ['portfolio'],
-    queryFn: async () => {
-      const response = await apiClient.get('/portfolio')
-      return response.data.data
-    },
-    enabled: isAuthenticated
-  })
+  const { data: portfolio, isLoading: portfolioLoading } = usePortfolio(isAuthenticated)
 
-  // Fetch user orders
-  const { data: orders } = useQuery({
+  const { data: ordersData } = useQuery({
     queryKey: ['myOrders'],
     queryFn: async () => {
-      const response = await apiClient.get('/orders')
+      const response = await apiClient.get('/orders/my')
       return response.data.data
     },
-    enabled: isAuthenticated
+    enabled: isAuthenticated,
   })
 
-  // Fetch trade history
-  const { data: tradeHistory } = useQuery({
+  const { data: tradesData } = useQuery({
     queryKey: ['myTrades'],
     queryFn: async () => {
-      const response = await apiClient.get('/trades/my/all?limit=50')
-      return response.data.trades
+      const response = await apiClient.get('/trades/my/all')
+      return response.data.data
     },
-    enabled: isAuthenticated
+    enabled: isAuthenticated,
   })
 
-  // ✅ Authentication yükleniyor
-  if (loading) {
-    return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-32 bg-gray-200 rounded-lg"></div>
-          <div className="h-64 bg-gray-200 rounded-lg"></div>
-        </div>
-      </div>
-    )
-  }
+  const orders = ordersData?.orders || []
+  const tradeHistory = tradesData?.trades || []
 
-  // ✅ Kullanıcı giriş yapmamış
+  const tabs = [
+    { 
+      id: 'positions', 
+      label: 'Pozisyonlar', 
+      icon: Target,
+      count: portfolio?.positions?.length || 0 
+    },
+    { 
+      id: 'orders', 
+      label: 'Emirler', 
+      icon: Activity,
+      count: orders.filter(o => o.status === 'pending').length 
+    },
+    { 
+      id: 'history', 
+      label: 'İşlem Geçmişi', 
+      icon: Clock,
+      count: tradeHistory.length 
+    },
+  ]
+
   if (!isAuthenticated) {
     return (
-      <div className="container mx-auto px-4 py-16">
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm text-center py-12">
-          <AlertCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold mb-2">Giriş Yapın</h2>
-          <p className="text-gray-600 mb-6">
-            Portfolyonuzu görüntülemek için giriş yapmanız gerekiyor
-          </p>
-          <Link to="/login" className="btn btn-primary">
-            Giriş Yap
-          </Link>
+      <div className="min-h-screen bg-gray-50 py-16">
+        <div className="container mx-auto px-4">
+          <div className="max-w-md mx-auto bg-white rounded-2xl shadow-md p-8 text-center">
+            <div className="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <AlertCircle className="w-8 h-8 text-brand-600" />
+            </div>
+            <h2 className="text-2xl font-bold mb-2">Giriş Yapın</h2>
+            <p className="text-gray-600 mb-6">
+              Portfolyonuzu görüntülemek için giriş yapmanız gerekiyor
+            </p>
+            <Link to="/login" className="inline-block px-6 py-3 bg-brand-600 text-white rounded-lg hover:bg-brand-700 font-medium transition-colors">
+              Giriş Yap
+            </Link>
+          </div>
         </div>
       </div>
     )
   }
 
-  // ✅ Portfolio yükleniyor
   if (portfolioLoading) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="animate-pulse space-y-4">
-          <div className="h-32 bg-gray-200 rounded-lg"></div>
-          <div className="h-64 bg-gray-200 rounded-lg"></div>
+      <div className="min-h-screen bg-gray-50 py-8">
+        <div className="container mx-auto px-4">
+          <div className="animate-pulse space-y-6">
+            <div className="h-48 bg-white rounded-2xl"></div>
+            <div className="h-96 bg-white rounded-2xl"></div>
+          </div>
         </div>
       </div>
     )
@@ -91,124 +103,91 @@ export default function PortfolioPage() {
   const positions = portfolio?.positions || []
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Portfolyo</h1>
-        <p className="text-gray-600">Pozisyonlarınız ve performansınız</p>
-      </div>
-
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {/* Current Balance */}
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-brand-100 rounded-lg">
-              <Wallet className="w-5 h-5 text-brand-600" />
+    <div className="min-h-screen bg-gray-50">
+      {/* Header Section */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="container mx-auto px-4 py-8">
+          <h1 className="text-4xl font-bold mb-8">Portfolyo</h1>
+          
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-gradient-to-br from-brand-50 to-white rounded-xl p-6 border border-brand-100">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-600">Toplam Değer</span>
+                <DollarSign className="w-5 h-5 text-brand-600" />
+              </div>
+              <div className="text-3xl font-bold text-gray-900">
+                ₺{parseFloat(summary.totalValue || 0).toFixed(2)}
+              </div>
             </div>
-            <span className="text-sm text-gray-600">Mevcut Bakiye</span>
-          </div>
-          <p className="text-3xl font-bold">
-            ₺{parseFloat(summary.currentBalance || 0).toFixed(2)}
-          </p>
-        </div>
 
-        {/* Total Invested */}
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-2 bg-blue-100 rounded-lg">
-              <Target className="w-5 h-5 text-blue-600" />
+            <div className="bg-gradient-to-br from-green-50 to-white rounded-xl p-6 border border-green-100">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-600">Kâr/Zarar</span>
+                <TrendingUp className="w-5 h-5 text-green-600" />
+              </div>
+              <div className={`text-3xl font-bold ${
+                summary.totalPnL >= 0 ? 'text-green-600' : 'text-red-600'
+              }`}>
+                {summary.totalPnL >= 0 ? '+' : ''}₺{parseFloat(summary.totalPnL || 0).toFixed(2)}
+              </div>
             </div>
-            <span className="text-sm text-gray-600">Yatırım</span>
-          </div>
-          <p className="text-3xl font-bold">
-            ₺{parseFloat(summary.totalInvested || 0).toFixed(2)}
-          </p>
-        </div>
 
-        {/* Unrealized P&L */}
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center gap-3 mb-2">
-            <div className={`p-2 rounded-lg ${
-              parseFloat(summary.totalUnrealizedPnL || 0) >= 0 
-                ? 'bg-yes-light' 
-                : 'bg-no-light'
-            }`}>
-              {parseFloat(summary.totalUnrealizedPnL || 0) >= 0 
-                ? <TrendingUp className="w-5 h-5 text-yes" />
-                : <TrendingDown className="w-5 h-5 text-no" />
-              }
+            <div className="bg-gradient-to-br from-blue-50 to-white rounded-xl p-6 border border-blue-100">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-600">Aktif Pozisyon</span>
+                <Target className="w-5 h-5 text-blue-600" />
+              </div>
+              <div className="text-3xl font-bold text-gray-900">
+                {positions.length}
+              </div>
             </div>
-            <span className="text-sm text-gray-600">Gerçekleşmemiş K/Z</span>
-          </div>
-          <p className={`text-3xl font-bold ${
-            parseFloat(summary.totalUnrealizedPnL || 0) >= 0 
-              ? 'text-yes' 
-              : 'text-no'
-          }`}>
-            {parseFloat(summary.totalUnrealizedPnL || 0) >= 0 ? '+' : ''}
-            ₺{parseFloat(summary.totalUnrealizedPnL || 0).toFixed(2)}
-          </p>
-        </div>
 
-        {/* Total P&L */}
-        <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="flex items-center gap-3 mb-2">
-            <div className={`p-2 rounded-lg ${
-              parseFloat(summary.totalPnL || 0) >= 0 
-                ? 'bg-yes-light' 
-                : 'bg-no-light'
-            }`}>
-              <PieChart className={`w-5 h-5 ${
-                parseFloat(summary.totalPnL || 0) >= 0 
-                  ? 'text-yes' 
-                  : 'text-no'
-              }`} />
+            <div className="bg-gradient-to-br from-purple-50 to-white rounded-xl p-6 border border-purple-100">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-gray-600">Bekleyen Emir</span>
+                <Activity className="w-5 h-5 text-purple-600" />
+              </div>
+              <div className="text-3xl font-bold text-gray-900">
+                {orders.filter(o => o.status === 'pending').length}
+              </div>
             </div>
-            <span className="text-sm text-gray-600">Toplam K/Z</span>
           </div>
-          <p className={`text-3xl font-bold ${
-            parseFloat(summary.totalPnL || 0) >= 0 
-              ? 'text-yes' 
-              : 'text-no'
-          }`}>
-            {parseFloat(summary.totalPnL || 0) >= 0 ? '+' : ''}
-            ₺{parseFloat(summary.totalPnL || 0).toFixed(2)}
-          </p>
         </div>
       </div>
 
       {/* Tabs */}
-      <div className="mb-6">
-        <div className="border-b border-gray-200">
-          <nav className="flex space-x-8">
-            {[
-              { id: 'positions', label: 'Pozisyonlar', count: positions.length },
-              { id: 'orders', label: 'Açık Emirler', count: orders?.filter(o => o.status === 'OPEN').length || 0 },
-              { id: 'history', label: 'İşlem Geçmişi', count: tradeHistory?.length || 0 }
-            ].map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
-                  activeTab === tab.id
-                    ? 'border-brand-600 text-brand-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                {tab.label} {tab.count > 0 && (
-                  <span className="ml-2 px-2 py-0.5 bg-gray-100 rounded-full text-xs">
-                    {tab.count}
-                  </span>
-                )}
-              </button>
-            ))}
+      <div className="bg-white border-b border-gray-200">
+        <div className="container mx-auto px-4">
+          <nav className="flex gap-8">
+            {tabs.map((tab) => {
+              const Icon = tab.icon
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center gap-2 py-4 border-b-2 font-medium transition-all ${
+                    activeTab === tab.id
+                      ? 'border-brand-600 text-brand-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  {tab.label}
+                  {tab.count > 0 && (
+                    <span className="ml-1 px-2 py-0.5 bg-gray-100 rounded-full text-xs">
+                      {tab.count}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
           </nav>
         </div>
       </div>
 
       {/* Tab Content */}
-      <div>
+      <div className="container mx-auto px-4 py-8">
         {activeTab === 'positions' && <PositionsPanel positions={positions} />}
         {activeTab === 'orders' && <OrdersPanel orders={orders} />}
         {activeTab === 'history' && <TradeHistoryPanel trades={tradeHistory} />}
@@ -221,11 +200,16 @@ export default function PortfolioPage() {
 function PositionsPanel({ positions }) {
   if (!positions || positions.length === 0) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm text-center py-12">
-        <Target className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Henüz pozisyon yok</h3>
+      <div className="bg-white rounded-2xl shadow-md p-12 text-center">
+        <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Target className="w-10 h-10 text-gray-400" />
+        </div>
+        <h3 className="text-xl font-semibold mb-2">Henüz pozisyon yok</h3>
         <p className="text-gray-600 mb-6">Pazarlara göz atın ve ilk pozisyonunuzu açın</p>
-        <Link to="/markets" className="btn btn-primary">
+        <Link 
+          to="/markets" 
+          className="inline-block px-6 py-3 bg-brand-600 text-white rounded-lg hover:bg-brand-700 font-medium transition-colors"
+        >
           Pazarları Keşfet
         </Link>
       </div>
@@ -238,53 +222,49 @@ function PositionsPanel({ positions }) {
         <Link
           key={index}
           to={`/markets/${position.marketId}`}
-          className="block rounded-lg border border-gray-200 bg-white p-6 shadow-sm hover:shadow-lg transition-shadow group"
+          className="block bg-white rounded-xl shadow-md hover:shadow-lg transition-all p-6 group"
         >
           <div className="flex items-start justify-between mb-4">
             <div className="flex-1">
-              <h3 className="text-lg font-semibold mb-1 group-hover:text-brand-600 transition-colors">
+              <h3 className="text-lg font-semibold mb-2 group-hover:text-brand-600 transition-colors">
                 {position.marketTitle}
               </h3>
               <div className="flex items-center gap-2">
-                <span className={`badge ${
-                  position.marketStatus === 'open' ? 'badge-success' : 'badge-info'
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  position.marketStatus === 'open' 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-blue-100 text-blue-700'
                 }`}>
                   {position.marketStatus === 'open' ? 'Açık' : 'Kapandı'}
                 </span>
-                <span className={`font-medium ${
-                  position.outcome === 'YES' ? 'text-yes' : 'text-no'
+                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                  position.outcome === 'YES' 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-red-100 text-red-700'
                 }`}>
                   {position.outcome}
                 </span>
               </div>
             </div>
-            <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-brand-600 transition-colors" />
+            <div className={`text-2xl font-bold ${
+              position.pnl >= 0 ? 'text-green-600' : 'text-red-600'
+            }`}>
+              {position.pnl >= 0 ? '+' : ''}₺{parseFloat(position.pnl || 0).toFixed(2)}
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-gray-100">
+          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-100">
             <div>
-              <p className="text-xs text-gray-600 mb-1">Miktar</p>
-              <p className="font-semibold">{position.quantity}</p>
+              <div className="text-sm text-gray-600 mb-1">Hisse</div>
+              <div className="font-semibold">{position.quantity}</div>
             </div>
             <div>
-              <p className="text-xs text-gray-600 mb-1">Yatırım</p>
-              <p className="font-semibold">₺{parseFloat(position.invested).toFixed(2)}</p>
+              <div className="text-sm text-gray-600 mb-1">Ort. Fiyat</div>
+              <div className="font-semibold">₺{parseFloat(position.avgPrice || 0).toFixed(2)}</div>
             </div>
             <div>
-              <p className="text-xs text-gray-600 mb-1">Mevcut Değer</p>
-              <p className="font-semibold">₺{parseFloat(position.currentValue).toFixed(2)}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-600 mb-1">K/Z</p>
-              <p className={`font-semibold ${
-                parseFloat(position.unrealizedPnL) >= 0 ? 'text-yes' : 'text-no'
-              }`}>
-                {parseFloat(position.unrealizedPnL) >= 0 ? '+' : ''}
-                ₺{parseFloat(position.unrealizedPnL).toFixed(2)}
-                <span className="text-xs ml-1">
-                  ({position.pnlPercentage})
-                </span>
-              </p>
+              <div className="text-sm text-gray-600 mb-1">Toplam</div>
+              <div className="font-semibold">₺{parseFloat(position.totalValue || 0).toFixed(2)}</div>
             </div>
           </div>
         </Link>
@@ -295,144 +275,160 @@ function PositionsPanel({ positions }) {
 
 // Orders Panel
 function OrdersPanel({ orders }) {
-  const cancelOrderMutation = useCancelOrder();
-  const openOrders = orders?.filter(order => order.status === 'OPEN') || [];
+  const pendingOrders = orders.filter(o => o.status === 'pending')
+  const completedOrders = orders.filter(o => o.status !== 'pending')
 
-  const handleCancelOrder = (orderId) => {
-    if (window.confirm('Bu emri iptal etmek istediğinizden emin misiniz?')) {
-      cancelOrderMutation.mutate(orderId);
-    }
-  };
-
-  if (openOrders.length === 0) {
+  if (orders.length === 0) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm text-center py-12">
-        <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-        <h3 className="text-lg font-semibold mb-2">Açık emir yok</h3>
-        <p className="text-gray-600">Tüm emirleriniz eşleşmiş veya iptal edilmiş</p>
+      <div className="bg-white rounded-2xl shadow-md p-12 text-center">
+        <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Activity className="w-10 h-10 text-gray-400" />
+        </div>
+        <h3 className="text-xl font-semibold mb-2">Henüz emir yok</h3>
+        <p className="text-gray-600">Bir market seçip emir oluşturabilirsiniz</p>
       </div>
     )
   }
 
   return (
-    <div className="space-y-4">
-      {openOrders.map((order) => (
-        <div key={order.id} className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
-          <div className="flex items-start justify-between mb-4">
-            <div>
-              <Link 
-                to={`/markets/${order.Market.id}`}
-                className="text-lg font-semibold hover:text-brand-600 transition-colors"
-              >
-                {order.Market.title}
-              </Link>
-              <div className="flex items-center gap-2 mt-1">
-                <span className={`badge ${
-                  order.type === 'BUY' ? 'badge-success' : 'badge-error'
-                }`}>
-                  {order.type === 'BUY' ? 'ALIŞ' : 'SATIŞ'}
-                </span>
-                <span className={`text-sm font-medium ${
-                  order.outcome ? 'text-yes' : 'text-no'
-                }`}>
-                  {order.outcome ? 'EVET' : 'HAYIR'}
-                </span>
+    <div className="space-y-6">
+      {/* Bekleyen Emirler */}
+      {pendingOrders.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Bekleyen Emirler</h3>
+          <div className="space-y-3">
+            {pendingOrders.map((order) => (
+              <div key={order.id} className="bg-white rounded-xl shadow-md p-6 border-l-4 border-yellow-500">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h4 className="font-semibold mb-2">{order.marketTitle}</h4>
+                    <div className="flex items-center gap-3 text-sm">
+                      <span className={`px-3 py-1 rounded-full font-medium ${
+                        order.type === 'BUY' 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-red-100 text-red-700'
+                      }`}>
+                        {order.type === 'BUY' ? 'AL' : 'SAT'}
+                      </span>
+                      <span className={`px-3 py-1 rounded-full font-medium ${
+                        order.outcome === 'YES' 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-red-100 text-red-700'
+                      }`}>
+                        {order.outcome}
+                      </span>
+                      <span className="text-gray-600">{order.quantity} Hisse</span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm text-gray-600 mb-1">Fiyat</div>
+                    <div className="text-xl font-bold">₺{parseFloat(order.price).toFixed(2)}</div>
+                  </div>
+                </div>
               </div>
-            </div>
-            <button 
-              className="btn btn-secondary btn-sm"
-              onClick={() => handleCancelOrder(order.id)}
-              disabled={cancelOrderMutation.isPending}
-            >
-              {cancelOrderMutation.isPending ? 'İptal ediliyor...' : 'İptal Et'}
-            </button>
+            ))}
           </div>
-
-          <div className="grid grid-cols-3 gap-4 pt-4 border-t border-gray-100">
-            <div>
-              <p className="text-xs text-gray-600 mb-1">Miktar</p>
-              <p className="font-semibold">{order.quantity}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-600 mb-1">Fiyat</p>
-              <p className="font-semibold">₺{order.price}</p>
-            </div>
-            <div>
-              <p className="text-xs text-gray-600 mb-1">Toplam</p>
-              <p className="font-semibold">
-                ₺{(order.quantity * parseFloat(order.price)).toFixed(2)}
-              </p>
-            </div>
-          </div>
-
-          <p className="text-xs text-gray-500 mt-4">
-            {format(new Date(order.createdAt), "dd MMM yyyy 'saat' HH:mm", { locale: tr })}
-          </p>
         </div>
-      ))}
+      )}
+
+      {/* Tamamlanan/İptal Edilen Emirler */}
+      {completedOrders.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold mb-4">Geçmiş Emirler</h3>
+          <div className="space-y-3">
+            {completedOrders.slice(0, 10).map((order) => (
+              <div key={order.id} className="bg-white rounded-xl shadow-md p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <h4 className="font-semibold mb-2">{order.marketTitle}</h4>
+                    <div className="flex items-center gap-3 text-sm">
+                      <span className={`px-3 py-1 rounded-full font-medium ${
+                        order.type === 'BUY' 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-red-100 text-red-700'
+                      }`}>
+                        {order.type === 'BUY' ? 'AL' : 'SAT'}
+                      </span>
+                      <span className={`px-3 py-1 rounded-full font-medium ${
+                        order.outcome === 'YES' 
+                          ? 'bg-green-100 text-green-700' 
+                          : 'bg-red-100 text-red-700'
+                      }`}>
+                        {order.outcome}
+                      </span>
+                      <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-xs font-medium ${
+                        order.status === 'filled' 
+                          ? 'bg-green-100 text-green-700' 
+                          : order.status === 'cancelled'
+                          ? 'bg-gray-100 text-gray-700'
+                          : 'bg-red-100 text-red-700'
+                      }`}>
+                        {order.status === 'filled' && <CheckCircle className="w-3 h-3" />}
+                        {order.status === 'cancelled' && <XCircle className="w-3 h-3" />}
+                        {order.status === 'filled' ? 'Tamamlandı' : 
+                         order.status === 'cancelled' ? 'İptal' : 
+                         order.status}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <div className="text-sm text-gray-600 mb-1">Fiyat</div>
+                    <div className="text-xl font-bold">₺{parseFloat(order.price).toFixed(2)}</div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
 // Trade History Panel
 function TradeHistoryPanel({ trades }) {
-  if (!trades || trades.length === 0) {
+  if (trades.length === 0) {
     return (
-      <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm text-center py-12">
-        <p className="text-gray-600">Henüz işlem geçmişiniz yok</p>
+      <div className="bg-white rounded-2xl shadow-md p-12 text-center">
+        <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Clock className="w-10 h-10 text-gray-400" />
+        </div>
+        <h3 className="text-xl font-semibold mb-2">Henüz işlem yok</h3>
+        <p className="text-gray-600">İşlemleriniz burada görünecek</p>
       </div>
     )
   }
 
   return (
-    <div className="rounded-lg border border-gray-200 bg-white p-6 shadow-sm overflow-x-auto">
-      <table className="w-full">
-        <thead>
-          <tr className="border-b border-gray-200">
-            <th className="text-left py-3 px-4 text-sm font-semibold">Tarih</th>
-            <th className="text-left py-3 px-4 text-sm font-semibold">Pazar</th>
-            <th className="text-left py-3 px-4 text-sm font-semibold">Tip</th>
-            <th className="text-left py-3 px-4 text-sm font-semibold">Taraf</th>
-            <th className="text-right py-3 px-4 text-sm font-semibold">Miktar</th>
-            <th className="text-right py-3 px-4 text-sm font-semibold">Fiyat</th>
-            <th className="text-right py-3 px-4 text-sm font-semibold">Toplam</th>
-          </tr>
-        </thead>
-        <tbody>
-          {trades.map((trade) => (
-            <tr key={trade.id} className="border-b border-gray-100 hover:bg-gray-50">
-              <td className="py-3 px-4 text-sm text-gray-600">
-                {format(new Date(trade.createdAt), 'dd MMM HH:mm', { locale: tr })}
-              </td>
-              <td className="py-3 px-4 text-sm">
-                <Link 
-                  to={`/markets/${trade.Market.id}`}
-                  className="hover:text-brand-600 transition-colors"
-                >
-                  {trade.Market.title.substring(0, 30)}...
-                </Link>
-              </td>
-              <td className="py-3 px-4">
-                <span className={`badge ${
-                  trade.myAction === 'BUY' ? 'badge-success' : 'badge-error'
+    <div className="space-y-3">
+      {trades.map((trade) => (
+        <div key={trade.id} className="bg-white rounded-xl shadow-md p-6">
+          <div className="flex items-start justify-between mb-3">
+            <div className="flex-1">
+              <h4 className="font-semibold mb-2">{trade.marketTitle}</h4>
+              <div className="flex items-center gap-3 text-sm">
+                <span className={`px-3 py-1 rounded-full font-medium ${
+                  trade.buyerSide === 'YES' 
+                    ? 'bg-green-100 text-green-700' 
+                    : 'bg-red-100 text-red-700'
                 }`}>
-                  {trade.myAction}
+                  {trade.buyerSide}
                 </span>
-              </td>
-              <td className="py-3 px-4">
-                <span className={`text-sm font-medium ${
-                  trade.outcome ? 'text-yes' : 'text-no'
-                }`}>
-                  {trade.outcome ? 'EVET' : 'HAYIR'}
+                <span className="text-gray-600">{trade.quantity} Hisse</span>
+                <span className="text-gray-400 text-xs">
+                  {new Date(trade.createdAt).toLocaleString('tr-TR')}
                 </span>
-              </td>
-              <td className="py-3 px-4 text-right text-sm">{trade.quantity}</td>
-              <td className="py-3 px-4 text-right text-sm font-mono">₺{trade.price}</td>
-              <td className="py-3 px-4 text-right text-sm font-medium">₺{trade.total}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+              </div>
+            </div>
+            <div className="text-right">
+              <div className="text-sm text-gray-600 mb-1">Fiyat</div>
+              <div className="text-xl font-bold text-gray-900">
+                ₺{parseFloat(trade.price).toFixed(2)}
+              </div>
+            </div>
+          </div>
+        </div>
+      ))}
     </div>
   )
 }

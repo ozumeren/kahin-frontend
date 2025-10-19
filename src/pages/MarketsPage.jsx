@@ -1,233 +1,238 @@
-import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import { Search, Filter, Clock, Users, TrendingUp } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import apiClient from '../api/client'
+import { 
+  Search, 
+  TrendingUp, 
+  Clock, 
+  Users,
+  Filter,
+  ChevronRight,
+  Loader
+} from 'lucide-react'
 
 export default function MarketsPage() {
-  const [statusFilter, setStatusFilter] = useState('open') // Default: açık pazarlar
   const [searchQuery, setSearchQuery] = useState('')
+  const [activeFilter, setActiveFilter] = useState('all')
+  const [activeCategory, setActiveCategory] = useState('all')
 
-  // Fetch markets - WebSocket'i kaldırdık çünkü gereksiz
-  const { data, isLoading, error } = useQuery({
-    queryKey: ['markets', statusFilter],
+  const { data: marketsData, isLoading, error } = useQuery({
+    queryKey: ['markets'],
     queryFn: async () => {
-      const params = statusFilter !== 'all' ? `?status=${statusFilter}` : ''
-      const response = await apiClient.get(`/markets${params}`)
+      const response = await apiClient.get('/markets')
       return response.data.data
-    }
+    },
+    staleTime: 30000,
   })
 
-  // Filter markets by search
-  const filteredMarkets = data?.filter(market =>
-    market.title.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || []
+  const categories = [
+    { id: 'all', name: 'Tümü', icon: '🎯' },
+    { id: 'politics', name: 'Siyaset', icon: '🏛️' },
+    { id: 'sports', name: 'Spor', icon: '⚽' },
+    { id: 'crypto', name: 'Kripto', icon: '₿' },
+    { id: 'economy', name: 'Ekonomi', icon: '📈' },
+    { id: 'entertainment', name: 'Eğlence', icon: '🎬' },
+    { id: 'technology', name: 'Teknoloji', icon: '💻' }
+  ]
+
+  const filters = [
+    { id: 'all', label: 'Tümü' },
+    { id: 'open', label: 'Açık' },
+    { id: 'closed', label: 'Kapandı' },
+    { id: 'resolved', label: 'Sonuçlandı' },
+  ]
+
+  const markets = marketsData?.markets || []
+
+  const filteredMarkets = markets.filter((market) => {
+    const matchesSearch = market.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         market.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    const matchesFilter = activeFilter === 'all' || market.status === activeFilter
+    const matchesCategory = activeCategory === 'all' || market.category === activeCategory
+    return matchesSearch && matchesFilter && matchesCategory
+  })
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-4xl font-bold mb-2">Pazarlar</h1>
-        <p className="text-gray-600">Aktif tahmin pazarlarını keşfet ve görüşünü paylaş</p>
+      <div className="bg-white border-b border-gray-200">
+        <div className="container mx-auto px-4 py-8">
+          <h1 className="text-4xl font-bold mb-6">Tüm Pazarlar</h1>
+          
+          {/* Search Bar */}
+          <div className="relative max-w-2xl">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Market ara..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+      </div>
+
+      {/* Categories */}
+      <div className="bg-white border-b border-gray-200">
+        <div className="container mx-auto px-4">
+          <div className="flex gap-2 overflow-x-auto py-4 scrollbar-hide">
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all ${
+                  activeCategory === cat.id
+                    ? 'bg-brand-50 text-brand-700 border-2 border-brand-200'
+                    : 'text-gray-700 hover:bg-gray-100 border-2 border-transparent'
+                }`}
+              >
+                <span>{cat.icon}</span>
+                {cat.name}
+              </button>
+            ))}
+          </div>
+        </div>
       </div>
 
       {/* Filters */}
-      <div className="mb-8 flex flex-col sm:flex-row gap-4">
-        {/* Search */}
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-          <input
-            type="text"
-            placeholder="Pazar ara..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-brand-500 focus:border-transparent"
-          />
-        </div>
-
-        {/* Status Filter */}
-        <div className="flex gap-2">
-          {[
-            { value: 'all', label: 'Tümü' },
-            { value: 'open', label: 'Açık' },
-            { value: 'closed', label: 'Kapandı' },
-            { value: 'resolved', label: 'Sonuçlandı' }
-          ].map((filter) => (
-            <button
-              key={filter.value}
-              onClick={() => setStatusFilter(filter.value)}
-              className={`px-4 py-2 rounded-lg font-medium transition-colors ${
-                statusFilter === filter.value
-                  ? 'bg-brand-600 text-white'
-                  : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
-              }`}
-            >
-              {filter.label}
-            </button>
-          ))}
+      <div className="bg-white border-b border-gray-200">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center gap-3">
+            <Filter className="w-5 h-5 text-gray-600" />
+            <div className="flex gap-2">
+              {filters.map((filter) => (
+                <button
+                  key={filter.id}
+                  onClick={() => setActiveFilter(filter.id)}
+                  className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                    activeFilter === filter.id
+                      ? 'bg-brand-600 text-white'
+                      : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'
+                  }`}
+                >
+                  {filter.label}
+                </button>
+              ))}
+            </div>
+            <div className="ml-auto text-sm text-gray-600">
+              {filteredMarkets.length} market bulundu
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Loading State */}
-      {isLoading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="bg-white rounded-xl shadow-md p-6 animate-pulse">
-              <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
-              <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
-              <div className="h-4 bg-gray-200 rounded w-2/3 mb-4"></div>
-              <div className="h-20 bg-gray-200 rounded"></div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Error State */}
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-xl p-6">
-          <p className="text-red-800">
-            Pazarlar yüklenirken bir hata oluştu. Lütfen daha sonra tekrar deneyin.
-          </p>
-        </div>
-      )}
-
-      {/* Empty State */}
-      {!isLoading && !error && filteredMarkets.length === 0 && (
-        <div className="bg-white rounded-xl shadow-md p-12 text-center">
-          <Filter className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Pazar bulunamadı</h3>
-          <p className="text-gray-600">Arama kriterlerinize uygun pazar bulunamadı.</p>
-        </div>
-      )}
 
       {/* Markets Grid */}
-      {!isLoading && !error && filteredMarkets.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredMarkets.map((market) => (
-            <MarketCard key={market.id} market={market} />
-          ))}
-        </div>
-      )}
-    </div>
-  )
-}
+      <div className="container mx-auto px-4 py-8">
+        {/* Loading State */}
+        {isLoading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="bg-white rounded-2xl shadow-md p-6 animate-pulse">
+                <div className="h-6 bg-gray-200 rounded w-3/4 mb-4"></div>
+                <div className="h-4 bg-gray-200 rounded w-full mb-2"></div>
+                <div className="h-4 bg-gray-200 rounded w-2/3 mb-4"></div>
+                <div className="h-24 bg-gray-200 rounded"></div>
+              </div>
+            ))}
+          </div>
+        )}
 
-function MarketCard({ market }) {
-  // Calculate probability from market data
-  const yesProb = 50 // TODO: Get from order book
-  const noProb = 50
+        {/* Error State */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
+            <p className="text-red-800 font-medium mb-2">
+              Pazarlar yüklenirken bir hata oluştu
+            </p>
+            <p className="text-red-600 text-sm">
+              Lütfen daha sonra tekrar deneyin
+            </p>
+          </div>
+        )}
 
-  const getStatusBadge = (status) => {
-    const badges = {
-      open: 'bg-green-100 text-green-700',
-      closed: 'bg-blue-100 text-blue-700',
-      resolved: 'bg-gray-100 text-gray-700'
-    }
-    const labels = {
-      open: 'Açık',
-      closed: 'Kapandı',
-      resolved: 'Sonuçlandı'
-    }
-    return { badge: badges[status] || badges.open, label: labels[status] || 'Açık' }
-  }
+        {/* Markets Grid */}
+        {!isLoading && !error && (
+          <>
+            {filteredMarkets.length === 0 ? (
+              <div className="bg-white rounded-2xl shadow-md p-12 text-center">
+                <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Search className="w-10 h-10 text-gray-400" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">Market bulunamadı</h3>
+                <p className="text-gray-600">
+                  Arama kriterlerinize uygun market bulunmuyor
+                </p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredMarkets.map((market) => (
+                  <Link
+                    key={market.id}
+                    to={`/markets/${market.id}`}
+                    className="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all p-6 group"
+                  >
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-4">
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                        market.status === 'open' 
+                          ? 'bg-green-100 text-green-700' 
+                          : market.status === 'closed'
+                          ? 'bg-blue-100 text-blue-700'
+                          : 'bg-gray-100 text-gray-700'
+                      }`}>
+                        {market.status === 'open' ? 'Açık' : 
+                         market.status === 'closed' ? 'Kapandı' : 'Sonuçlandı'}
+                      </span>
+                      <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-brand-600 transition-colors" />
+                    </div>
 
-  const { badge, label } = getStatusBadge(market.status)
+                    {/* Title */}
+                    <h3 className="text-lg font-semibold mb-3 group-hover:text-brand-600 transition-colors line-clamp-2">
+                      {market.title}
+                    </h3>
 
-  const formatVolume = (volume) => {
-    if (!volume) return '₺0'
-    const num = parseFloat(volume)
-    if (num >= 1000000) return `₺${(num / 1000000).toFixed(1)}M`
-    if (num >= 1000) return `₺${(num / 1000).toFixed(0)}K`
-    return `₺${num.toFixed(0)}`
-  }
+                    {/* Description */}
+                    {market.description && (
+                      <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+                        {market.description}
+                      </p>
+                    )}
 
-  const formatDate = (dateString) => {
-    if (!dateString) return ''
-    const date = new Date(dateString)
-    const now = new Date()
-    const diffTime = date - now
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    
-    if (diffDays < 0) return 'Kapandı'
-    if (diffDays === 0) return 'Bugün'
-    if (diffDays === 1) return 'Yarın'
-    return `${diffDays} gün`
-  }
+                    {/* Stats */}
+                    <div className="flex items-center gap-4 text-sm text-gray-600 mb-4 pb-4 border-b border-gray-100">
+                      <div className="flex items-center gap-1">
+                        <TrendingUp className="w-4 h-4" />
+                        <span>₺{parseFloat(market.volume || 0).toLocaleString('tr-TR')}</span>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Users className="w-4 h-4" />
+                        <span>{market.tradersCount || 0}</span>
+                      </div>
+                    </div>
 
-  return (
-    <Link 
-      to={`/markets/${market.id}`}
-      className="bg-white rounded-xl shadow-md hover:shadow-lg transition-all p-6 block group"
-    >
-      {/* Header */}
-      <div className="flex items-start justify-between mb-4">
-        <span className={`px-3 py-1 rounded-full text-xs font-medium ${badge}`}>
-          {label}
-        </span>
-        {market.category && (
-          <span className="text-xs text-gray-500 capitalize">
-            {market.category}
-          </span>
+                    {/* Prices */}
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-center">
+                        <div className="text-xs text-green-600 font-medium mb-1">EVET</div>
+                        <div className="text-xl font-bold text-green-700">
+                          ₺{parseFloat(market.yesPrice || 0.50).toFixed(2)}
+                        </div>
+                      </div>
+                      <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-center">
+                        <div className="text-xs text-red-600 font-medium mb-1">HAYIR</div>
+                        <div className="text-xl font-bold text-red-700">
+                          ₺{parseFloat(market.noPrice || 0.50).toFixed(2)}
+                        </div>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </>
         )}
       </div>
-
-      {/* Avatar and Title */}
-      <div className="flex items-start gap-3 mb-2">
-        {/* Avatar */}
-        <div className="flex-shrink-0">
-          {market.image_url ? (
-            <img 
-              src={market.image_url} 
-              alt={market.title}
-              className="w-12 h-12 rounded-full object-cover border-2 border-gray-200"
-            />
-          ) : (
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-brand-400 to-brand-600 flex items-center justify-center text-white font-bold text-lg">
-              {market.title.charAt(0).toUpperCase()}
-            </div>
-          )}
-        </div>
-
-        {/* Title */}
-        <h3 className="flex-1 text-lg font-bold text-gray-900 group-hover:text-brand-600 transition-colors line-clamp-2">
-          {market.title}
-        </h3>
-      </div>
-
-      {/* Description */}
-      {market.description && (
-        <p className="text-sm text-gray-600 mb-4 line-clamp-2">
-          {market.description}
-        </p>
-      )}
-
-      {/* Probabilities */}
-      <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="bg-green-50 rounded-lg p-3 border border-green-200">
-          <div className="text-xs text-green-600 font-medium mb-1">EVET</div>
-          <div className="text-2xl font-bold text-green-700">{yesProb}%</div>
-        </div>
-        <div className="bg-red-50 rounded-lg p-3 border border-red-200">
-          <div className="text-xs text-red-600 font-medium mb-1">HAYIR</div>
-          <div className="text-2xl font-bold text-red-700">{noProb}%</div>
-        </div>
-      </div>
-
-      {/* Stats */}
-      <div className="flex items-center justify-between text-sm text-gray-600 pt-4 border-t border-gray-100">
-        <div className="flex items-center gap-1">
-          <TrendingUp className="w-4 h-4" />
-          <span>{formatVolume(market.volume)}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <Users className="w-4 h-4" />
-          <span>{market.tradersCount || 0}</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <Clock className="w-4 h-4" />
-          <span>{formatDate(market.closing_date)}</span>
-        </div>
-      </div>
-    </Link>
+    </div>
   )
 }
