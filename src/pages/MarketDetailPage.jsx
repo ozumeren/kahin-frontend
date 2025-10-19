@@ -108,47 +108,9 @@ const MarketDetailPage = () => {
     return tradeData;
   }, [trades, chartTimeframe]);
 
-  // Calculate probabilities from order book or latest trades
+  // Calculate probabilities from latest trades
   const probabilities = useMemo(() => {
-    const orderBook = liveOrderBook || initialOrderBook;
-    
-    if (orderBook?.yes?.bids || orderBook?.yes?.asks || orderBook?.no?.bids || orderBook?.no?.asks) {
-      const prices = [];
-      
-      // EVET tarafı
-      if (orderBook.yes?.bids && orderBook.yes.bids.length > 0) {
-        let price = parseFloat(orderBook.yes.bids[0].price);
-        if (price <= 1) price *= 100;
-        prices.push(price);
-      }
-      if (orderBook.yes?.asks && orderBook.yes.asks.length > 0) {
-        let price = parseFloat(orderBook.yes.asks[0].price);
-        if (price <= 1) price *= 100;
-        prices.push(price);
-      }
-      
-      // HAYIR tarafı
-      if (orderBook.no?.bids && orderBook.no.bids.length > 0) {
-        let noPrice = parseFloat(orderBook.no.bids[0].price);
-        if (noPrice <= 1) noPrice *= 100;
-        prices.push(100 - noPrice);
-      }
-      if (orderBook.no?.asks && orderBook.no.asks.length > 0) {
-        let noPrice = parseFloat(orderBook.no.asks[0].price);
-        if (noPrice <= 1) noPrice *= 100;
-        prices.push(100 - noPrice);
-      }
-      
-      if (prices.length > 0) {
-        const avgPrice = prices.reduce((sum, p) => sum + p, 0) / prices.length;
-        return { 
-          yes: Math.round(avgPrice * 10) / 10, 
-          no: Math.round((100 - avgPrice) * 10) / 10 
-        };
-      }
-    }
-    
-    // chartData'dan al
+    // chartData'dan al (trade'lere göre)
     if (chartData.length > 0) {
       const lastTrade = chartData[chartData.length - 1];
       return {
@@ -158,7 +120,7 @@ const MarketDetailPage = () => {
     }
     
     return { yes: 50, no: 50 };
-  }, [liveOrderBook, initialOrderBook, chartData]);
+  }, [chartData]);
 
   // Mevcut order book'u al (WebSocket veya initial)
   const orderBook = useMemo(() => {
