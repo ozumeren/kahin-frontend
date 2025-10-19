@@ -45,52 +45,59 @@ const MarketDetailPage = () => {
   
   useNewTrades(marketId, handleNewTrade);
 
-  // Prepare chart data from trades with timeframe filtering
-  const chartData = useMemo(() => {
-    if (!trades || trades.length === 0) return [];
+// Prepare chart data from trades with timeframe filtering
+const chartData = useMemo(() => {
+  if (!trades || trades.length === 0) return [];
 
-    const sortedTrades = [...trades].sort((a, b) => 
-      new Date(a.createdAt) - new Date(b.createdAt)
-    );
+  const sortedTrades = [...trades].sort((a, b) => 
+    new Date(a.createdAt) - new Date(b.createdAt)
+  );
 
-    let filteredTrades = sortedTrades;
-    const now = new Date();
+  let filteredTrades = sortedTrades;
+  const now = new Date();
+  
+  if (chartTimeframe !== 'all') {
+    const cutoffTime = new Date(now);
     
-    if (chartTimeframe !== 'all') {
-      const cutoffTime = new Date(now);
-      
-      switch (chartTimeframe) {
-        case '1h':
-          cutoffTime.setHours(now.getHours() - 1);
-          break;
-        case '6h':
-          cutoffTime.setHours(now.getHours() - 6);
-          break;
-        case '24h':
-          cutoffTime.setHours(now.getHours() - 24);
-          break;
-        case '7d':
-          cutoffTime.setDate(now.getDate() - 7);
-          break;
-        default:
-          break;
-      }
-      
-      filteredTrades = sortedTrades.filter(trade => 
-        new Date(trade.createdAt) >= cutoffTime
-      );
+    switch (chartTimeframe) {
+      case '1h':
+        cutoffTime.setHours(now.getHours() - 1);
+        break;
+      case '6h':
+        cutoffTime.setHours(now.getHours() - 6);
+        break;
+      case '24h':
+        cutoffTime.setHours(now.getHours() - 24);
+        break;
+      case '7d':
+        cutoffTime.setDate(now.getDate() - 7);
+        break;
+      default:
+        break;
     }
+    
+    filteredTrades = sortedTrades.filter(trade => 
+      new Date(trade.createdAt) >= cutoffTime
+    );
+  }
 
-    return filteredTrades.map((trade) => ({
+  // ✅ DÜZELTME: Her trade için hem EVET hem HAYIR fiyatını hesapla
+  return filteredTrades.map((trade) => {
+    const tradePrice = parseFloat(trade.price);
+    
+    return {
       time: new Date(trade.createdAt).toLocaleTimeString('tr-TR', { 
         hour: '2-digit', 
         minute: '2-digit' 
       }),
       timestamp: new Date(trade.createdAt).getTime(),
-      yes: trade.outcome ? parseFloat(trade.price) : null,
-      no: !trade.outcome ? parseFloat(trade.price) : null,
-    }));
-  }, [trades, chartTimeframe]);
+      // EVET fiyatı: outcome=true ise direkt fiyat, false ise 100-fiyat
+      yes: trade.outcome ? tradePrice : (100 - tradePrice),
+      // HAYIR fiyatı: outcome=false ise direkt fiyat, true ise 100-fiyat
+      no: !trade.outcome ? tradePrice : (100 - tradePrice),
+    };
+  });
+}, [trades, chartTimeframe]);
 
   // Calculate probabilities from order book or latest trades
   const probabilities = useMemo(() => {
