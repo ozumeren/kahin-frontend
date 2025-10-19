@@ -4,17 +4,17 @@ import WebSocketNotifications from './WebSocketNotifications'
 
 export default function Layout() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ backgroundColor: '#1D1D1F' }}>
       <Navbar />
       <WebSocketNotifications />
       <main className="flex-1">
         <Outlet />
       </main>
-      <footer className="border-t border-gray-200 bg-white py-8 mt-16">
-        <div className="container mx-auto px-4 text-center text-sm text-gray-600">
+      <footer className="py-8 mt-16" style={{ borderTop: '1px solid #555555', backgroundColor: '#1D1D1F' }}>
+        <div className="container mx-auto px-4 text-center text-sm" style={{ color: '#EEFFDD', opacity: 0.7 }}>
           <p>© 2025 Kahin Market. Tüm hakları saklıdır.</p>
         </div>
       </footer>
     </div>
   )
-}
+} 

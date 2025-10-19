@@ -7,12 +7,16 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Dark theme colors (Kalshi-inspired)
+        // Özel tema renkleri
         dark: {
-          900: '#0f1419',  // Ana arka plan
-          800: '#1a1f2e',  // Card arka plan
-          700: '#252d3d',  // Hover state
-          600: '#2d3748',  // Border
+          900: '#1D1D1F',  // Ana arka plan
+          800: '#1D1D1F',  // Card arka plan
+          700: '#2a2a2c',  // Hover state (biraz açık)
+          600: '#555555',  // Border ve input
+        },
+        text: {
+          primary: '#EEFFDD',   // Ana yazı rengi
+          secondary: '#EEFFDD', // İkincil yazı (biraz soluk)
         },
         brand: {
           50: '#f0fdf4',

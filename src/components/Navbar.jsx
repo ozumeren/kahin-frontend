@@ -1,12 +1,13 @@
 import { Link, useLocation } from 'react-router-dom'
-import { TrendingUp, Menu, X, User, LogOut, Shield } from 'lucide-react'
+import { useAuth } from '../context/AuthContext'
+import { TrendingUp, User, LogOut, Menu, X, Shield } from 'lucide-react'
 import { useState } from 'react'
-import { useAuth } from '../context/AuthContext'  // ← YENİ
 
 export default function Navbar() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { user, logout } = useAuth()
   const location = useLocation()
-  const { user, logout } = useAuth()  // ← YENİ
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
   const isActive = (path) => location.pathname === path
 
   const handleLogout = () => {
@@ -15,49 +16,85 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+    <nav className="sticky top-0 z-50" style={{ backgroundColor: '#1D1D1F', borderBottom: '1px solid #555555' }}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
+          {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <TrendingUp className="w-8 h-8 text-brand-600" />
-            <span className="text-xl font-bold">Kahin Market</span>
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-all" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)' }}>
+              <TrendingUp className="w-6 h-6" style={{ color: '#22c55e' }} />
+            </div>
+            <span className="text-xl font-bold transition-colors" style={{ color: '#EEFFDD' }}>
+              Kahin Market
+            </span>
           </Link>
 
-          <div className="hidden md:flex items-center gap-1">
-            <Link to="/" className={`px-4 py-2 rounded-lg font-medium ${isActive('/') ? 'bg-brand-50 text-brand-700' : 'hover:bg-gray-100'}`}>
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-2">
+            <Link 
+              to="/" 
+              className="px-4 py-2 rounded-lg font-medium transition-all"
+              style={{
+                backgroundColor: isActive('/') ? '#555555' : 'transparent',
+                color: '#EEFFDD'
+              }}
+            >
               Ana Sayfa
             </Link>
-            <Link to="/markets" className={`px-4 py-2 rounded-lg font-medium ${isActive('/markets') ? 'bg-brand-50 text-brand-700' : 'hover:bg-gray-100'}`}>
+            <Link 
+              to="/markets" 
+              className="px-4 py-2 rounded-lg font-medium transition-all"
+              style={{
+                backgroundColor: isActive('/markets') ? '#555555' : 'transparent',
+                color: '#EEFFDD'
+              }}
+            >
               Pazarlar
             </Link>
             {user && (
-              <Link to="/portfolio" className={`px-4 py-2 rounded-lg font-medium ${isActive('/portfolio') ? 'bg-brand-50 text-brand-700' : 'hover:bg-gray-100'}`}>
+              <Link 
+                to="/portfolio" 
+                className="px-4 py-2 rounded-lg font-medium transition-all"
+                style={{
+                  backgroundColor: isActive('/portfolio') ? '#555555' : 'transparent',
+                  color: '#EEFFDD'
+                }}
+              >
                 Portfolyo
               </Link>
             )}
             {user?.role === 'admin' && (
-              <Link to="/admin" className={`px-4 py-2 rounded-lg font-medium flex items-center gap-1 ${isActive('/admin') ? 'bg-purple-50 text-purple-700' : 'hover:bg-purple-50 hover:text-purple-700'}`}>
+              <Link 
+                to="/admin" 
+                className="px-4 py-2 rounded-lg font-medium flex items-center gap-1 transition-all"
+                style={{
+                  backgroundColor: isActive('/admin') ? '#555555' : 'transparent',
+                  color: '#EEFFDD'
+                }}
+              >
                 <Shield className="w-4 h-4" />
                 Admin
               </Link>
             )}
           </div>
 
+          {/* Desktop User Section */}
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <>
-                <div className="flex items-center gap-3 px-4 py-2 bg-gray-100 rounded-lg">
-                  <User className="w-4 h-4 text-gray-600 flex-shrink-0" />
+                <div className="flex items-center gap-3 px-4 py-2 rounded-lg" style={{ backgroundColor: '#555555', border: '1px solid #555555' }}>
+                  <User className="w-4 h-4 flex-shrink-0" style={{ color: '#EEFFDD', opacity: 0.7 }} />
                   <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-medium truncate">{user.username}</span>
-                    <span className="text-xs text-gray-500 whitespace-nowrap">
+                    <span className="text-sm font-medium truncate" style={{ color: '#EEFFDD' }}>{user.username}</span>
+                    <span className="text-xs whitespace-nowrap" style={{ color: '#EEFFDD', opacity: 0.7 }}>
                       ₺{parseFloat(user.balance || 0).toFixed(2)}
                     </span>
                   </div>
                 </div>
                 <button 
                   onClick={handleLogout} 
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-transparent text-gray-700 hover:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-gray-400"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all hover:brightness-110"
+                  style={{ backgroundColor: 'transparent', color: '#EEFFDD' }}
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Çıkış</span>
@@ -65,40 +102,57 @@ export default function Navbar() {
               </>
             ) : (
               <>
-                <Link to="/login" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-transparent text-gray-700 hover:bg-gray-100 transition-all duration-200">
+                <Link 
+                  to="/login" 
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all hover:brightness-110"
+                  style={{ backgroundColor: 'transparent', color: '#EEFFDD' }}
+                >
                   Giriş
                 </Link>
-                <Link to="/register" className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium bg-brand-600 text-white hover:bg-brand-700 shadow-sm hover:shadow-md transition-all duration-200">
+                <Link 
+                  to="/register" 
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all hover:brightness-110 shadow-lg"
+                  style={{ backgroundColor: '#555555', color: '#EEFFDD' }}
+                >
                   Kayıt Ol
                 </Link>
               </>
             )}
           </div>
 
-          <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden">
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          {/* Mobile Menu Button */}
+          <button 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
+            className="md:hidden p-2 rounded-lg transition-all hover:brightness-110"
+            style={{ backgroundColor: '#555555' }}
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" style={{ color: '#EEFFDD' }} /> : <Menu className="w-6 h-6" style={{ color: '#EEFFDD' }} />}
           </button>
         </div>
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-200 py-4">
+          <div className="md:hidden py-4" style={{ borderTop: '1px solid #555555' }}>
             <div className="flex flex-col space-y-2">
               <Link
                 to="/"
                 onClick={() => setMobileMenuOpen(false)}
-                className={`px-4 py-2 rounded-lg font-medium ${
-                  isActive('/') ? 'bg-brand-50 text-brand-700' : 'hover:bg-gray-100'
-                }`}
+                className="px-4 py-2 rounded-lg font-medium"
+                style={{
+                  backgroundColor: isActive('/') ? '#555555' : 'transparent',
+                  color: '#EEFFDD'
+                }}
               >
                 Ana Sayfa
               </Link>
               <Link
                 to="/markets"
                 onClick={() => setMobileMenuOpen(false)}
-                className={`px-4 py-2 rounded-lg font-medium ${
-                  isActive('/markets') ? 'bg-brand-50 text-brand-700' : 'hover:bg-gray-100'
-                }`}
+                className="px-4 py-2 rounded-lg font-medium"
+                style={{
+                  backgroundColor: isActive('/markets') ? '#555555' : 'transparent',
+                  color: '#EEFFDD'
+                }}
               >
                 Pazarlar
               </Link>
@@ -106,9 +160,11 @@ export default function Navbar() {
                 <Link
                   to="/portfolio"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`px-4 py-2 rounded-lg font-medium ${
-                    isActive('/portfolio') ? 'bg-brand-50 text-brand-700' : 'hover:bg-gray-100'
-                  }`}
+                  className="px-4 py-2 rounded-lg font-medium"
+                  style={{
+                    backgroundColor: isActive('/portfolio') ? '#555555' : 'transparent',
+                    color: '#EEFFDD'
+                  }}
                 >
                   Portfolyo
                 </Link>
@@ -117,30 +173,33 @@ export default function Navbar() {
                 <Link
                   to="/admin"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`px-4 py-2 rounded-lg font-medium flex items-center gap-1 ${
-                    isActive('/admin') ? 'bg-purple-50 text-purple-700' : 'hover:bg-purple-50 hover:text-purple-700'
-                  }`}
+                  className="px-4 py-2 rounded-lg font-medium flex items-center gap-1"
+                  style={{
+                    backgroundColor: isActive('/admin') ? '#555555' : 'transparent',
+                    color: '#EEFFDD'
+                  }}
                 >
                   <Shield className="w-4 h-4" />
                   Admin
                 </Link>
               )}
 
-              <div className="pt-4 border-t border-gray-200 mt-2 space-y-2">
+              <div className="pt-4 mt-2 space-y-2" style={{ borderTop: '1px solid #555555' }}>
                 {user ? (
                   <>
-                    <div className="px-4 py-2 bg-gray-100 rounded-lg">
+                    <div className="px-4 py-2 rounded-lg" style={{ backgroundColor: '#555555', border: '1px solid #555555' }}>
                       <div className="flex items-center gap-2 mb-1">
-                        <User className="w-4 h-4 text-gray-600" />
-                        <span className="text-sm font-medium">{user.username}</span>
+                        <User className="w-4 h-4" style={{ color: '#EEFFDD', opacity: 0.7 }} />
+                        <span className="text-sm font-medium" style={{ color: '#EEFFDD' }}>{user.username}</span>
                       </div>
-                      <div className="text-xs text-gray-500">
+                      <div className="text-xs" style={{ color: '#EEFFDD', opacity: 0.7 }}>
                         Bakiye: ₺{parseFloat(user.balance || 0).toFixed(2)}
                       </div>
                     </div>
                     <button
                       onClick={handleLogout}
-                      className="w-full px-4 py-2 bg-red-50 text-red-600 rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-red-100"
+                      className="w-full px-4 py-2 rounded-lg font-medium flex items-center justify-center gap-2 hover:brightness-110 transition-all"
+                      style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)' }}
                     >
                       <LogOut className="w-4 h-4" />
                       Çıkış Yap
@@ -151,14 +210,16 @@ export default function Navbar() {
                     <Link
                       to="/login"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="block w-full px-4 py-2 text-center border border-brand-600 text-brand-600 rounded-lg font-medium hover:bg-brand-50"
+                      className="block w-full px-4 py-2 text-center rounded-lg font-medium hover:brightness-110 transition-all"
+                      style={{ border: '1px solid #555555', color: '#EEFFDD' }}
                     >
                       Giriş
                     </Link>
                     <Link
                       to="/register"
                       onClick={() => setMobileMenuOpen(false)}
-                      className="block w-full px-4 py-2 text-center bg-brand-600 text-white rounded-lg font-medium hover:bg-brand-700"
+                      className="block w-full px-4 py-2 text-center rounded-lg font-medium hover:brightness-110 transition-all"
+                      style={{ backgroundColor: '#555555', color: '#EEFFDD' }}
                     >
                       Kayıt Ol
                     </Link>
