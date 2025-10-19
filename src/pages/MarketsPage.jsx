@@ -21,19 +21,20 @@ export default function MarketsPage() {
     queryKey: ['markets'],
     queryFn: async () => {
       const response = await apiClient.get('/markets')
+      // API response: { success: true, count: X, data: [...markets] }
       return response.data.data
     },
     staleTime: 30000,
   })
 
   const categories = [
-    { id: 'all', name: 'Tüm Marketler' },
-    { id: 'politics', name: 'Siyaset' },
-    { id: 'sports', name: 'Spor' },
-    { id: 'crypto', name: 'Kripto' },
-    { id: 'economy', name: 'Ekonomi' },
-    { id: 'entertainment', name: 'Eğlence' },
-    { id: 'technology', name: 'Teknoloji' }
+    { id: 'all', name: 'Tümü', icon: '🎯' },
+    { id: 'politics', name: 'Siyaset', icon: '🏛️' },
+    { id: 'sports', name: 'Spor', icon: '⚽' },
+    { id: 'crypto', name: 'Kripto', icon: '₿' },
+    { id: 'economy', name: 'Ekonomi', icon: '📈' },
+    { id: 'entertainment', name: 'Eğlence', icon: '🎬' },
+    { id: 'technology', name: 'Teknoloji', icon: '💻' }
   ]
 
   const filters = [
@@ -43,12 +44,11 @@ export default function MarketsPage() {
     { id: 'resolved', label: 'Sonuçlandı' },
   ]
 
-  const markets = marketsData?.markets || []
-
-  console.log('Markets Page - Total markets:', markets.length)
-  console.log('Markets Page - First market:', markets[0])
-  console.log('Markets Page - Active category:', activeCategory)
-  console.log('Markets Page - Active filter:', activeFilter)
+  // markets artık doğrudan array - Backend'den gelen data yapısı
+  const markets = Array.isArray(marketsData) ? marketsData : []
+  
+  console.log('📊 MarketsPage - Total markets:', markets.length)
+  console.log('📊 MarketsPage - First market:', markets[0])
 
   const filteredMarkets = markets.filter((market) => {
     const matchesSearch = market.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -57,33 +57,9 @@ export default function MarketsPage() {
     const matchesCategory = activeCategory === 'all' || market.category === activeCategory
     return matchesSearch && matchesFilter && matchesCategory
   })
-  
-  console.log('Markets Page - Filtered markets:', filteredMarkets.length)
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#1D1D1F' }}>
-      {/* Categories - Navbar'ın tam altında */}
-      <div className="sticky top-0 z-10" style={{ backgroundColor: '#1D1D1F', borderBottom: '1px solid #555555' }}>
-        <div className="container mx-auto px-4">
-          <nav className="flex gap-2 overflow-x-auto py-4 scrollbar-hide">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all"
-                style={{
-                  backgroundColor: activeCategory === cat.id ? '#555555' : 'transparent',
-                  color: '#EEFFDD',
-                  border: activeCategory === cat.id ? '1px solid #ccff33' : '1px solid transparent'
-                }}
-              >
-                {cat.name}
-              </button>
-            ))}
-          </nav>
-        </div>
-      </div>
-
       {/* Header */}
       <div style={{ borderBottom: '1px solid #555555' }}>
         <div className="container mx-auto px-4 py-8">
@@ -99,6 +75,29 @@ export default function MarketsPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="input w-full pl-12"
             />
+          </div>
+        </div>
+      </div>
+
+      {/* Categories */}
+      <div style={{ borderBottom: '1px solid #555555' }}>
+        <div className="container mx-auto px-4">
+          <div className="flex gap-2 overflow-x-auto py-4 scrollbar-hide">
+            {categories.map((cat) => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all"
+                style={{
+                  backgroundColor: activeCategory === cat.id ? '#555555' : 'transparent',
+                  color: '#EEFFDD',
+                  border: activeCategory === cat.id ? '1px solid #22c55e' : '1px solid transparent'
+                }}
+              >
+                <span>{cat.icon}</span>
+                {cat.name}
+              </button>
+            ))}
           </div>
         </div>
       </div>
@@ -187,7 +186,7 @@ export default function MarketsPage() {
                           style={{
                             backgroundColor: market.status === 'open' ? 'rgba(34, 197, 94, 0.2)' : 
                                            market.status === 'closed' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(107, 114, 128, 0.2)',
-                            color: market.status === 'open' ? '#ccff33' : 
+                            color: market.status === 'open' ? '#22c55e' : 
                                   market.status === 'closed' ? '#3b82f6' : '#6b7280',
                             border: `1px solid ${market.status === 'open' ? 'rgba(34, 197, 94, 0.3)' : 
                                                market.status === 'closed' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(107, 114, 128, 0.3)'}`
@@ -226,8 +225,8 @@ export default function MarketsPage() {
                       {/* Prices */}
                       <div className="grid grid-cols-2 gap-3">
                         <div className="rounded-lg p-3 text-center" style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
-                          <div className="text-xs font-medium mb-1" style={{ color: '#ccff33', opacity: 0.8 }}>EVET</div>
-                          <div className="text-xl font-bold" style={{ color: '#ccff33' }}>
+                          <div className="text-xs font-medium mb-1" style={{ color: '#22c55e', opacity: 0.8 }}>EVET</div>
+                          <div className="text-xl font-bold" style={{ color: '#22c55e' }}>
                             ₺{parseFloat(market.yesPrice || 0.50).toFixed(2)}
                           </div>
                         </div>
