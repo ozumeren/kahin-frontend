@@ -37,7 +37,7 @@ ReactDOM.createRoot(document.getElementById('root')).render(
               },
               success: {
                 iconTheme: {
-                  primary: '#22c55e',
+                  primary: '#ccff33',
                   secondary: '#fff',
                 },
               },

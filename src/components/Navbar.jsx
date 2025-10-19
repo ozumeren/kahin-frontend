@@ -22,10 +22,10 @@ export default function Navbar() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-all" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)' }}>
-              <TrendingUp className="w-6 h-6" style={{ color: '#22c55e' }} />
+              <TrendingUp className="w-6 h-6" style={{ color: '#ccff33' }} />
             </div>
             <span className="text-xl font-bold transition-colors" style={{ color: '#EEFFDD' }}>
-              Kahin Market
+              Kahinmarket
             </span>
           </Link>
 

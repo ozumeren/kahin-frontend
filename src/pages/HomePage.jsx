@@ -11,13 +11,13 @@ export default function HomePage() {
   const [error, setError] = useState(null)
 
   const categories = [
-    { id: 'all', name: 'Tüm Marketler', icon: '🎯' },
-    { id: 'politics', name: 'Siyaset', icon: '🏛️' },
-    { id: 'sports', name: 'Spor', icon: '⚽' },
-    { id: 'crypto', name: 'Kripto', icon: '₿' },
-    { id: 'economy', name: 'Ekonomi', icon: '📈' },
-    { id: 'entertainment', name: 'Eğlence', icon: '🎬' },
-    { id: 'technology', name: 'Teknoloji', icon: '💻' }
+    { id: 'all', name: 'Tüm Marketler'},
+    { id: 'politics', name: 'Siyaset' },
+    { id: 'sports', name: 'Spor'},
+    { id: 'crypto', name: 'Kripto' },
+    { id: 'economy', name: 'Ekonomi' },
+    { id: 'entertainment', name: 'Eğlence' },
+    { id: 'technology', name: 'Teknoloji' }
   ]
 
   useEffect(() => {
@@ -28,7 +28,10 @@ export default function HomePage() {
     try {
       setLoading(true)
       const response = await apiClient.get('/markets')
-      setMarkets(response.data.data.markets || [])
+      const fetchedMarkets = response.data.data.markets || []
+      console.log('Fetched markets:', fetchedMarkets)
+      console.log('First market:', fetchedMarkets[0])
+      setMarkets(fetchedMarkets)
       setError(null)
     } catch (err) {
       console.error('Markets fetch error:', err)
@@ -42,6 +45,10 @@ export default function HomePage() {
     if (activeCategory === 'all') return true
     return market.category === activeCategory
   })
+  
+  console.log('Active category:', activeCategory)
+  console.log('Total markets:', markets.length)
+  console.log('Filtered markets:', filteredMarkets.length)
 
   const stats = {
     totalVolume: markets.reduce((sum, m) => sum + parseFloat(m.volume || 0), 0),
@@ -67,14 +74,13 @@ export default function HomePage() {
                 <button
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all`}
+                  className="px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all"
                   style={{
                     backgroundColor: activeCategory === cat.id ? '#555555' : 'transparent',
                     color: '#EEFFDD',
-                    border: activeCategory === cat.id ? '1px solid #22c55e' : '1px solid transparent'
+                    border: activeCategory === cat.id ? '1px solid #ccff33' : '1px solid transparent'
                   }}
                 >
-                  <span>{cat.icon}</span>
                   {cat.name}
                 </button>
               ))}
@@ -85,7 +91,6 @@ export default function HomePage() {
               style={{ backgroundColor: '#555555', color: '#EEFFDD' }}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
-              <span>{categories.find(c => c.id === activeCategory)?.icon}</span>
               <span className="text-sm font-medium">{categories.find(c => c.id === activeCategory)?.name}</span>
               {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
@@ -107,7 +112,6 @@ export default function HomePage() {
                     color: '#EEFFDD'
                   }}
                 >
-                  <span className="mr-2">{cat.icon}</span>
                   {cat.name}
                 </button>
               ))}
@@ -155,7 +159,7 @@ export default function HomePage() {
             <button 
               onClick={fetchMarkets}
               className="text-sm font-medium flex items-center gap-1 hover:opacity-80 transition-opacity"
-              style={{ color: '#22c55e' }}
+              style={{ color: '#ccff33' }}
             >
               Yenile
               <ChevronRight className="w-4 h-4" />
@@ -211,7 +215,7 @@ export default function HomePage() {
                             : market.status === 'closed'
                             ? 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
                             : 'bg-gray-500/20 border border-gray-500/30'
-                        }`} style={{ color: market.status === 'open' ? '#22c55e' : '#3b82f6' }}>
+                        }`} style={{ color: market.status === 'open' ? '#ccff33' : '#3b82f6' }}>
                           {market.status === 'open' ? 'Açık' : 
                            market.status === 'closed' ? 'Kapandı' : 'Sonuçlandı'}
                         </span>
@@ -245,8 +249,8 @@ export default function HomePage() {
                       {/* Prices */}
                       <div className="grid grid-cols-2 gap-3">
                         <div className="rounded-lg p-3 text-center" style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
-                          <div className="text-xs font-medium mb-1" style={{ color: '#22c55e', opacity: 0.8 }}>EVET</div>
-                          <div className="text-xl font-bold" style={{ color: '#22c55e' }}>
+                          <div className="text-xs font-medium mb-1" style={{ color: '#ccff33', opacity: 0.8 }}>EVET</div>
+                          <div className="text-xl font-bold" style={{ color: '#ccff33' }}>
                             ₺{parseFloat(market.yesPrice || 0.50).toFixed(2)}
                           </div>
                         </div>

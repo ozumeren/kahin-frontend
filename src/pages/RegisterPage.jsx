@@ -1,233 +1,305 @@
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { UserPlus, Mail, Lock, User, AlertCircle, CheckCircle } from 'lucide-react'
+import { User, Mail, Lock, Eye, EyeOff, UserPlus, AlertCircle, CheckCircle, TrendingUp } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function RegisterPage() {
+  const navigate = useNavigate()
+  const { register } = useAuth()
+  
   const [formData, setFormData] = useState({
     username: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
   })
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
-  const [loading, setLoading] = useState(false)
-  const [success, setSuccess] = useState(false)
-  
-  const { register } = useAuth()
-  const navigate = useNavigate()
-
-  const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    })
-  }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    setLoading(false)
 
-    // Validation
     if (formData.password !== formData.confirmPassword) {
-      toast.error('Şifreler eşleşmiyor')  // ← YENİ
+      setError('Şifreler eşleşmiyor')
+      toast.error('Şifreler eşleşmiyor')
       return
     }
 
     if (formData.password.length < 6) {
+      setError('Şifre en az 6 karakter olmalıdır')
       toast.error('Şifre en az 6 karakter olmalıdır')
       return
     }
 
-    setLoading(true)
+    setIsLoading(true)
 
     try {
       await register(formData.username, formData.email, formData.password)
-      setSuccess(true)
-      
-      setTimeout(() => {
-        navigate('/login')
-      }, 2000)
+      toast.success('Hesabınız başarıyla oluşturuldu!')
+      navigate('/')
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Kayıt başarısız. Lütfen tekrar deneyin.')
+      const errorMessage = err.response?.data?.message || 'Kayıt başarısız. Lütfen tekrar deneyin.'
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
-  if (success) {
-    return (
-      <div className="min-h-[80vh] flex items-center justify-center py-12 px-4">
-        <div className="max-w-md w-full text-center">
-          <div className="mx-auto h-16 w-16 flex items-center justify-center rounded-full bg-green-100 mb-6">
-            <CheckCircle className="h-10 w-10 text-green-600" />
-          </div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
-            Kayıt Başarılı! 🎉
-          </h2>
-          <p className="text-gray-600 mb-4">
-            Hesabınız oluşturuldu. Giriş sayfasına yönlendiriliyorsunuz...
-          </p>
-          <Link to="/login" className="text-brand-600 hover:underline">
-            Hemen giriş yap
-          </Link>
-        </div>
-      </div>
-    )
+  const handleChange = (e) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }))
   }
 
+  const getPasswordStrength = () => {
+    const password = formData.password
+    if (!password) return { strength: 0, text: '', color: '' }
+    
+    let strength = 0
+    if (password.length >= 6) strength++
+    if (password.length >= 8) strength++
+    if (/[A-Z]/.test(password)) strength++
+    if (/[0-9]/.test(password)) strength++
+    if (/[^A-Za-z0-9]/.test(password)) strength++
+
+    const levels = [
+      { strength: 0, text: '', color: '' },
+      { strength: 1, text: 'Çok Zayıf', color: '#ef4444' },
+      { strength: 2, text: 'Zayıf', color: '#f97316' },
+      { strength: 3, text: 'Orta', color: '#eab308' },
+      { strength: 4, text: 'İyi', color: '#3b82f6' },
+      { strength: 5, text: 'Güçlü', color: '#ccff33' },
+    ]
+
+    return levels[strength]
+  }
+
+  const passwordStrength = getPasswordStrength()
+
   return (
-    <div className="min-h-[80vh] flex items-center justify-center py-12 px-4">
-      <div className="max-w-md w-full space-y-8">
-        {/* Header */}
-        <div className="text-center">
-          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-brand-100">
-            <UserPlus className="h-6 w-6 text-brand-600" />
+    <div className="min-h-screen flex items-center justify-center py-12 px-4">
+      <div className="max-w-md w-full">
+        {/* Logo/Brand */}
+        <div className="text-center mb-8">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+            <TrendingUp className="w-8 h-8" style={{ color: '#ccff33' }} />
           </div>
-          <h2 className="mt-6 text-3xl font-bold text-gray-900">
-            Hesap Oluşturun
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Kahin Market'e katılın
-          </p>
+          <h1 className="text-3xl font-bold mb-2" style={{ color: '#EEFFDD' }}>Hesap Oluştur</h1>
+          <p style={{ color: '#EEFFDD', opacity: 0.7 }}>Hemen başlayın ve tahminlerinizi yapın</p>
         </div>
 
-        {/* Form */}
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
-          <div className="space-y-4">
-            {/* Username */}
+        {/* Form Card */}
+        <div className="rounded-2xl shadow-lg p-8" style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}>
+          {/* Error Alert */}
+          {error && (
+            <div className="mb-6 p-4 rounded-xl flex items-start gap-3" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#ef4444' }} />
+              <div className="flex-1">
+                <p className="text-sm" style={{ color: '#ef4444' }}>{error}</p>
+              </div>
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="space-y-5">
+            {/* Username Input */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="username" className="block text-sm font-medium mb-2" style={{ color: '#EEFFDD' }}>
                 Kullanıcı Adı
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <User className="h-5 w-5 text-gray-400" />
-                </div>
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: '#EEFFDD', opacity: 0.5 }} />
                 <input
+                  type="text"
                   id="username"
                   name="username"
-                  type="text"
-                  required
                   value={formData.username}
                   onChange={handleChange}
-                  className="input pl-10"
-                  placeholder="kullanici123"
+                  required
+                  className="input pl-11"
+                  placeholder="kullaniciadi"
                 />
               </div>
             </div>
 
-            {/* Email */}
+            {/* Email Input */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="email" className="block text-sm font-medium mb-2" style={{ color: '#EEFFDD' }}>
                 E-posta
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Mail className="h-5 w-5 text-gray-400" />
-                </div>
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: '#EEFFDD', opacity: 0.5 }} />
                 <input
+                  type="email"
                   id="email"
                   name="email"
-                  type="email"
-                  autoComplete="email"
-                  required
                   value={formData.email}
                   onChange={handleChange}
-                  className="input pl-10"
+                  required
+                  className="input pl-11"
                   placeholder="ornek@email.com"
                 />
               </div>
             </div>
 
-            {/* Password */}
+            {/* Password Input */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="password" className="block text-sm font-medium mb-2" style={{ color: '#EEFFDD' }}>
                 Şifre
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: '#EEFFDD', opacity: 0.5 }} />
                 <input
+                  type={showPassword ? 'text' : 'password'}
                   id="password"
                   name="password"
-                  type="password"
-                  autoComplete="new-password"
-                  required
                   value={formData.password}
                   onChange={handleChange}
-                  className="input pl-10"
+                  required
+                  className="input pl-11 pr-12"
                   placeholder="••••••••"
-                  minLength={6}
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 transition-opacity hover:opacity-70"
+                  style={{ color: '#EEFFDD', opacity: 0.5 }}
+                >
+                  {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
-              <p className="mt-1 text-xs text-gray-500">En az 6 karakter</p>
+              
+              {/* Password Strength Indicator */}
+              {formData.password && (
+                <div className="mt-2">
+                  <div className="flex gap-1 mb-1">
+                    {[1, 2, 3, 4, 5].map((level) => (
+                      <div
+                        key={level}
+                        className="h-1 flex-1 rounded-full transition-all"
+                        style={{
+                          backgroundColor: level <= passwordStrength.strength ? passwordStrength.color : '#555555'
+                        }}
+                      />
+                    ))}
+                  </div>
+                  {passwordStrength.text && (
+                    <p className="text-xs" style={{ color: '#EEFFDD', opacity: 0.7 }}>
+                      Şifre gücü: <span className="font-medium" style={{ color: passwordStrength.color }}>{passwordStrength.text}</span>
+                    </p>
+                  )}
+                </div>
+              )}
             </div>
 
-            {/* Confirm Password */}
+            {/* Confirm Password Input */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2" style={{ color: '#EEFFDD' }}>
                 Şifre Tekrar
               </label>
               <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <Lock className="h-5 w-5 text-gray-400" />
-                </div>
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: '#EEFFDD', opacity: 0.5 }} />
                 <input
+                  type={showConfirmPassword ? 'text' : 'password'}
                   id="confirmPassword"
                   name="confirmPassword"
-                  type="password"
-                  autoComplete="new-password"
-                  required
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="input pl-10"
+                  required
+                  className="input pl-11 pr-12"
                   placeholder="••••••••"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 transition-opacity hover:opacity-70"
+                  style={{ color: '#EEFFDD', opacity: 0.5 }}
+                >
+                  {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                </button>
               </div>
+              {formData.confirmPassword && (
+                <div className="mt-2 flex items-center gap-2">
+                  {formData.password === formData.confirmPassword ? (
+                    <>
+                      <CheckCircle className="w-4 h-4" style={{ color: '#ccff33' }} />
+                      <span className="text-xs" style={{ color: '#ccff33' }}>Şifreler eşleşiyor</span>
+                    </>
+                  ) : (
+                    <>
+                      <AlertCircle className="w-4 h-4" style={{ color: '#ef4444' }} />
+                      <span className="text-xs" style={{ color: '#ef4444' }}>Şifreler eşleşmiyor</span>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Terms Checkbox */}
+            <div className="flex items-start">
+              <input
+                type="checkbox"
+                required
+                className="w-4 h-4 mt-1 rounded"
+                style={{ backgroundColor: '#555555', borderColor: '#555555' }}
+              />
+              <label className="ml-2 text-sm" style={{ color: '#EEFFDD', opacity: 0.7 }}>
+                <a href="#" className="font-medium hover:opacity-80 transition-opacity" style={{ color: '#ccff33' }}>
+                  Kullanım Koşulları
+                </a>{' '}
+                ve{' '}
+                <a href="#" className="font-medium hover:opacity-80 transition-opacity" style={{ color: '#ccff33' }}>
+                  Gizlilik Politikası
+                </a>
+                'nı okudum ve kabul ediyorum
+              </label>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="btn btn-primary w-full"
+            >
+              {isLoading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#EEFFDD' }}></div>
+                  <span>Hesap oluşturuluyor...</span>
+                </>
+              ) : (
+                <>
+                  <UserPlus className="w-5 h-5" />
+                  <span>Hesap Oluştur</span>
+                </>
+              )}
+            </button>
+          </form>
+
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full" style={{ borderTop: '1px solid #555555' }}></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4" style={{ backgroundColor: '#1D1D1F', color: '#EEFFDD', opacity: 0.5 }}>veya</span>
             </div>
           </div>
 
-          {/* Error Message */}
-          {error && (
-            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-              <p className="text-sm text-red-800">{error}</p>
-            </div>
-          )}
-
-          {/* Submit Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn btn-primary w-full text-base py-3"
-          >
-            {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                </svg>
-                Kayıt Olunuyor...
-              </span>
-            ) : (
-              'Kayıt Ol'
-            )}
-          </button>
-
           {/* Login Link */}
           <div className="text-center">
-            <p className="text-sm text-gray-600">
+            <p style={{ color: '#EEFFDD', opacity: 0.7 }}>
               Zaten hesabınız var mı?{' '}
-              <Link to="/login" className="font-medium text-brand-600 hover:text-brand-700">
+              <Link to="/login" className="font-medium hover:opacity-80 transition-opacity" style={{ color: '#ccff33' }}>
                 Giriş yapın
               </Link>
             </p>
           </div>
-        </form>
+        </div>
       </div>
     </div>
   )

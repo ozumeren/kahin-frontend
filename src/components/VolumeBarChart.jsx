@@ -133,7 +133,7 @@ const VolumeBarChart = ({
                       y={yScale(d.totalVolume)}
                       width={barWidth}
                       height={barHeight * (d.yesVolume / d.totalVolume)}
-                      fill="#22c55e"
+                      fill="#ccff33"
                       opacity={0.8}
                       onMouseMove={(event) => {
                         const coords = localPoint(event);
