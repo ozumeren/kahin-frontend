@@ -10,7 +10,6 @@ import { bisector } from 'd3-array';
 import { format } from 'date-fns';
 import { tr } from 'date-fns/locale';
 
-// Tooltip styles
 const tooltipStyles = {
   ...defaultStyles,
   minWidth: 120,
@@ -21,7 +20,6 @@ const tooltipStyles = {
   fontSize: '14px',
 };
 
-// Accessors
 const getDate = (d) => new Date(d.timestamp);
 const getYesPrice = (d) => d.yes;
 const getNoPrice = (d) => d.no;
@@ -47,21 +45,17 @@ const MarketChart = ({
     tooltipTop = 0,
   } = useTooltip();
 
-  // Bounds
   const innerWidth = width - margin.left - margin.right;
   const innerHeight = height - margin.top - margin.bottom;
 
-  // Memoized data preparation
   const chartData = useMemo(() => {
     if (!data || data.length === 0) return [];
     
-    // Filter out null values and sort by time
     return data
       .filter(d => d.timestamp && (d.yes !== null || d.no !== null))
       .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
   }, [data]);
 
-  // Scales
   const xScale = useMemo(
     () =>
       scaleTime({
@@ -77,16 +71,15 @@ const MarketChart = ({
   );
 
   const yScale = useMemo(
-  () =>
-    scaleLinear({
-      range: [innerHeight, 0],
-      domain: [0, 100],  // ✅ 0-100% aralığı
-      nice: true,
-    }),
-  [innerHeight]
-);
+    () =>
+      scaleLinear({
+        range: [innerHeight, 0],
+        domain: [0, 100],
+        nice: true,
+      }),
+    [innerHeight]
+  );
 
-  // Event handlers
   const handleTooltip = useCallback(
     (event) => {
       const { x } = localPoint(event) || { x: 0 };
@@ -151,7 +144,6 @@ const MarketChart = ({
 
       <svg width={width} height={height}>
         <defs>
-          {/* Gradients for area fill */}
           <linearGradient id="area-gradient-yes" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0%" stopColor="#22c55e" stopOpacity={0.3} />
             <stop offset="100%" stopColor="#22c55e" stopOpacity={0.05} />
@@ -163,7 +155,6 @@ const MarketChart = ({
         </defs>
 
         <g transform={`translate(${margin.left},${margin.top})`}>
-          {/* Grid */}
           {showGrid && (
             <>
               <GridRows
@@ -183,10 +174,8 @@ const MarketChart = ({
             </>
           )}
 
-          {/* Area fills */}
           {showArea && (
             <>
-              {/* YES Area */}
               {chartData.some(d => d.yes !== null) && (
                 <AreaClosed
                   data={chartData.filter(d => d.yes !== null)}
@@ -200,7 +189,6 @@ const MarketChart = ({
                 />
               )}
 
-              {/* NO Area */}
               {chartData.some(d => d.no !== null) && (
                 <AreaClosed
                   data={chartData.filter(d => d.no !== null)}
@@ -216,8 +204,6 @@ const MarketChart = ({
             </>
           )}
 
-          {/* Line paths */}
-          {/* YES Line */}
           {chartData.some(d => d.yes !== null) && (
             <LinePath
               data={chartData.filter(d => d.yes !== null)}
@@ -231,7 +217,6 @@ const MarketChart = ({
             />
           )}
 
-          {/* NO Line */}
           {chartData.some(d => d.no !== null) && (
             <LinePath
               data={chartData.filter(d => d.no !== null)}
@@ -245,7 +230,6 @@ const MarketChart = ({
             />
           )}
 
-          {/* Axes */}
           <AxisBottom
             top={innerHeight}
             scale={xScale}
@@ -266,17 +250,16 @@ const MarketChart = ({
             numTicks={5}
             stroke="#9ca3af"
             tickStroke="#9ca3af"
-              tickLabelProps={() => ({
+            tickLabelProps={() => ({
               fill: '#6b7280',
               fontSize: 11,
               textAnchor: 'end',
               dx: -4,
               fontFamily: 'system-ui, -apple-system, sans-serif',
-          })}
-  tickFormat={(value) => `${value}%`}  // ✅ ₺ yerine % göster
-/>
+            })}
+            tickFormat={(value) => `${value}%`}
+          />
 
-          {/* Hover overlay */}
           <Bar
             x={0}
             y={0}
@@ -287,7 +270,6 @@ const MarketChart = ({
             onMouseLeave={() => hideTooltip()}
           />
 
-          {/* Tooltip line and circle */}
           {tooltipData && (
             <>
               <line
@@ -300,35 +282,33 @@ const MarketChart = ({
                 strokeDasharray="4,4"
                 pointerEvents="none"
               />
-    {tooltipData.yes !== null && (
-      <circle
-        cx={tooltipLeft - margin.left}
-        cy={yScale(tooltipData.yes)}
-        r={4}
-        fill="#22c55e"
-        stroke="white"
-        strokeWidth={2}
-        pointerEvents="none"
-      />
-    )}
-    {tooltipData.no !== null && (
-      <circle
-        cx={tooltipLeft - margin.left}
-        cy={yScale(tooltipData.no)}
-        r={4}
-        fill="#ef4444"
-        stroke="white"
-        strokeWidth={2}
-        pointerEvents="none"
-      />
-        )}
-        </>
+              {tooltipData.yes !== null && (
+                <circle
+                  cx={xScale(getDate(tooltipData))}
+                  cy={yScale(getYesPrice(tooltipData))}
+                  r={4}
+                  fill="#22c55e"
+                  stroke="white"
+                  strokeWidth={2}
+                  pointerEvents="none"
+                />
+              )}
+              {tooltipData.no !== null && (
+                <circle
+                  cx={xScale(getDate(tooltipData))}
+                  cy={yScale(getNoPrice(tooltipData))}
+                  r={4}
+                  fill="#ef4444"
+                  stroke="white"
+                  strokeWidth={2}
+                  pointerEvents="none"
+                />
+              )}
+            </>
           )}
-
         </g>
       </svg>
 
-      {/* Tooltip */}
       {tooltipData && (
         <TooltipWithBounds
           key={Math.random()}
@@ -343,13 +323,13 @@ const MarketChart = ({
             {tooltipData.yes !== null && (
               <div className="flex items-center justify-between gap-4">
                 <span className="text-green-400 font-medium">EVET:</span>
-                <span className="font-bold">₺{tooltipData.yes.toFixed(2)}</span>
+                <span className="font-bold">{tooltipData.yes.toFixed(1)}%</span>
               </div>
             )}
             {tooltipData.no !== null && (
               <div className="flex items-center justify-between gap-4">
                 <span className="text-red-400 font-medium">HAYIR:</span>
-                <span className="font-bold">₺{tooltipData.no.toFixed(2)}</span>
+                <span className="font-bold">{tooltipData.no.toFixed(1)}%</span>
               </div>
             )}
           </div>
