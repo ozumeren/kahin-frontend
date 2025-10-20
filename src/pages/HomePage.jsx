@@ -132,19 +132,8 @@ export default function HomePage() {
         </div>
       </div>
 
-      {/* Hero Section */}
+      {/* Stats */}
       <div className="container mx-auto px-4 py-12">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: '#ffffff' }}>
-            Geleceği Tahmin Et, Kazan
-          </h2>
-          <p className="text-lg max-w-2xl mx-auto" style={{ color: '#ffffff', opacity: 0.7 }}>
-            Siyaset, spor, ekonomi ve daha fazlası hakkında tahminlerde bulun. 
-            Bilgini paraya çevir.
-          </p>
-        </div>
-
-        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
           {[
             { label: 'Toplam Hacim', value: formatVolume(stats.totalVolume) },
@@ -188,8 +177,8 @@ export default function HomePage() {
 
           {/* Error State */}
           {error && (
-            <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: 'rgba(255, 0, 110, 0.1)', border: '1px solid rgba(255, 0, 110, 0.3)' }}>
-              <p className="font-medium mb-4" style={{ color: '#ff006e' }}>{error}</p>
+            <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: 'rgba(255, 0, 0, 0.1)', border: '1px solid rgba(255, 0, 0, 0.3)' }}>
+              <p className="font-medium mb-4" style={{ color: '#FF0000' }}>{error}</p>
               <button 
                 onClick={fetchMarkets}
                 className="px-6 py-3 rounded-lg font-medium transition-all hover:brightness-110"
@@ -275,9 +264,9 @@ export default function HomePage() {
                             ₺{(market.yesMidPrice || market.yesPrice || 0.50).toFixed(2)}
                           </div>
                         </div>
-                        <div className="rounded-lg p-3 text-center" style={{ backgroundColor: 'rgba(255, 0, 110, 0.1)', border: '1px solid rgba(255, 0, 110, 0.2)' }}>
-                          <div className="text-xs font-medium mb-1" style={{ color: '#ff006e', opacity: 0.8 }}>HAYIR</div>
-                          <div className="text-xl font-bold" style={{ color: '#ff006e' }}>
+                        <div className="rounded-lg p-3 text-center" style={{ backgroundColor: 'rgba(255, 0, 0, 0.1)', border: '1px solid rgba(255, 0, 0, 0.2)' }}>
+                          <div className="text-xs font-medium mb-1" style={{ color: '#FF0000', opacity: 0.8 }}>HAYIR</div>
+                          <div className="text-xl font-bold" style={{ color: '#FF0000' }}>
                             ₺{(market.noMidPrice || market.noPrice || 0.50).toFixed(2)}
                           </div>
                         </div>

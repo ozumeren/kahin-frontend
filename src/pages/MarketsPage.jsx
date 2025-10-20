@@ -148,11 +148,11 @@ export default function MarketsPage() {
 
         {/* Error State */}
         {error && (
-          <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: 'rgba(255, 0, 110, 0.1)', border: '1px solid rgba(255, 0, 110, 0.3)' }}>
-            <p className="font-medium mb-2" style={{ color: '#ff006e' }}>
+          <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: 'rgba(255, 0, 0, 0.1)', border: '1px solid rgba(255, 0, 0, 0.3)' }}>
+            <p className="font-medium mb-2" style={{ color: '#FF0000' }}>
               Pazarlar yüklenirken bir hata oluştu
             </p>
-            <p className="text-sm" style={{ color: '#ff006e', opacity: 0.8 }}>
+            <p className="text-sm" style={{ color: '#FF0000', opacity: 0.8 }}>
               Lütfen daha sonra tekrar deneyin
             </p>
           </div>
@@ -230,9 +230,9 @@ export default function MarketsPage() {
                             ₺{parseFloat(market.yesPrice || 0.50).toFixed(2)}
                           </div>
                         </div>
-                        <div className="rounded-lg p-3 text-center" style={{ backgroundColor: 'rgba(255, 0, 110, 0.1)', border: '1px solid rgba(255, 0, 110, 0.2)' }}>
-                          <div className="text-xs font-medium mb-1" style={{ color: '#ff006e', opacity: 0.8 }}>HAYIR</div>
-                          <div className="text-xl font-bold" style={{ color: '#ff006e' }}>
+                        <div className="rounded-lg p-3 text-center" style={{ backgroundColor: 'rgba(255, 0, 0, 0.1)', border: '1px solid rgba(255, 0, 0, 0.2)' }}>
+                          <div className="text-xs font-medium mb-1" style={{ color: '#FF0000', opacity: 0.8 }}>HAYIR</div>
+                          <div className="text-xl font-bold" style={{ color: '#FF0000' }}>
                             ₺{parseFloat(market.noPrice || 0.50).toFixed(2)}
                           </div>
                         </div>

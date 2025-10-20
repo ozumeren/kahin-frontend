@@ -175,7 +175,7 @@ const CandlestickChart = ({
           {candlestickData.map((d, i) => {
             const x = xScale(getDate(d));
             const isUp = d.close >= d.open;
-            const color = isUp ? '#ccff33' : '#ff006e';
+            const color = isUp ? '#ccff33' : '#FF0000';
             const wickColor = isUp ? '#16a34a' : '#dc2626';
 
             return (

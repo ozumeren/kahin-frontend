@@ -138,9 +138,9 @@ export default function PortfolioPage() {
             <div className="rounded-xl p-6" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm" style={{ color: '#ffffff', opacity: 0.7 }}>Kâr/Zarar</span>
-                <TrendingUp className="w-5 h-5" style={{ color: summary.totalPnL >= 0 ? '#ccff33' : '#ff006e' }} />
+                <TrendingUp className="w-5 h-5" style={{ color: summary.totalPnL >= 0 ? '#ccff33' : '#FF0000' }} />
               </div>
-              <div className="text-3xl font-bold" style={{ color: summary.totalPnL >= 0 ? '#ccff33' : '#ff006e' }}>
+              <div className="text-3xl font-bold" style={{ color: summary.totalPnL >= 0 ? '#ccff33' : '#FF0000' }}>
                 {summary.totalPnL >= 0 ? '+' : ''}₺{parseFloat(summary.totalPnL || 0).toFixed(2)}
               </div>
             </div>
@@ -247,12 +247,11 @@ function PositionsPanel({ positions }) {
           <Link
             key={index}
             to={`/markets/${position.marketId}`}
-            className="block rounded-xl shadow-md hover:shadow-lg transition-all p-6 group"
-            style={{ backgroundColor: '#111111', border: '1px solid #555555' }}
+            className="block p-6 group market-card"
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
-                <h3 className="text-lg font-semibold mb-2 group-hover:text-brand-500 transition-colors" style={{ color: '#ffffff' }}>
+                <h3 className="text-lg font-semibold mb-2 transition-colors" style={{ color: '#ffffff' }}>
                   {position.marketTitle}
                 </h3>
                 <div className="flex items-center gap-2">
@@ -266,15 +265,15 @@ function PositionsPanel({ positions }) {
                   </span>
                   <span className="px-3 py-1 rounded-full text-xs font-medium"
                     style={{
-                      backgroundColor: position.outcome === 'YES' ? 'rgba(204, 255, 51, 0.2)' : 'rgba(255, 0, 110, 0.2)',
-                      color: position.outcome === 'YES' ? '#ccff33' : '#ff006e'
+                      backgroundColor: position.outcome === 'YES' ? 'rgba(204, 255, 51, 0.2)' : 'rgba(255, 0, 0, 0.2)',
+                      color: position.outcome === 'YES' ? '#ccff33' : '#FF0000'
                     }}
                   >
                     {position.outcome}
                   </span>
                 </div>
               </div>
-              <div className="text-2xl font-bold" style={{ color: pnl >= 0 ? '#ccff33' : '#ff006e' }}>
+              <div className="text-2xl font-bold" style={{ color: pnl >= 0 ? '#ccff33' : '#FF0000' }}>
                 {pnl >= 0 ? '+' : ''}₺{pnl.toFixed(2)}
               </div>
             </div>
@@ -317,23 +316,23 @@ function OrdersPanel({ orders }) {
   return (
     <div className="space-y-3">
       {orders.map((order) => (
-        <div key={order.id} className="rounded-xl shadow-md p-6" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
+        <div key={order.id} className="p-6 market-card">
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h4 className="font-semibold mb-2" style={{ color: '#ffffff' }}>{order.marketTitle}</h4>
               <div className="flex items-center gap-3 text-sm">
                 <span className="px-3 py-1 rounded-full font-medium"
                   style={{
-                    backgroundColor: order.type === 'BUY' ? 'rgba(204, 255, 51, 0.2)' : 'rgba(255, 0, 110, 0.2)',
-                    color: order.type === 'BUY' ? '#ccff33' : '#ff006e'
+                    backgroundColor: order.type === 'BUY' ? 'rgba(204, 255, 51, 0.2)' : 'rgba(255, 0, 0, 0.2)',
+                    color: order.type === 'BUY' ? '#ccff33' : '#FF0000'
                   }}
                 >
                   {order.type === 'BUY' ? 'AL' : 'SAT'}
                 </span>
                 <span className="px-3 py-1 rounded-full font-medium"
                   style={{
-                    backgroundColor: order.outcome === 'YES' ? 'rgba(204, 255, 51, 0.2)' : 'rgba(255, 0, 110, 0.2)',
-                    color: order.outcome === 'YES' ? '#ccff33' : '#ff006e'
+                    backgroundColor: order.outcome === 'YES' ? 'rgba(204, 255, 51, 0.2)' : 'rgba(255, 0, 0, 0.2)',
+                    color: order.outcome === 'YES' ? '#ccff33' : '#FF0000'
                   }}
                 >
                   {order.outcome}
@@ -369,15 +368,15 @@ function TradeHistoryPanel({ trades }) {
   return (
     <div className="space-y-3">
       {trades.map((trade) => (
-        <div key={trade.id} className="rounded-xl shadow-md p-6" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
+        <div key={trade.id} className="p-6 market-card">
           <div className="flex items-start justify-between mb-3">
             <div className="flex-1">
               <h4 className="font-semibold mb-2" style={{ color: '#ffffff' }}>{trade.marketTitle}</h4>
               <div className="flex items-center gap-3 text-sm">
                 <span className="px-3 py-1 rounded-full font-medium"
                   style={{
-                    backgroundColor: trade.buyerSide === 'YES' ? 'rgba(204, 255, 51, 0.2)' : 'rgba(255, 0, 110, 0.2)',
-                    color: trade.buyerSide === 'YES' ? '#ccff33' : '#ff006e'
+                    backgroundColor: trade.buyerSide === 'YES' ? 'rgba(204, 255, 51, 0.2)' : 'rgba(255, 0, 0, 0.2)',
+                    color: trade.buyerSide === 'YES' ? '#ccff33' : '#FF0000'
                   }}
                 >
                   {trade.buyerSide}

@@ -209,7 +209,7 @@ export default function Navbar() {
                     <button
                       onClick={handleLogout}
                       className="w-full px-4 py-2 rounded-lg font-medium flex items-center justify-center gap-2 hover:brightness-110 transition-all"
-                      style={{ backgroundColor: 'rgba(255, 0, 110, 0.1)', color: '#ff006e', border: '1px solid rgba(255, 0, 110, 0.3)' }}
+                      style={{ backgroundColor: 'rgba(255, 0, 0, 0.1)', color: '#FF0000', border: '1px solid rgba(255, 0, 0, 0.3)' }}
                     >
                       <LogOut className="w-4 h-4" />
                       Çıkış Yap

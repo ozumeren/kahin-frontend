@@ -70,7 +70,7 @@ export default function RegisterPage() {
 
     const levels = [
       { strength: 0, text: '', color: '' },
-      { strength: 1, text: 'Çok Zayıf', color: '#ff006e' },
+      { strength: 1, text: 'Çok Zayıf', color: '#FF0000' },
       { strength: 2, text: 'Zayıf', color: '#f97316' },
       { strength: 3, text: 'Orta', color: '#eab308' },
       { strength: 4, text: 'İyi', color: '#3b82f6' },
@@ -98,10 +98,10 @@ export default function RegisterPage() {
         <div className="rounded-2xl shadow-lg p-8" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
           {/* Error Alert */}
           {error && (
-            <div className="mb-6 p-4 rounded-xl flex items-start gap-3" style={{ backgroundColor: 'rgba(255, 0, 110, 0.1)', border: '1px solid rgba(255, 0, 110, 0.3)' }}>
-              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#ff006e' }} />
+            <div className="mb-6 p-4 rounded-xl flex items-start gap-3" style={{ backgroundColor: 'rgba(255, 0, 0, 0.1)', border: '1px solid rgba(255, 0, 0, 0.3)' }}>
+              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#FF0000' }} />
               <div className="flex-1">
-                <p className="text-sm" style={{ color: '#ff006e' }}>{error}</p>
+                <p className="text-sm" style={{ color: '#FF0000' }}>{error}</p>
               </div>
             </div>
           )}
@@ -232,8 +232,8 @@ export default function RegisterPage() {
                     </>
                   ) : (
                     <>
-                      <AlertCircle className="w-4 h-4" style={{ color: '#ff006e' }} />
-                      <span className="text-xs" style={{ color: '#ff006e' }}>Şifreler eşleşmiyor</span>
+                      <AlertCircle className="w-4 h-4" style={{ color: '#FF0000' }} />
+                      <span className="text-xs" style={{ color: '#FF0000' }}>Şifreler eşleşmiyor</span>
                     </>
                   )}
                 </div>

@@ -149,8 +149,8 @@ const MarketChart = ({
             <stop offset="100%" stopColor="#ccff33" stopOpacity={0.05} />
           </linearGradient>
           <linearGradient id="area-gradient-no" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stopColor="#ff006e" stopOpacity={0.3} />
-            <stop offset="100%" stopColor="#ff006e" stopOpacity={0.05} />
+            <stop offset="0%" stopColor="#FF0000" stopOpacity={0.3} />
+            <stop offset="100%" stopColor="#FF0000" stopOpacity={0.05} />
           </linearGradient>
         </defs>
 
@@ -222,7 +222,7 @@ const MarketChart = ({
               data={chartData.filter(d => d.no !== null)}
               x={(d) => xScale(getDate(d)) ?? 0}
               y={(d) => yScale(getNoPrice(d)) ?? 0}
-              stroke="#ff006e"
+              stroke="#FF0000"
               strokeWidth={hoveredOutcome === 'yes' ? 1.5 : 2.5}
               curve={curveMonotoneX}
               opacity={hoveredOutcome === 'yes' ? 0.3 : 1}
@@ -298,7 +298,7 @@ const MarketChart = ({
                   cx={xScale(getDate(tooltipData))}
                   cy={yScale(getNoPrice(tooltipData))}
                   r={4}
-                  fill="#ff006e"
+                  fill="#FF0000"
                   stroke="white"
                   strokeWidth={2}
                   pointerEvents="none"
