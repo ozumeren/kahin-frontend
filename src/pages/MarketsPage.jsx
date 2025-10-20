@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useOutletContext } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import apiClient from '../api/client'
 import { 
@@ -13,9 +13,9 @@ import {
 } from 'lucide-react'
 
 export default function MarketsPage() {
+  const { activeCategory, setActiveCategory } = useOutletContext() || { activeCategory: 'all', setActiveCategory: () => {} }
   const [searchQuery, setSearchQuery] = useState('')
   const [activeFilter, setActiveFilter] = useState('all')
-  const [activeCategory, setActiveCategory] = useState('all')
 
   const { data: marketsData, isLoading, error } = useQuery({
     queryKey: ['markets'],
@@ -26,16 +26,6 @@ export default function MarketsPage() {
     },
     staleTime: 30000,
   })
-
-  const categories = [
-    { id: 'all', name: 'Tümü', icon: '🎯' },
-    { id: 'politics', name: 'Siyaset', icon: '🏛️' },
-    { id: 'sports', name: 'Spor', icon: '⚽' },
-    { id: 'crypto', name: 'Kripto', icon: '₿' },
-    { id: 'economy', name: 'Ekonomi', icon: '📈' },
-    { id: 'entertainment', name: 'Eğlence', icon: '🎬' },
-    { id: 'technology', name: 'Teknoloji', icon: '💻' }
-  ]
 
   const filters = [
     { id: 'all', label: 'Tümü' },
@@ -75,29 +65,6 @@ export default function MarketsPage() {
               onChange={(e) => setSearchQuery(e.target.value)}
               className="input w-full pl-12"
             />
-          </div>
-        </div>
-      </div>
-
-      {/* Categories */}
-      <div style={{ borderBottom: '1px solid #555555' }}>
-        <div className="container mx-auto px-4">
-          <div className="flex gap-2 overflow-x-auto py-4 scrollbar-hide">
-            {categories.map((cat) => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all"
-                style={{
-                  backgroundColor: activeCategory === cat.id ? '#555555' : 'transparent',
-                  color: '#ffffff',
-                  border: activeCategory === cat.id ? '1px solid #ccff33' : '1px solid transparent'
-                }}
-              >
-                <span>{cat.icon}</span>
-                {cat.name}
-              </button>
-            ))}
           </div>
         </div>
       </div>

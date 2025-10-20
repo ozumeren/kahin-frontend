@@ -3,10 +3,20 @@ import { useAuth } from '../context/AuthContext'
 import { TrendingUp, User, LogOut, Menu, X, Shield } from 'lucide-react'
 import { useState } from 'react'
 
-export default function Navbar() {
+export default function Navbar({ activeCategory, setActiveCategory, showCategories = false }) {
   const { user, logout } = useAuth()
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+
+  const categories = [
+    { id: 'all', name: 'Tüm Marketler', icon: '🎯' },
+    { id: 'politics', name: 'Siyaset', icon: '🏛️' },
+    { id: 'sports', name: 'Spor', icon: '⚽' },
+    { id: 'crypto', name: 'Kripto', icon: '₿' },
+    { id: 'economy', name: 'Ekonomi', icon: '📈' },
+    { id: 'entertainment', name: 'Eğlence', icon: '🎬' },
+    { id: 'technology', name: 'Teknoloji', icon: '💻' }
+  ]
 
   const isActive = (path) => location.pathname === path
 
@@ -130,18 +140,80 @@ export default function Navbar() {
             )}
           </div>
 
-          {/* Mobile Menu Button */}
-          <button 
-            onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
-            className="md:hidden p-2 rounded-lg transition-all hover:brightness-110"
-            style={{ backgroundColor: '#555555' }}
-          >
-            {mobileMenuOpen ? <X className="w-6 h-6" style={{ color: '#ffffff' }} /> : <Menu className="w-6 h-6" style={{ color: '#ffffff' }} />}
-          </button>
+          {/* Mobile Menu Button - only show when categories are not shown */}
+          {!showCategories && (
+            <button 
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
+              className="md:hidden p-2 rounded-lg transition-all hover:brightness-110"
+              style={{ backgroundColor: '#555555' }}
+            >
+              {mobileMenuOpen ? <X className="w-6 h-6" style={{ color: '#ffffff' }} /> : <Menu className="w-6 h-6" style={{ color: '#ffffff' }} />}
+            </button>
+          )}
         </div>
 
+        {/* Category Navigation */}
+        {showCategories && (
+          <div className="py-4" style={{ borderTop: '1px solid #555555' }}>
+            {/* Desktop Categories */}
+            <nav className="hidden md:flex gap-2 overflow-x-auto scrollbar-hide">
+              {categories.map(cat => (
+                <button
+                  key={cat.id}
+                  onClick={() => setActiveCategory(cat.id)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all"
+                  style={{
+                    backgroundColor: activeCategory === cat.id ? '#555555' : 'transparent',
+                    color: '#ffffff',
+                    border: activeCategory === cat.id ? '1px solid #ccff33' : '1px solid transparent'
+                  }}
+                >
+                  <span>{cat.icon}</span>
+                  {cat.name}
+                </button>
+              ))}
+            </nav>
+
+            {/* Mobile Category Selector */}
+            <div className="md:hidden flex items-center justify-between">
+              <button 
+                className="flex items-center gap-2 px-4 py-2 rounded-lg"
+                style={{ backgroundColor: '#555555', color: '#ffffff' }}
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                <span>{categories.find(c => c.id === activeCategory)?.icon}</span>
+                <span className="text-sm font-medium">{categories.find(c => c.id === activeCategory)?.name}</span>
+                {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
+              </button>
+            </div>
+
+            {/* Mobile Categories Dropdown */}
+            {mobileMenuOpen && (
+              <div className="md:hidden mt-4 space-y-2">
+                {categories.map(cat => (
+                  <button
+                    key={cat.id}
+                    onClick={() => {
+                      setActiveCategory(cat.id)
+                      setMobileMenuOpen(false)
+                    }}
+                    className="w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                    style={{
+                      backgroundColor: activeCategory === cat.id ? '#555555' : 'transparent',
+                      color: '#ffffff'
+                    }}
+                  >
+                    <span className="mr-2">{cat.icon}</span>
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Mobile Menu */}
-        {mobileMenuOpen && (
+        {mobileMenuOpen && !showCategories && (
           <div className="md:hidden py-4" style={{ borderTop: '1px solid #555555' }}>
             <div className="flex flex-col space-y-2">
               <Link

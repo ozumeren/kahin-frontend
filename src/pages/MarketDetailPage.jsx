@@ -281,11 +281,30 @@ const MarketDetailPage = () => {
         {/* Market Header */}
         <div className="rounded-xl p-6 mb-6" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
           <div className="flex items-start justify-between mb-4">
-            <div className="flex-1">
-              <h1 className="text-3xl font-bold mb-2" style={{ color: '#ffffff' }}>{market.title}</h1>
-              {market.description && (
-                <p style={{ color: '#ffffff', opacity: 0.7 }}>{market.description}</p>
-              )}
+            <div className="flex items-start gap-4 flex-1">
+              {/* Market Image */}
+              <div 
+                className="w-16 h-16 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center text-2xl"
+                style={{ backgroundColor: 'rgba(204, 255, 51, 0.1)' }}
+              >
+                {market.image_url ? (
+                  <img 
+                    src={market.image_url} 
+                    alt={market.title}
+                    className="w-full h-full object-cover" 
+                  />
+                ) : (
+                  '📊'
+                )}
+              </div>
+              
+              {/* Market Info */}
+              <div className="flex-1">
+                <h1 className="text-3xl font-bold mb-2" style={{ color: '#ffffff' }}>{market.title}</h1>
+                {market.description && (
+                  <p style={{ color: '#ffffff', opacity: 0.7 }}>{market.description}</p>
+                )}
+              </div>
             </div>
             <div className="flex items-center gap-3">
               {wsConnected && (

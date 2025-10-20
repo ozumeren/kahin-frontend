@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { TrendingUp, ChevronRight, Menu, X, Clock, Users } from 'lucide-react'
+import { Link, useOutletContext } from 'react-router-dom'
+import { TrendingUp, ChevronRight, Users } from 'lucide-react'
 import apiClient from '../api/client'
 
 export default function HomePage() {
-  const [activeCategory, setActiveCategory] = useState('all')
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const { activeCategory, setActiveCategory } = useOutletContext()
   const [markets, setMarkets] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -29,12 +28,8 @@ export default function HomePage() {
       setLoading(true)
       const response = await apiClient.get('/markets')
       console.log('📊 API Response:', response.data)
-      
-      // API response: { success: true, count: X, data: [...markets] }
       const fetchedMarkets = response.data.data || []
       console.log('📊 Fetched markets:', fetchedMarkets.length)
-      console.log('📊 First market:', fetchedMarkets[0])
-      
       setMarkets(fetchedMarkets)
       setError(null)
     } catch (err) {
@@ -45,19 +40,13 @@ export default function HomePage() {
     }
   }
 
-  // Category filter - şimdilik category field olmadığı için sadece status'e göre filtrele
   const filteredMarkets = markets.filter((market) => {
-    // Şimdilik sadece "open" marketleri göster
+    const statusFilter = market.status === 'open' || market.status === 'closed'
     if (activeCategory === 'all') {
-      return market.status === 'open' || market.status === 'closed'
+      return statusFilter
     }
-    // Category field olmadığı için şimdilik tüm marketleri göster
-    return market.status === 'open' || market.status === 'closed'
+    return statusFilter && market.category === activeCategory
   })
-
-  console.log('🔍 Active category:', activeCategory)
-  console.log('🔍 Total markets:', markets.length)
-  console.log('🔍 Filtered markets:', filteredMarkets.length)
 
   const stats = {
     totalVolume: markets.reduce((sum, m) => sum + parseFloat(m.volume || 0), 0),
@@ -74,66 +63,19 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#111111' }}>
-      {/* Category Navigation */}
-      <div className="sticky top-0 z-10" style={{ backgroundColor: '#111111', borderBottom: '1px solid #555555' }}>
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between py-4">
-            <nav className="hidden md:flex gap-2 overflow-x-auto scrollbar-hide">
-              {categories.map(cat => (
-                <button
-                  key={cat.id}
-                  onClick={() => setActiveCategory(cat.id)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all`}
-                  style={{
-                    backgroundColor: activeCategory === cat.id ? '#555555' : 'transparent',
-                    color: '#ffffff',
-                    border: activeCategory === cat.id ? '1px solid #ccff33' : '1px solid transparent'
-                  }}
-                >
-                  <span>{cat.icon}</span>
-                  {cat.name}
-                </button>
-              ))}
-            </nav>
-
-            <button 
-              className="md:hidden flex items-center gap-2 px-4 py-2 rounded-lg"
-              style={{ backgroundColor: '#555555', color: '#ffffff' }}
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              <span>{categories.find(c => c.id === activeCategory)?.icon}</span>
-              <span className="text-sm font-medium">{categories.find(c => c.id === activeCategory)?.name}</span>
-              {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-            </button>
-          </div>
-
-          {/* Mobile Menu */}
-          {mobileMenuOpen && (
-            <div className="md:hidden py-4 space-y-2" style={{ borderTop: '1px solid #555555' }}>
-              {categories.map(cat => (
-                <button
-                  key={cat.id}
-                  onClick={() => {
-                    setActiveCategory(cat.id)
-                    setMobileMenuOpen(false)
-                  }}
-                  className="w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-all"
-                  style={{
-                    backgroundColor: activeCategory === cat.id ? '#555555' : 'transparent',
-                    color: '#ffffff'
-                  }}
-                >
-                  <span className="mr-2">{cat.icon}</span>
-                  {cat.name}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Stats */}
+      {/* Hero Section */}
       <div className="container mx-auto px-4 py-12">
+        <div className="text-center mb-12">
+          <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: '#EEFFDD' }}>
+            Geleceği Tahmin Et, Kazan
+          </h2>
+          <p className="text-lg max-w-2xl mx-auto" style={{ color: '#EEFFDD', opacity: 0.7 }}>
+            Siyaset, spor, ekonomi ve daha fazlası hakkında tahminlerde bulun. 
+            Bilgini paraya çevir.
+          </p>
+        </div>
+
+        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
           {[
             { label: 'Toplam Hacim', value: formatVolume(stats.totalVolume) },
@@ -141,11 +83,11 @@ export default function HomePage() {
             { label: 'Aktif Market', value: stats.activeMarkets },
             { label: 'Başarı Oranı', value: '%99.2' }
           ].map((stat, idx) => (
-            <div key={idx} className="rounded-2xl p-6 text-center" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
-              <div className="text-3xl font-bold mb-1" style={{ color: '#ffffff' }}>
+            <div key={idx} className="rounded-2xl p-6 text-center" style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}>
+              <div className="text-3xl font-bold mb-1" style={{ color: '#EEFFDD' }}>
                 {stat.value}
               </div>
-              <div className="text-sm" style={{ color: '#ffffff', opacity: 0.7 }}>{stat.label}</div>
+              <div className="text-sm" style={{ color: '#EEFFDD', opacity: 0.7 }}>{stat.label}</div>
             </div>
           ))}
         </div>
@@ -153,7 +95,7 @@ export default function HomePage() {
         {/* Markets Grid */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-bold flex items-center gap-2" style={{ color: '#ffffff' }}>
+            <h3 className="text-2xl font-bold flex items-center gap-2" style={{ color: '#EEFFDD' }}>
               <TrendingUp className="w-6 h-6" style={{ color: '#ccff33' }} />
               {categories.find(c => c.id === activeCategory)?.name}
             </h3>
@@ -171,109 +113,137 @@ export default function HomePage() {
           {loading && (
             <div className="text-center py-12">
               <div className="inline-block animate-spin rounded-full h-12 w-12 mb-4" style={{ border: '4px solid #ccff33', borderTopColor: 'transparent' }}></div>
-              <p style={{ color: '#ffffff', opacity: 0.7 }}>Marketler yükleniyor...</p>
+              <p style={{ color: '#EEFFDD', opacity: 0.7 }}>Marketler yükleniyor...</p>
             </div>
           )}
 
           {/* Error State */}
           {error && (
-            <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: 'rgba(255, 0, 0, 0.1)', border: '1px solid rgba(255, 0, 0, 0.3)' }}>
-              <p className="font-medium mb-4" style={{ color: '#FF0000' }}>{error}</p>
+            <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+              <p className="font-medium mb-4" style={{ color: '#ef4444' }}>{error}</p>
               <button 
                 onClick={fetchMarkets}
                 className="px-6 py-3 rounded-lg font-medium transition-all hover:brightness-110"
-                style={{ backgroundColor: '#555555', color: '#ffffff' }}
+                style={{ backgroundColor: '#555555', color: '#EEFFDD' }}
               >
                 Tekrar Dene
               </button>
             </div>
           )}
 
-          {/* Markets Grid */}
+          {/* Markets Grid - YENİ TASARIM */}
           {!loading && !error && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
               {filteredMarkets.length === 0 ? (
-                <div className="col-span-full rounded-2xl p-12 text-center" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
+                <div className="col-span-full rounded-2xl p-12 text-center" style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}>
                   <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#555555' }}>
-                    <TrendingUp className="w-10 h-10" style={{ color: '#ffffff', opacity: 0.5 }} />
+                    <TrendingUp className="w-10 h-10" style={{ color: '#EEFFDD', opacity: 0.5 }} />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2" style={{ color: '#ffffff' }}>Henüz market yok</h3>
-                  <p style={{ color: '#ffffff', opacity: 0.7 }}>Bu kategoride market bulunmuyor</p>
+                  <h3 className="text-xl font-semibold mb-2" style={{ color: '#EEFFDD' }}>Henüz market yok</h3>
+                  <p style={{ color: '#EEFFDD', opacity: 0.7 }}>Bu kategoride market bulunmuyor</p>
                 </div>
               ) : (
-                filteredMarkets.map((market) => (
-                  <Link
-                    key={market.id}
-                    to={`/markets/${market.id}`}
-                    className="market-card group"
-                  >
-                    <div className="p-6">
-                      {/* Header */}
-                      <div className="flex items-start justify-between mb-4">
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium`}
-                          style={{
-                            backgroundColor: market.status === 'open' ? 'rgba(204, 255, 51, 0.2)' : 
-                                           market.status === 'closed' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(107, 114, 128, 0.2)',
-                            color: market.status === 'open' ? '#ccff33' : 
-                                  market.status === 'closed' ? '#3b82f6' : '#6b7280',
-                            border: `1px solid ${market.status === 'open' ? 'rgba(204, 255, 51, 0.3)' : 
-                                               market.status === 'closed' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(107, 114, 128, 0.3)'}`
-                          }}
-                        >
-                          {market.status === 'open' ? 'Açık' : 
-                           market.status === 'closed' ? 'Kapandı' : 'Sonuçlandı'}
-                        </span>
-                        <ChevronRight className="w-5 h-5 transition-colors" style={{ color: '#ffffff', opacity: 0.5 }} />
-                      </div>
+                filteredMarkets.map((market) => {
+                  const yesPrice = parseFloat(market.yesMidPrice || market.yesPrice || 0.50)
+                  const noPrice = parseFloat(market.noMidPrice || market.noPrice || 0.50)
+                  const yesPercentage = Math.round(yesPrice * 100)
 
-                      {/* Title */}
-                      <h3 className="text-lg font-semibold mb-3 group-hover:text-brand-500 transition-colors line-clamp-2" style={{ color: '#ffffff' }}>
-                        {market.title}
-                      </h3>
-
-                      {/* Description */}
-                      {market.description && (
-                        <p className="text-sm mb-4 line-clamp-2" style={{ color: '#ffffff', opacity: 0.7 }}>
-                          {market.description}
-                        </p>
-                      )}
-
-                      {/* Stats */}
-                      <div className="flex items-center gap-4 text-sm mb-4 pb-4" style={{ borderBottom: '1px solid #555555', color: '#ffffff', opacity: 0.7 }}>
-                        <div className="flex items-center gap-1">
-                          <TrendingUp className="w-4 h-4" />
-                          <span>₺{parseFloat(market.volume || 0).toLocaleString('tr-TR')}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Users className="w-4 h-4" />
-                          <span>{market.tradersCount || 0}</span>
-                        </div>
-                        {market.closing_date && (
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-4 h-4" />
-                            <span>{new Date(market.closing_date).toLocaleDateString('tr-TR')}</span>
+                  return (
+                    <div 
+                      key={market.id}
+                      className="rounded-2xl p-5 transition-all hover:shadow-xl border group"
+                      style={{ 
+                        backgroundColor: '#1D1D1F',
+                        borderColor: '#555555'
+                      }}
+                    >
+                      <Link to={`/markets/${market.id}`} className="block">
+                        {/* Header */}
+                        <div className="flex items-start gap-3 mb-4">
+                          {/* Icon */}
+                          <div 
+                            className="w-12 h-12 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center text-2xl"
+                            style={{ backgroundColor: 'rgba(204, 255, 51, 0.1)' }}
+                          >
+                            {market.image_url ? (
+                              <img src={market.image_url} alt="" className="w-full h-full object-cover" />
+                            ) : '📊'}
                           </div>
-                        )}
-                      </div>
 
-                      {/* Prices - Şimdilik sabit fiyat göster */}
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="rounded-lg p-3 text-center" style={{ backgroundColor: 'rgba(204, 255, 51, 0.1)', border: '1px solid rgba(204, 255, 51, 0.2)' }}>
-                          <div className="text-xs font-medium mb-1" style={{ color: '#ccff33', opacity: 0.8 }}>EVET</div>
-                          <div className="text-xl font-bold" style={{ color: '#ccff33' }}>
-                            ₺{(market.yesMidPrice || market.yesPrice || 0.50).toFixed(2)}
+                          {/* Title */}
+                          <div className="flex-1 min-w-0">
+                            <h3 
+                              className="text-base font-semibold line-clamp-2 group-hover:opacity-80 transition-opacity mb-2"
+                              style={{ color: '#EEFFDD', opacity: 0.9 }}
+                            >
+                              {market.title}
+                            </h3>
+                            <div className="flex items-baseline gap-2">
+                              <span className="text-2xl font-bold" style={{ color: '#ccff33' }}>
+                                {yesPercentage}%
+                              </span>
+                              <span className="text-xs" style={{ color: '#EEFFDD', opacity: 0.5 }}>
+                                EVET
+                              </span>
+                            </div>
                           </div>
                         </div>
-                        <div className="rounded-lg p-3 text-center" style={{ backgroundColor: 'rgba(255, 0, 0, 0.1)', border: '1px solid rgba(255, 0, 0, 0.2)' }}>
-                          <div className="text-xs font-medium mb-1" style={{ color: '#FF0000', opacity: 0.8 }}>HAYIR</div>
-                          <div className="text-xl font-bold" style={{ color: '#FF0000' }}>
-                            ₺{(market.noMidPrice || market.noPrice || 0.50).toFixed(2)}
-                          </div>
+
+                        {/* Buttons */}
+                        <div className="grid grid-cols-2 gap-2 mb-3">
+                          <button
+                            className="py-2.5 px-3 rounded-lg font-semibold text-sm transition-all hover:brightness-110"
+                            style={{ 
+                              backgroundColor: 'rgba(204, 255, 51, 0.15)',
+                              color: '#ccff33',
+                              border: '1px solid rgba(204, 255, 51, 0.3)'
+                            }}
+                          >
+                            Yes
+                          </button>
+                          <button
+                            className="py-2.5 px-3 rounded-lg font-semibold text-sm transition-all hover:brightness-110"
+                            style={{ 
+                              backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                              color: '#ef4444',
+                              border: '1px solid rgba(239, 68, 68, 0.3)'
+                            }}
+                          >
+                            No
+                          </button>
                         </div>
-                      </div>
+
+                        {/* Prices */}
+                        <div className="grid grid-cols-2 gap-2 mb-3 text-xs text-center" style={{ color: '#EEFFDD', opacity: 0.5 }}>
+                          <div>₺100 → <span style={{ color: '#ccff33' }}>₺{(100 * yesPrice).toFixed(0)}</span></div>
+                          <div>₺100 → <span style={{ color: '#ef4444' }}>₺{(100 * noPrice).toFixed(0)}</span></div>
+                        </div>
+
+                        {/* Footer */}
+                        <div className="flex items-center justify-between pt-3 text-xs" style={{ borderTop: '1px solid #555555', color: '#EEFFDD', opacity: 0.6 }}>
+                          <div className="flex items-center gap-3">
+                            <span className="flex items-center gap-1">
+                              <TrendingUp className="w-3 h-3" />
+                              ₺{parseFloat(market.volume || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Users className="w-3 h-3" />
+                              {market.tradersCount || 0}
+                            </span>
+                          </div>
+                          <span className="px-2 py-0.5 rounded text-xs"
+                            style={{
+                              backgroundColor: market.status === 'open' ? 'rgba(204, 255, 51, 0.2)' : 'rgba(107, 114, 128, 0.2)',
+                              color: market.status === 'open' ? '#ccff33' : '#9ca3af'
+                            }}
+                          >
+                            {market.status === 'open' ? 'Açık' : 'Kapandı'}
+                          </span>
+                        </div>
+                      </Link>
                     </div>
-                  </Link>
-                ))
+                  )
+                })
               )}
             </div>
           )}
