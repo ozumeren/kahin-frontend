@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react'
+import { Mail, Lock, Eye, EyeOff, LogIn, AlertCircle, TrendingUp } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 export default function LoginPage() {
@@ -45,25 +45,54 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-brand-50 via-white to-green-50 flex items-center justify-center py-12 px-4">
+    <div 
+      className="min-h-screen flex items-center justify-center py-12 px-4"
+      style={{ backgroundColor: '#111111' }}
+    >
       <div className="max-w-md w-full">
-        {/* Logo/Brand */}
+        
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-brand-600 rounded-2xl mb-4">
-            <span className="text-3xl">🎯</span>
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4">
+            <img 
+              src="https://i.ibb.co/qL5cd5C1/Logo.png" 
+              alt="Kahinmarket Logo" 
+              className="w-16 h-16 object-contain"
+              onError={(e) => {
+                // Eğer logo yüklenemezse, fallback icon göster
+                e.target.style.display = 'none'
+                e.target.nextElementSibling.style.display = 'flex'
+              }}
+            />
+            <div 
+              className="w-16 h-16 rounded-2xl items-center justify-center transition-all hidden"
+              style={{ backgroundColor: '#ccff33', display: 'none' }}
+            >
+              <TrendingUp className="w-8 h-8" style={{ color: '#111111' }} />
+            </div>
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Hoş Geldiniz</h1>
-          <p className="text-gray-600">Hesabınıza giriş yapın</p>
+          <h1 
+            className="text-3xl font-bold mb-2 font-sans"
+            style={{ color: '#ffffff' }}
+          >
+            Hoş Geldiniz
+          </h1>
+          <p style={{ color: '#cccccc' }}>Hesabınıza giriş yapın</p>
         </div>
 
         {/* Form Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div 
+          className="rounded-2xl shadow-xl p-8"
+          style={{ backgroundColor: '#222222', border: '1px solid #333333' }}
+        >
           {/* Error Alert */}
           {error && (
-            <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
+            <div 
+              className="mb-6 p-4 rounded-xl flex items-start gap-3"
+              style={{ backgroundColor: 'rgba(255, 0, 0, 0.1)', border: '1px solid rgba(255, 0, 0, 0.3)' }}
+            >
+              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#FF0000' }} />
               <div className="flex-1">
-                <p className="text-sm text-red-800">{error}</p>
+                <p className="text-sm" style={{ color: '#FF0000' }}>{error}</p>
               </div>
             </div>
           )}
@@ -71,11 +100,15 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Email Input */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+              <label 
+                htmlFor="email" 
+                className="block text-sm font-medium mb-2 font-sans"
+                style={{ color: '#ffffff' }}
+              >
                 E-posta
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: '#888888' }} />
                 <input
                   type="email"
                   id="email"
@@ -83,7 +116,12 @@ export default function LoginPage() {
                   value={formData.email}
                   onChange={handleChange}
                   required
-                  className="w-full pl-11 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+                  className="w-full pl-11 pr-4 py-3 rounded-xl focus:outline-none transition-all font-sans"
+                  style={{ 
+                    backgroundColor: '#333333',
+                    border: '1px solid #444444',
+                    color: '#ffffff'
+                  }}
                   placeholder="ornek@email.com"
                 />
               </div>
@@ -91,11 +129,15 @@ export default function LoginPage() {
 
             {/* Password Input */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
+              <label 
+                htmlFor="password" 
+                className="block text-sm font-medium mb-2 font-sans"
+                style={{ color: '#ffffff' }}
+              >
                 Şifre
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: '#888888' }} />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="password"
@@ -103,13 +145,19 @@ export default function LoginPage() {
                   value={formData.password}
                   onChange={handleChange}
                   required
-                  className="w-full pl-11 pr-12 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all"
+                  className="w-full pl-11 pr-12 py-3 rounded-xl focus:outline-none transition-all font-sans"
+                  style={{ 
+                    backgroundColor: '#333333',
+                    border: '1px solid #444444',
+                    color: '#ffffff'
+                  }}
                   placeholder="••••••••"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
+                  className="absolute right-3 top-1/2 transform -translate-y-1/2 hover:brightness-110 transition-all"
+                  style={{ color: '#888888' }}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -121,11 +169,20 @@ export default function LoginPage() {
               <label className="flex items-center cursor-pointer">
                 <input
                   type="checkbox"
-                  className="w-4 h-4 text-brand-600 border-gray-300 rounded focus:ring-brand-500"
+                  className="w-4 h-4 rounded focus:outline-none"
+                  style={{ 
+                    backgroundColor: '#333333',
+                    border: '1px solid #444444',
+                    accentColor: '#ccff33'
+                  }}
                 />
-                <span className="ml-2 text-gray-600">Beni hatırla</span>
+                <span className="ml-2 font-sans" style={{ color: '#cccccc' }}>Beni hatırla</span>
               </label>
-              <a href="#" className="text-brand-600 hover:text-brand-700 font-medium">
+              <a 
+                href="#" 
+                className="font-medium hover:brightness-110 transition-all font-sans"
+                style={{ color: '#ccff33' }}
+              >
                 Şifremi unuttum
               </a>
             </div>
@@ -134,11 +191,15 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full flex items-center justify-center gap-2 py-3 bg-brand-600 text-white rounded-xl font-medium hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl font-medium focus:outline-none transition-all disabled:opacity-50 disabled:cursor-not-allowed hover:brightness-110 font-sans"
+              style={{ 
+                backgroundColor: '#ccff33',
+                color: '#111111'
+              }}
             >
               {isLoading ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#111111' }}></div>
                   <span>Giriş yapılıyor...</span>
                 </>
               ) : (
@@ -153,18 +214,27 @@ export default function LoginPage() {
           {/* Divider */}
           <div className="relative my-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-300"></div>
+              <div className="w-full border-t" style={{ borderColor: '#444444' }}></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4 bg-white text-gray-500">veya</span>
+              <span 
+                className="px-4 font-sans"
+                style={{ backgroundColor: '#222222', color: '#888888' }}
+              >
+                veya
+              </span>
             </div>
           </div>
 
           {/* Sign Up Link */}
           <div className="text-center">
-            <p className="text-gray-600">
+            <p style={{ color: '#cccccc' }} className="font-sans">
               Hesabınız yok mu?{' '}
-              <Link to="/register" className="text-brand-600 hover:text-brand-700 font-medium">
+              <Link 
+                to="/register" 
+                className="font-medium hover:brightness-110 transition-all font-sans"
+                style={{ color: '#ccff33' }}
+              >
                 Kayıt olun
               </Link>
             </p>
@@ -172,13 +242,21 @@ export default function LoginPage() {
         </div>
 
         {/* Footer */}
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-center text-sm mt-6 font-sans" style={{ color: '#888888' }}>
           Giriş yaparak{' '}
-          <a href="#" className="text-brand-600 hover:text-brand-700">
+          <a 
+            href="#" 
+            className="hover:brightness-110 transition-all font-sans"
+            style={{ color: '#ccff33' }}
+          >
             Kullanım Koşulları
           </a>{' '}
           ve{' '}
-          <a href="#" className="text-brand-600 hover:text-brand-700">
+          <a 
+            href="#" 
+            className="hover:brightness-110 transition-all font-sans"
+            style={{ color: '#ccff33' }}
+          >
             Gizlilik Politikası
           </a>
           'nı kabul etmiş olursunuz
