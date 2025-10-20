@@ -21,7 +21,17 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center transition-all" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)' }}>
+            <img 
+              src="https://api.kahinmarket.com/uploads/logo.png" 
+              alt="Kahinmarket Logo" 
+              className="w-10 h-10 rounded-xl object-cover"
+              onError={(e) => {
+                // Eğer logo yüklenemezse, fallback icon göster
+                e.target.style.display = 'none'
+                e.target.nextElementSibling.style.display = 'flex'
+              }}
+            />
+            <div className="w-10 h-10 rounded-xl items-center justify-center transition-all hidden" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)', display: 'none' }}>
               <TrendingUp className="w-6 h-6" style={{ color: '#ccff33' }} />
             </div>
             <span className="text-xl font-bold transition-colors" style={{ color: '#EEFFDD' }}>

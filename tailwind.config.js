@@ -9,8 +9,8 @@ export default {
       colors: {
         // Özel tema renkleri
         dark: {
-          900: '#1D1D1F',  // Ana arka plan
-          800: '#1D1D1F',  // Card arka plan
+          900: '#111111',  // Ana arka plan
+          800: '#111111',  // Card arka plan
           700: '#2a2a2c',  // Hover state (biraz açık)
           600: '#555555',  // Border ve input
         },

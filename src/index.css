@@ -15,7 +15,7 @@
 @layer base {
   body {
     @apply font-sans antialiased;
-    background-color: #1D1D1F;
+    background-color: #111111;
     color: #EEFFDD;
   }
   
@@ -29,7 +29,7 @@
 @layer components {
   /* Market Card */
   .market-card {
-    background-color: #1D1D1F;
+    background-color: #111111;
     @apply rounded-2xl p-0 overflow-hidden transition-all duration-300 cursor-pointer;
     border: 1px solid #555555;
   }

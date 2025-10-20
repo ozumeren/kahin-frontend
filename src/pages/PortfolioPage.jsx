@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { usePortfolio } from '../hooks/useMarketQueries'
@@ -20,24 +20,26 @@ import apiClient from '../api/client'
 export default function PortfolioPage() {
   const { user, isAuthenticated } = useAuth()
   const [activeTab, setActiveTab] = useState('positions')
-  const [activeCategory, setActiveCategory] = useState('all')
 
-  const categories = [
-    { id: 'all', name: 'Tüm Marketler' },
-    { id: 'politics', name: 'Siyaset' },
-    { id: 'sports', name: 'Spor' },
-    { id: 'crypto', name: 'Kripto' },
-    { id: 'economy', name: 'Ekonomi' },
-    { id: 'entertainment', name: 'Eğlence' },
-    { id: 'technology', name: 'Teknoloji' }
-  ]
+  const { data: portfolio, isLoading: portfolioLoading, error: portfolioError } = usePortfolio(isAuthenticated)
 
-  const { data: portfolio, isLoading: portfolioLoading } = usePortfolio(isAuthenticated)
+  // Debug için console log
+  useEffect(() => {
+    if (portfolio) {
+      console.log('📊 PORTFOLIO DATA:', portfolio)
+      console.log('📊 Summary:', portfolio.summary)
+      console.log('📊 Positions:', portfolio.positions)
+    }
+    if (portfolioError) {
+      console.error('❌ PORTFOLIO ERROR:', portfolioError)
+    }
+  }, [portfolio, portfolioError])
 
   const { data: ordersData } = useQuery({
     queryKey: ['myOrders'],
     queryFn: async () => {
-      const response = await apiClient.get('/orders/my')
+      const response = await apiClient.get('/orders')
+      console.log('📊 ORDERS RESPONSE:', response.data)
       return response.data.data
     },
     enabled: isAuthenticated,
@@ -47,6 +49,8 @@ export default function PortfolioPage() {
     queryKey: ['myTrades'],
     queryFn: async () => {
       const response = await apiClient.get('/trades/my/all')
+      console.log('📊 TRADES RESPONSE:', response.data)
+      // Backend response: { success: true, data: { trades: [...], ... } }
       return response.data.data
     },
     enabled: isAuthenticated,
@@ -54,6 +58,9 @@ export default function PortfolioPage() {
 
   const orders = ordersData?.orders || []
   const tradeHistory = tradesData?.trades || []
+  
+  console.log('📊 Orders count:', orders.length)
+  console.log('📊 Trades count:', tradeHistory.length)
 
   const tabs = [
     { id: 'positions', label: 'Pozisyonlar', icon: Target, count: portfolio?.positions?.length || 0 },
@@ -67,7 +74,7 @@ export default function PortfolioPage() {
         <div className="container mx-auto px-4">
           <div className="max-w-md mx-auto rounded-2xl shadow-md p-8 text-center" style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}>
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)' }}>
-              <AlertCircle className="w-8 h-8" style={{ color: '#ccff33' }} />
+              <AlertCircle className="w-8 h-8" style={{ color: '#22c55e' }} />
             </div>
             <h2 className="text-2xl font-bold mb-2" style={{ color: '#EEFFDD' }}>Giriş Yapın</h2>
             <p className="mb-6" style={{ color: '#EEFFDD', opacity: 0.7 }}>
@@ -95,33 +102,22 @@ export default function PortfolioPage() {
     )
   }
 
-  const summary = portfolio?.summary || {}
+  const summary = portfolio?.summary || {
+    totalValue: 0,
+    totalPnL: 0,
+    currentBalance: 0,
+    totalInvested: 0
+  }
   const positions = portfolio?.positions || []
+
+  console.log('📊 Rendering with:', { 
+    summaryKeys: Object.keys(summary), 
+    positionsCount: positions.length,
+    firstPosition: positions[0]
+  })
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#1D1D1F' }}>
-      {/* Category Navigation */}
-      <div className="sticky top-0 z-10" style={{ backgroundColor: '#1D1D1F', borderBottom: '1px solid #555555' }}>
-        <div className="container mx-auto px-4">
-          <nav className="flex gap-2 overflow-x-auto py-4 scrollbar-hide">
-            {categories.map(cat => (
-              <button
-                key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all"
-                style={{
-                  backgroundColor: activeCategory === cat.id ? '#555555' : 'transparent',
-                  color: '#EEFFDD',
-                  border: activeCategory === cat.id ? '1px solid #ccff33' : '1px solid transparent'
-                }}
-              >
-                {cat.name}
-              </button>
-            ))}
-          </nav>
-        </div>
-      </div>
-
       {/* Header Section */}
       <div style={{ borderBottom: '1px solid #555555' }}>
         <div className="container mx-auto px-4 py-8">
@@ -132,7 +128,7 @@ export default function PortfolioPage() {
             <div className="rounded-xl p-6" style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm" style={{ color: '#EEFFDD', opacity: 0.7 }}>Toplam Değer</span>
-                <DollarSign className="w-5 h-5" style={{ color: '#ccff33' }} />
+                <DollarSign className="w-5 h-5" style={{ color: '#22c55e' }} />
               </div>
               <div className="text-3xl font-bold" style={{ color: '#EEFFDD' }}>
                 ₺{parseFloat(summary.totalValue || 0).toFixed(2)}
@@ -142,9 +138,9 @@ export default function PortfolioPage() {
             <div className="rounded-xl p-6" style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm" style={{ color: '#EEFFDD', opacity: 0.7 }}>Kâr/Zarar</span>
-                <TrendingUp className="w-5 h-5" style={{ color: summary.totalPnL >= 0 ? '#ccff33' : '#ef4444' }} />
+                <TrendingUp className="w-5 h-5" style={{ color: summary.totalPnL >= 0 ? '#22c55e' : '#ef4444' }} />
               </div>
-              <div className="text-3xl font-bold" style={{ color: summary.totalPnL >= 0 ? '#ccff33' : '#ef4444' }}>
+              <div className="text-3xl font-bold" style={{ color: summary.totalPnL >= 0 ? '#22c55e' : '#ef4444' }}>
                 {summary.totalPnL >= 0 ? '+' : ''}₺{parseFloat(summary.totalPnL || 0).toFixed(2)}
               </div>
             </div>
@@ -184,8 +180,8 @@ export default function PortfolioPage() {
                   onClick={() => setActiveTab(tab.id)}
                   className="flex items-center gap-2 py-4 font-medium transition-all"
                   style={{
-                    borderBottom: activeTab === tab.id ? '2px solid #ccff33' : '2px solid transparent',
-                    color: activeTab === tab.id ? '#ccff33' : '#EEFFDD',
+                    borderBottom: activeTab === tab.id ? '2px solid #22c55e' : '2px solid transparent',
+                    color: activeTab === tab.id ? '#22c55e' : '#EEFFDD',
                     opacity: activeTab === tab.id ? 1 : 0.7
                   }}
                 >
@@ -215,6 +211,8 @@ export default function PortfolioPage() {
 
 // Positions Panel
 function PositionsPanel({ positions }) {
+  console.log('🎯 PositionsPanel received:', positions)
+  
   if (!positions || positions.length === 0) {
     return (
       <div className="rounded-2xl shadow-md p-12 text-center" style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}>
@@ -236,58 +234,68 @@ function PositionsPanel({ positions }) {
 
   return (
     <div className="space-y-4">
-      {positions.map((position, index) => (
-        <Link
-          key={index}
-          to={`/markets/${position.marketId}`}
-          className="block rounded-xl shadow-md hover:shadow-lg transition-all p-6 group"
-          style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}
-        >
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold mb-2 group-hover:text-brand-500 transition-colors" style={{ color: '#EEFFDD' }}>
-                {position.marketTitle}
-              </h3>
-              <div className="flex items-center gap-2">
-                <span className="px-3 py-1 rounded-full text-xs font-medium"
-                  style={{
-                    backgroundColor: position.marketStatus === 'open' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(59, 130, 246, 0.2)',
-                    color: position.marketStatus === 'open' ? '#ccff33' : '#3b82f6'
-                  }}
-                >
-                  {position.marketStatus === 'open' ? 'Açık' : 'Kapandı'}
-                </span>
-                <span className="px-3 py-1 rounded-full text-xs font-medium"
-                  style={{
-                    backgroundColor: position.outcome === 'YES' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                    color: position.outcome === 'YES' ? '#ccff33' : '#ef4444'
-                  }}
-                >
-                  {position.outcome}
-                </span>
+      {positions.map((position, index) => {
+        console.log(`🎯 Position ${index}:`, position)
+        
+        // Değerleri güvenli bir şekilde al
+        const pnl = parseFloat(position.unrealizedPnL || position.pnl || 0)
+        const invested = parseFloat(position.invested || 0)
+        const currentValue = parseFloat(position.currentValue || 0)
+        const quantity = parseFloat(position.quantity || 0)
+        
+        return (
+          <Link
+            key={index}
+            to={`/markets/${position.marketId}`}
+            className="block rounded-xl shadow-md hover:shadow-lg transition-all p-6 group"
+            style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold mb-2 group-hover:text-brand-500 transition-colors" style={{ color: '#EEFFDD' }}>
+                  {position.marketTitle}
+                </h3>
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full text-xs font-medium"
+                    style={{
+                      backgroundColor: position.marketStatus === 'open' ? 'rgba(204, 255, 51, 0.2)' : 'rgba(59, 130, 246, 0.2)',
+                      color: position.marketStatus === 'open' ? '#ccff33' : '#3b82f6'
+                    }}
+                  >
+                    {position.marketStatus === 'open' ? 'Açık' : 'Kapandı'}
+                  </span>
+                  <span className="px-3 py-1 rounded-full text-xs font-medium"
+                    style={{
+                      backgroundColor: position.outcome === 'YES' ? 'rgba(204, 255, 51, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                      color: position.outcome === 'YES' ? '#ccff33' : '#ef4444'
+                    }}
+                  >
+                    {position.outcome}
+                  </span>
+                </div>
+              </div>
+              <div className="text-2xl font-bold" style={{ color: pnl >= 0 ? '#ccff33' : '#ef4444' }}>
+                {pnl >= 0 ? '+' : ''}₺{pnl.toFixed(2)}
               </div>
             </div>
-            <div className="text-2xl font-bold" style={{ color: position.pnl >= 0 ? '#ccff33' : '#ef4444' }}>
-              {position.pnl >= 0 ? '+' : ''}₺{parseFloat(position.pnl || 0).toFixed(2)}
-            </div>
-          </div>
 
-          <div className="grid grid-cols-3 gap-4 pt-4" style={{ borderTop: '1px solid #555555' }}>
-            <div>
-              <div className="text-sm mb-1" style={{ color: '#EEFFDD', opacity: 0.7 }}>Hisse</div>
-              <div className="font-semibold" style={{ color: '#EEFFDD' }}>{position.quantity}</div>
+            <div className="grid grid-cols-3 gap-4 pt-4" style={{ borderTop: '1px solid #555555' }}>
+              <div>
+                <div className="text-sm mb-1" style={{ color: '#EEFFDD', opacity: 0.7 }}>Hisse</div>
+                <div className="font-semibold" style={{ color: '#EEFFDD' }}>{quantity}</div>
+              </div>
+              <div>
+                <div className="text-sm mb-1" style={{ color: '#EEFFDD', opacity: 0.7 }}>Yatırım</div>
+                <div className="font-semibold" style={{ color: '#EEFFDD' }}>₺{invested.toFixed(2)}</div>
+              </div>
+              <div>
+                <div className="text-sm mb-1" style={{ color: '#EEFFDD', opacity: 0.7 }}>Güncel Değer</div>
+                <div className="font-semibold" style={{ color: '#EEFFDD' }}>₺{currentValue.toFixed(2)}</div>
+              </div>
             </div>
-            <div>
-              <div className="text-sm mb-1" style={{ color: '#EEFFDD', opacity: 0.7 }}>Ort. Fiyat</div>
-              <div className="font-semibold" style={{ color: '#EEFFDD' }}>₺{parseFloat(position.avgPrice || 0).toFixed(2)}</div>
-            </div>
-            <div>
-              <div className="text-sm mb-1" style={{ color: '#EEFFDD', opacity: 0.7 }}>Toplam</div>
-              <div className="font-semibold" style={{ color: '#EEFFDD' }}>₺{parseFloat(position.totalValue || 0).toFixed(2)}</div>
-            </div>
-          </div>
-        </Link>
-      ))}
+          </Link>
+        )
+      })}
     </div>
   )
 }
@@ -317,7 +325,7 @@ function OrdersPanel({ orders }) {
                 <span className="px-3 py-1 rounded-full font-medium"
                   style={{
                     backgroundColor: order.type === 'BUY' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                    color: order.type === 'BUY' ? '#ccff33' : '#ef4444'
+                    color: order.type === 'BUY' ? '#22c55e' : '#ef4444'
                   }}
                 >
                   {order.type === 'BUY' ? 'AL' : 'SAT'}
@@ -325,7 +333,7 @@ function OrdersPanel({ orders }) {
                 <span className="px-3 py-1 rounded-full font-medium"
                   style={{
                     backgroundColor: order.outcome === 'YES' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                    color: order.outcome === 'YES' ? '#ccff33' : '#ef4444'
+                    color: order.outcome === 'YES' ? '#22c55e' : '#ef4444'
                   }}
                 >
                   {order.outcome}
@@ -369,7 +377,7 @@ function TradeHistoryPanel({ trades }) {
                 <span className="px-3 py-1 rounded-full font-medium"
                   style={{
                     backgroundColor: trade.buyerSide === 'YES' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                    color: trade.buyerSide === 'YES' ? '#ccff33' : '#ef4444'
+                    color: trade.buyerSide === 'YES' ? '#22c55e' : '#ef4444'
                   }}
                 >
                   {trade.buyerSide}
