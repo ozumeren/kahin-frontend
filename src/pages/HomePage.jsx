@@ -73,9 +73,9 @@ export default function HomePage() {
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#1D1D1F' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#111111' }}>
       {/* Category Navigation */}
-      <div className="sticky top-0 z-10" style={{ backgroundColor: '#1D1D1F', borderBottom: '1px solid #555555' }}>
+      <div className="sticky top-0 z-10" style={{ backgroundColor: '#111111', borderBottom: '1px solid #555555' }}>
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between py-4">
             <nav className="hidden md:flex gap-2 overflow-x-auto scrollbar-hide">
@@ -152,7 +152,7 @@ export default function HomePage() {
             { label: 'Aktif Market', value: stats.activeMarkets },
             { label: 'Başarı Oranı', value: '%99.2' }
           ].map((stat, idx) => (
-            <div key={idx} className="rounded-2xl p-6 text-center" style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}>
+            <div key={idx} className="rounded-2xl p-6 text-center" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
               <div className="text-3xl font-bold mb-1" style={{ color: '#EEFFDD' }}>
                 {stat.value}
               </div>
@@ -204,7 +204,7 @@ export default function HomePage() {
           {!loading && !error && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
               {filteredMarkets.length === 0 ? (
-                <div className="col-span-full rounded-2xl p-12 text-center" style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}>
+                <div className="col-span-full rounded-2xl p-12 text-center" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
                   <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#555555' }}>
                     <TrendingUp className="w-10 h-10" style={{ color: '#EEFFDD', opacity: 0.5 }} />
                   </div>

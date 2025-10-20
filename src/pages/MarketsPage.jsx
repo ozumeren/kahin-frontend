@@ -59,7 +59,7 @@ export default function MarketsPage() {
   })
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#1D1D1F' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#111111' }}>
       {/* Header */}
       <div style={{ borderBottom: '1px solid #555555' }}>
         <div className="container mx-auto px-4 py-8">
@@ -136,7 +136,7 @@ export default function MarketsPage() {
         {isLoading && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <div key={i} className="rounded-2xl p-6 animate-pulse" style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}>
+              <div key={i} className="rounded-2xl p-6 animate-pulse" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
                 <div className="h-6 rounded w-3/4 mb-4" style={{ backgroundColor: '#555555' }}></div>
                 <div className="h-4 rounded w-full mb-2" style={{ backgroundColor: '#555555' }}></div>
                 <div className="h-4 rounded w-2/3 mb-4" style={{ backgroundColor: '#555555' }}></div>
@@ -162,7 +162,7 @@ export default function MarketsPage() {
         {!isLoading && !error && (
           <>
             {filteredMarkets.length === 0 ? (
-              <div className="rounded-2xl p-12 text-center" style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}>
+              <div className="rounded-2xl p-12 text-center" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
                 <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#555555' }}>
                   <Search className="w-10 h-10" style={{ color: '#EEFFDD', opacity: 0.5 }} />
                 </div>

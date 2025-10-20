@@ -95,7 +95,7 @@ export default function RegisterPage() {
         </div>
 
         {/* Form Card */}
-        <div className="rounded-2xl shadow-lg p-8" style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}>
+        <div className="rounded-2xl shadow-lg p-8" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
           {/* Error Alert */}
           {error && (
             <div className="mb-6 p-4 rounded-xl flex items-start gap-3" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
@@ -286,7 +286,7 @@ export default function RegisterPage() {
               <div className="w-full" style={{ borderTop: '1px solid #555555' }}></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4" style={{ backgroundColor: '#1D1D1F', color: '#EEFFDD', opacity: 0.5 }}>veya</span>
+              <span className="px-4" style={{ backgroundColor: '#111111', color: '#EEFFDD', opacity: 0.5 }}>veya</span>
             </div>
           </div>
 

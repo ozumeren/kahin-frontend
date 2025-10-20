@@ -111,7 +111,7 @@
 
   /* Card */
   .card {
-    background-color: #1D1D1F;
+    background-color: #111111;
     @apply rounded-2xl shadow-lg p-6;
     border: 1px solid #555555;
   }
@@ -133,7 +133,7 @@
 }
 
 ::-webkit-scrollbar-track {
-  background: #1D1D1F;
+  background: #111111;
 }
 
 ::-webkit-scrollbar-thumb {

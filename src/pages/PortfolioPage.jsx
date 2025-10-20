@@ -70,9 +70,9 @@ export default function PortfolioPage() {
 
   if (!isAuthenticated) {
     return (
-      <div className="min-h-screen py-16" style={{ backgroundColor: '#1D1D1F' }}>
+      <div className="min-h-screen py-16" style={{ backgroundColor: '#111111' }}>
         <div className="container mx-auto px-4">
-          <div className="max-w-md mx-auto rounded-2xl shadow-md p-8 text-center" style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}>
+          <div className="max-w-md mx-auto rounded-2xl shadow-md p-8 text-center" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)' }}>
               <AlertCircle className="w-8 h-8" style={{ color: '#22c55e' }} />
             </div>
@@ -91,7 +91,7 @@ export default function PortfolioPage() {
 
   if (portfolioLoading) {
     return (
-      <div className="min-h-screen py-8" style={{ backgroundColor: '#1D1D1F' }}>
+      <div className="min-h-screen py-8" style={{ backgroundColor: '#111111' }}>
         <div className="container mx-auto px-4">
           <div className="animate-pulse space-y-6">
             <div className="h-48 rounded-2xl" style={{ backgroundColor: '#555555' }}></div>
@@ -117,7 +117,7 @@ export default function PortfolioPage() {
   })
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#1D1D1F' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#111111' }}>
       {/* Header Section */}
       <div style={{ borderBottom: '1px solid #555555' }}>
         <div className="container mx-auto px-4 py-8">
@@ -125,7 +125,7 @@ export default function PortfolioPage() {
           
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="rounded-xl p-6" style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}>
+            <div className="rounded-xl p-6" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm" style={{ color: '#EEFFDD', opacity: 0.7 }}>Toplam Değer</span>
                 <DollarSign className="w-5 h-5" style={{ color: '#22c55e' }} />
@@ -135,7 +135,7 @@ export default function PortfolioPage() {
               </div>
             </div>
 
-            <div className="rounded-xl p-6" style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}>
+            <div className="rounded-xl p-6" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm" style={{ color: '#EEFFDD', opacity: 0.7 }}>Kâr/Zarar</span>
                 <TrendingUp className="w-5 h-5" style={{ color: summary.totalPnL >= 0 ? '#22c55e' : '#ef4444' }} />
@@ -145,7 +145,7 @@ export default function PortfolioPage() {
               </div>
             </div>
 
-            <div className="rounded-xl p-6" style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}>
+            <div className="rounded-xl p-6" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm" style={{ color: '#EEFFDD', opacity: 0.7 }}>Aktif Pozisyon</span>
                 <Target className="w-5 h-5" style={{ color: '#3b82f6' }} />
@@ -155,7 +155,7 @@ export default function PortfolioPage() {
               </div>
             </div>
 
-            <div className="rounded-xl p-6" style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}>
+            <div className="rounded-xl p-6" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm" style={{ color: '#EEFFDD', opacity: 0.7 }}>Bekleyen Emir</span>
                 <Activity className="w-5 h-5" style={{ color: '#a855f7' }} />
@@ -215,7 +215,7 @@ function PositionsPanel({ positions }) {
   
   if (!positions || positions.length === 0) {
     return (
-      <div className="rounded-2xl shadow-md p-12 text-center" style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}>
+      <div className="rounded-2xl shadow-md p-12 text-center" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
         <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#555555' }}>
           <Target className="w-10 h-10" style={{ color: '#EEFFDD', opacity: 0.5 }} />
         </div>
@@ -248,7 +248,7 @@ function PositionsPanel({ positions }) {
             key={index}
             to={`/markets/${position.marketId}`}
             className="block rounded-xl shadow-md hover:shadow-lg transition-all p-6 group"
-            style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}
+            style={{ backgroundColor: '#111111', border: '1px solid #555555' }}
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
@@ -304,7 +304,7 @@ function PositionsPanel({ positions }) {
 function OrdersPanel({ orders }) {
   if (orders.length === 0) {
     return (
-      <div className="rounded-2xl shadow-md p-12 text-center" style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}>
+      <div className="rounded-2xl shadow-md p-12 text-center" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
         <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#555555' }}>
           <Activity className="w-10 h-10" style={{ color: '#EEFFDD', opacity: 0.5 }} />
         </div>
@@ -317,7 +317,7 @@ function OrdersPanel({ orders }) {
   return (
     <div className="space-y-3">
       {orders.map((order) => (
-        <div key={order.id} className="rounded-xl shadow-md p-6" style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}>
+        <div key={order.id} className="rounded-xl shadow-md p-6" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
           <div className="flex items-start justify-between">
             <div className="flex-1">
               <h4 className="font-semibold mb-2" style={{ color: '#EEFFDD' }}>{order.marketTitle}</h4>
@@ -356,7 +356,7 @@ function OrdersPanel({ orders }) {
 function TradeHistoryPanel({ trades }) {
   if (trades.length === 0) {
     return (
-      <div className="rounded-2xl shadow-md p-12 text-center" style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}>
+      <div className="rounded-2xl shadow-md p-12 text-center" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
         <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#555555' }}>
           <Clock className="w-10 h-10" style={{ color: '#EEFFDD', opacity: 0.5 }} />
         </div>
@@ -369,7 +369,7 @@ function TradeHistoryPanel({ trades }) {
   return (
     <div className="space-y-3">
       {trades.map((trade) => (
-        <div key={trade.id} className="rounded-xl shadow-md p-6" style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}>
+        <div key={trade.id} className="rounded-xl shadow-md p-6" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
           <div className="flex items-start justify-between mb-3">
             <div className="flex-1">
               <h4 className="font-semibold mb-2" style={{ color: '#EEFFDD' }}>{trade.marketTitle}</h4>
