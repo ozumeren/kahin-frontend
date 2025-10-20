@@ -188,8 +188,8 @@ export default function HomePage() {
 
           {/* Error State */}
           {error && (
-            <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-              <p className="font-medium mb-4" style={{ color: '#ef4444' }}>{error}</p>
+            <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: 'rgba(255, 0, 110, 0.1)', border: '1px solid rgba(255, 0, 110, 0.3)' }}>
+              <p className="font-medium mb-4" style={{ color: '#ff006e' }}>{error}</p>
               <button 
                 onClick={fetchMarkets}
                 className="px-6 py-3 rounded-lg font-medium transition-all hover:brightness-110"
@@ -275,9 +275,9 @@ export default function HomePage() {
                             ₺{(market.yesMidPrice || market.yesPrice || 0.50).toFixed(2)}
                           </div>
                         </div>
-                        <div className="rounded-lg p-3 text-center" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                          <div className="text-xs font-medium mb-1" style={{ color: '#ef4444', opacity: 0.8 }}>HAYIR</div>
-                          <div className="text-xl font-bold" style={{ color: '#ef4444' }}>
+                        <div className="rounded-lg p-3 text-center" style={{ backgroundColor: 'rgba(255, 0, 110, 0.1)', border: '1px solid rgba(255, 0, 110, 0.2)' }}>
+                          <div className="text-xs font-medium mb-1" style={{ color: '#ff006e', opacity: 0.8 }}>HAYIR</div>
+                          <div className="text-xl font-bold" style={{ color: '#ff006e' }}>
                             ₺{(market.noMidPrice || market.noPrice || 0.50).toFixed(2)}
                           </div>
                         </div>

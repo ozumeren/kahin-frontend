@@ -91,7 +91,7 @@ export default function MarketsPage() {
                 style={{
                   backgroundColor: activeCategory === cat.id ? '#555555' : 'transparent',
                   color: '#ffffff',
-                  border: activeCategory === cat.id ? '1px solid #22c55e' : '1px solid transparent'
+                  border: activeCategory === cat.id ? '1px solid #ccff33' : '1px solid transparent'
                 }}
               >
                 <span>{cat.icon}</span>
@@ -148,11 +148,11 @@ export default function MarketsPage() {
 
         {/* Error State */}
         {error && (
-          <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-            <p className="font-medium mb-2" style={{ color: '#ef4444' }}>
+          <div className="rounded-2xl p-8 text-center" style={{ backgroundColor: 'rgba(255, 0, 110, 0.1)', border: '1px solid rgba(255, 0, 110, 0.3)' }}>
+            <p className="font-medium mb-2" style={{ color: '#ff006e' }}>
               Pazarlar yüklenirken bir hata oluştu
             </p>
-            <p className="text-sm" style={{ color: '#ef4444', opacity: 0.8 }}>
+            <p className="text-sm" style={{ color: '#ff006e', opacity: 0.8 }}>
               Lütfen daha sonra tekrar deneyin
             </p>
           </div>
@@ -184,11 +184,11 @@ export default function MarketsPage() {
                       <div className="flex items-start justify-between mb-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-medium`}
                           style={{
-                            backgroundColor: market.status === 'open' ? 'rgba(34, 197, 94, 0.2)' : 
+                            backgroundColor: market.status === 'open' ? 'rgba(204, 255, 51, 0.2)' : 
                                            market.status === 'closed' ? 'rgba(59, 130, 246, 0.2)' : 'rgba(107, 114, 128, 0.2)',
-                            color: market.status === 'open' ? '#22c55e' : 
+                            color: market.status === 'open' ? '#ccff33' : 
                                   market.status === 'closed' ? '#3b82f6' : '#6b7280',
-                            border: `1px solid ${market.status === 'open' ? 'rgba(34, 197, 94, 0.3)' : 
+                            border: `1px solid ${market.status === 'open' ? 'rgba(204, 255, 51, 0.3)' : 
                                                market.status === 'closed' ? 'rgba(59, 130, 246, 0.3)' : 'rgba(107, 114, 128, 0.3)'}`
                           }}
                         >
@@ -224,15 +224,15 @@ export default function MarketsPage() {
 
                       {/* Prices */}
                       <div className="grid grid-cols-2 gap-3">
-                        <div className="rounded-lg p-3 text-center" style={{ backgroundColor: 'rgba(34, 197, 94, 0.1)', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
-                          <div className="text-xs font-medium mb-1" style={{ color: '#22c55e', opacity: 0.8 }}>EVET</div>
-                          <div className="text-xl font-bold" style={{ color: '#22c55e' }}>
+                        <div className="rounded-lg p-3 text-center" style={{ backgroundColor: 'rgba(204, 255, 51, 0.1)', border: '1px solid rgba(204, 255, 51, 0.2)' }}>
+                          <div className="text-xs font-medium mb-1" style={{ color: '#ccff33', opacity: 0.8 }}>EVET</div>
+                          <div className="text-xl font-bold" style={{ color: '#ccff33' }}>
                             ₺{parseFloat(market.yesPrice || 0.50).toFixed(2)}
                           </div>
                         </div>
-                        <div className="rounded-lg p-3 text-center" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                          <div className="text-xs font-medium mb-1" style={{ color: '#ef4444', opacity: 0.8 }}>HAYIR</div>
-                          <div className="text-xl font-bold" style={{ color: '#ef4444' }}>
+                        <div className="rounded-lg p-3 text-center" style={{ backgroundColor: 'rgba(255, 0, 110, 0.1)', border: '1px solid rgba(255, 0, 110, 0.2)' }}>
+                          <div className="text-xs font-medium mb-1" style={{ color: '#ff006e', opacity: 0.8 }}>HAYIR</div>
+                          <div className="text-xl font-bold" style={{ color: '#ff006e' }}>
                             ₺{parseFloat(market.noPrice || 0.50).toFixed(2)}
                           </div>
                         </div>

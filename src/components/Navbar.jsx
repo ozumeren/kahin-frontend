@@ -31,7 +31,7 @@ export default function Navbar() {
                 e.target.nextElementSibling.style.display = 'flex'
               }}
             />
-            <div className="w-10 h-10 rounded-xl items-center justify-center transition-all hidden" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)', display: 'none' }}>
+            <div className="w-10 h-10 rounded-xl items-center justify-center transition-all hidden" style={{ backgroundColor: 'rgba(204, 255, 51, 0.2)', display: 'none' }}>
               <TrendingUp className="w-6 h-6" style={{ color: '#ccff33' }} />
             </div>
             <span className="text-2xl font-bold transition-colors" style={{ color: '#ffffff' }}>
@@ -209,7 +209,7 @@ export default function Navbar() {
                     <button
                       onClick={handleLogout}
                       className="w-full px-4 py-2 rounded-lg font-medium flex items-center justify-center gap-2 hover:brightness-110 transition-all"
-                      style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)' }}
+                      style={{ backgroundColor: 'rgba(255, 0, 110, 0.1)', color: '#ff006e', border: '1px solid rgba(255, 0, 110, 0.3)' }}
                     >
                       <LogOut className="w-4 h-4" />
                       Çıkış Yap

@@ -82,7 +82,7 @@ const SparklineChart = ({
   const firstPrice = chartData[0].price;
   const lastPrice = chartData[chartData.length - 1].price;
   const isPositive = lastPrice >= firstPrice;
-  const actualColor = isPositive ? '#ccff33' : '#ef4444';
+  const actualColor = isPositive ? '#ccff33' : '#ff006e';
 
   return (
     <svg width={width} height={height}>

@@ -73,8 +73,8 @@ export default function PortfolioPage() {
       <div className="min-h-screen py-16" style={{ backgroundColor: '#111111' }}>
         <div className="container mx-auto px-4">
           <div className="max-w-md mx-auto rounded-2xl shadow-md p-8 text-center" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
-            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)' }}>
-              <AlertCircle className="w-8 h-8" style={{ color: '#22c55e' }} />
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: 'rgba(204, 255, 51, 0.2)' }}>
+              <AlertCircle className="w-8 h-8" style={{ color: '#ccff33' }} />
             </div>
             <h2 className="text-2xl font-bold mb-2" style={{ color: '#ffffff' }}>Giriş Yapın</h2>
             <p className="mb-6" style={{ color: '#ffffff', opacity: 0.7 }}>
@@ -128,7 +128,7 @@ export default function PortfolioPage() {
             <div className="rounded-xl p-6" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm" style={{ color: '#ffffff', opacity: 0.7 }}>Toplam Değer</span>
-                <DollarSign className="w-5 h-5" style={{ color: '#22c55e' }} />
+                <DollarSign className="w-5 h-5" style={{ color: '#ccff33' }} />
               </div>
               <div className="text-3xl font-bold" style={{ color: '#ffffff' }}>
                 ₺{parseFloat(summary.totalValue || 0).toFixed(2)}
@@ -138,9 +138,9 @@ export default function PortfolioPage() {
             <div className="rounded-xl p-6" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm" style={{ color: '#ffffff', opacity: 0.7 }}>Kâr/Zarar</span>
-                <TrendingUp className="w-5 h-5" style={{ color: summary.totalPnL >= 0 ? '#22c55e' : '#ef4444' }} />
+                <TrendingUp className="w-5 h-5" style={{ color: summary.totalPnL >= 0 ? '#ccff33' : '#ff006e' }} />
               </div>
-              <div className="text-3xl font-bold" style={{ color: summary.totalPnL >= 0 ? '#22c55e' : '#ef4444' }}>
+              <div className="text-3xl font-bold" style={{ color: summary.totalPnL >= 0 ? '#ccff33' : '#ff006e' }}>
                 {summary.totalPnL >= 0 ? '+' : ''}₺{parseFloat(summary.totalPnL || 0).toFixed(2)}
               </div>
             </div>
@@ -180,8 +180,8 @@ export default function PortfolioPage() {
                   onClick={() => setActiveTab(tab.id)}
                   className="flex items-center gap-2 py-4 font-medium transition-all"
                   style={{
-                    borderBottom: activeTab === tab.id ? '2px solid #22c55e' : '2px solid transparent',
-                    color: activeTab === tab.id ? '#22c55e' : '#ffffff',
+                    borderBottom: activeTab === tab.id ? '2px solid #ccff33' : '2px solid transparent',
+                    color: activeTab === tab.id ? '#ccff33' : '#ffffff',
                     opacity: activeTab === tab.id ? 1 : 0.7
                   }}
                 >
@@ -266,15 +266,15 @@ function PositionsPanel({ positions }) {
                   </span>
                   <span className="px-3 py-1 rounded-full text-xs font-medium"
                     style={{
-                      backgroundColor: position.outcome === 'YES' ? 'rgba(204, 255, 51, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                      color: position.outcome === 'YES' ? '#ccff33' : '#ef4444'
+                      backgroundColor: position.outcome === 'YES' ? 'rgba(204, 255, 51, 0.2)' : 'rgba(255, 0, 110, 0.2)',
+                      color: position.outcome === 'YES' ? '#ccff33' : '#ff006e'
                     }}
                   >
                     {position.outcome}
                   </span>
                 </div>
               </div>
-              <div className="text-2xl font-bold" style={{ color: pnl >= 0 ? '#ccff33' : '#ef4444' }}>
+              <div className="text-2xl font-bold" style={{ color: pnl >= 0 ? '#ccff33' : '#ff006e' }}>
                 {pnl >= 0 ? '+' : ''}₺{pnl.toFixed(2)}
               </div>
             </div>
@@ -324,16 +324,16 @@ function OrdersPanel({ orders }) {
               <div className="flex items-center gap-3 text-sm">
                 <span className="px-3 py-1 rounded-full font-medium"
                   style={{
-                    backgroundColor: order.type === 'BUY' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                    color: order.type === 'BUY' ? '#22c55e' : '#ef4444'
+                    backgroundColor: order.type === 'BUY' ? 'rgba(204, 255, 51, 0.2)' : 'rgba(255, 0, 110, 0.2)',
+                    color: order.type === 'BUY' ? '#ccff33' : '#ff006e'
                   }}
                 >
                   {order.type === 'BUY' ? 'AL' : 'SAT'}
                 </span>
                 <span className="px-3 py-1 rounded-full font-medium"
                   style={{
-                    backgroundColor: order.outcome === 'YES' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                    color: order.outcome === 'YES' ? '#22c55e' : '#ef4444'
+                    backgroundColor: order.outcome === 'YES' ? 'rgba(204, 255, 51, 0.2)' : 'rgba(255, 0, 110, 0.2)',
+                    color: order.outcome === 'YES' ? '#ccff33' : '#ff006e'
                   }}
                 >
                   {order.outcome}
@@ -376,8 +376,8 @@ function TradeHistoryPanel({ trades }) {
               <div className="flex items-center gap-3 text-sm">
                 <span className="px-3 py-1 rounded-full font-medium"
                   style={{
-                    backgroundColor: trade.buyerSide === 'YES' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                    color: trade.buyerSide === 'YES' ? '#22c55e' : '#ef4444'
+                    backgroundColor: trade.buyerSide === 'YES' ? 'rgba(204, 255, 51, 0.2)' : 'rgba(255, 0, 110, 0.2)',
+                    color: trade.buyerSide === 'YES' ? '#ccff33' : '#ff006e'
                   }}
                 >
                   {trade.buyerSide}

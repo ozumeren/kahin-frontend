@@ -70,7 +70,7 @@ export default function RegisterPage() {
 
     const levels = [
       { strength: 0, text: '', color: '' },
-      { strength: 1, text: 'Çok Zayıf', color: '#ef4444' },
+      { strength: 1, text: 'Çok Zayıf', color: '#ff006e' },
       { strength: 2, text: 'Zayıf', color: '#f97316' },
       { strength: 3, text: 'Orta', color: '#eab308' },
       { strength: 4, text: 'İyi', color: '#3b82f6' },
@@ -87,7 +87,7 @@ export default function RegisterPage() {
       <div className="max-w-md w-full">
         {/* Logo/Brand */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style={{ backgroundColor: 'rgba(204, 255, 51, 0.2)', border: '1px solid rgba(204, 255, 51, 0.3)' }}>
             <TrendingUp className="w-8 h-8" style={{ color: '#ccff33' }} />
           </div>
           <h1 className="text-3xl font-bold mb-2" style={{ color: '#ffffff' }}>Hesap Oluştur</h1>
@@ -98,10 +98,10 @@ export default function RegisterPage() {
         <div className="rounded-2xl shadow-lg p-8" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
           {/* Error Alert */}
           {error && (
-            <div className="mb-6 p-4 rounded-xl flex items-start gap-3" style={{ backgroundColor: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#ef4444' }} />
+            <div className="mb-6 p-4 rounded-xl flex items-start gap-3" style={{ backgroundColor: 'rgba(255, 0, 110, 0.1)', border: '1px solid rgba(255, 0, 110, 0.3)' }}>
+              <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" style={{ color: '#ff006e' }} />
               <div className="flex-1">
-                <p className="text-sm" style={{ color: '#ef4444' }}>{error}</p>
+                <p className="text-sm" style={{ color: '#ff006e' }}>{error}</p>
               </div>
             </div>
           )}
@@ -232,8 +232,8 @@ export default function RegisterPage() {
                     </>
                   ) : (
                     <>
-                      <AlertCircle className="w-4 h-4" style={{ color: '#ef4444' }} />
-                      <span className="text-xs" style={{ color: '#ef4444' }}>Şifreler eşleşmiyor</span>
+                      <AlertCircle className="w-4 h-4" style={{ color: '#ff006e' }} />
+                      <span className="text-xs" style={{ color: '#ff006e' }}>Şifreler eşleşmiyor</span>
                     </>
                   )}
                 </div>
