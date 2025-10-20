@@ -86,7 +86,7 @@ export default function HomePage() {
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all`}
                   style={{
                     backgroundColor: activeCategory === cat.id ? '#555555' : 'transparent',
-                    color: '#EEFFDD',
+                    color: '#ffffff',
                     border: activeCategory === cat.id ? '1px solid #ccff33' : '1px solid transparent'
                   }}
                 >
@@ -98,7 +98,7 @@ export default function HomePage() {
 
             <button 
               className="md:hidden flex items-center gap-2 px-4 py-2 rounded-lg"
-              style={{ backgroundColor: '#555555', color: '#EEFFDD' }}
+              style={{ backgroundColor: '#555555', color: '#ffffff' }}
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             >
               <span>{categories.find(c => c.id === activeCategory)?.icon}</span>
@@ -120,7 +120,7 @@ export default function HomePage() {
                   className="w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-all"
                   style={{
                     backgroundColor: activeCategory === cat.id ? '#555555' : 'transparent',
-                    color: '#EEFFDD'
+                    color: '#ffffff'
                   }}
                 >
                   <span className="mr-2">{cat.icon}</span>
@@ -135,10 +135,10 @@ export default function HomePage() {
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-12">
         <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: '#EEFFDD' }}>
+          <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: '#ffffff' }}>
             Geleceği Tahmin Et, Kazan
           </h2>
-          <p className="text-lg max-w-2xl mx-auto" style={{ color: '#EEFFDD', opacity: 0.7 }}>
+          <p className="text-lg max-w-2xl mx-auto" style={{ color: '#ffffff', opacity: 0.7 }}>
             Siyaset, spor, ekonomi ve daha fazlası hakkında tahminlerde bulun. 
             Bilgini paraya çevir.
           </p>
@@ -153,10 +153,10 @@ export default function HomePage() {
             { label: 'Başarı Oranı', value: '%99.2' }
           ].map((stat, idx) => (
             <div key={idx} className="rounded-2xl p-6 text-center" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
-              <div className="text-3xl font-bold mb-1" style={{ color: '#EEFFDD' }}>
+              <div className="text-3xl font-bold mb-1" style={{ color: '#ffffff' }}>
                 {stat.value}
               </div>
-              <div className="text-sm" style={{ color: '#EEFFDD', opacity: 0.7 }}>{stat.label}</div>
+              <div className="text-sm" style={{ color: '#ffffff', opacity: 0.7 }}>{stat.label}</div>
             </div>
           ))}
         </div>
@@ -164,7 +164,7 @@ export default function HomePage() {
         {/* Markets Grid */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
-            <h3 className="text-2xl font-bold flex items-center gap-2" style={{ color: '#EEFFDD' }}>
+            <h3 className="text-2xl font-bold flex items-center gap-2" style={{ color: '#ffffff' }}>
               <TrendingUp className="w-6 h-6" style={{ color: '#ccff33' }} />
               {categories.find(c => c.id === activeCategory)?.name}
             </h3>
@@ -182,7 +182,7 @@ export default function HomePage() {
           {loading && (
             <div className="text-center py-12">
               <div className="inline-block animate-spin rounded-full h-12 w-12 mb-4" style={{ border: '4px solid #ccff33', borderTopColor: 'transparent' }}></div>
-              <p style={{ color: '#EEFFDD', opacity: 0.7 }}>Marketler yükleniyor...</p>
+              <p style={{ color: '#ffffff', opacity: 0.7 }}>Marketler yükleniyor...</p>
             </div>
           )}
 
@@ -193,7 +193,7 @@ export default function HomePage() {
               <button 
                 onClick={fetchMarkets}
                 className="px-6 py-3 rounded-lg font-medium transition-all hover:brightness-110"
-                style={{ backgroundColor: '#555555', color: '#EEFFDD' }}
+                style={{ backgroundColor: '#555555', color: '#ffffff' }}
               >
                 Tekrar Dene
               </button>
@@ -206,10 +206,10 @@ export default function HomePage() {
               {filteredMarkets.length === 0 ? (
                 <div className="col-span-full rounded-2xl p-12 text-center" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
                   <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#555555' }}>
-                    <TrendingUp className="w-10 h-10" style={{ color: '#EEFFDD', opacity: 0.5 }} />
+                    <TrendingUp className="w-10 h-10" style={{ color: '#ffffff', opacity: 0.5 }} />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2" style={{ color: '#EEFFDD' }}>Henüz market yok</h3>
-                  <p style={{ color: '#EEFFDD', opacity: 0.7 }}>Bu kategoride market bulunmuyor</p>
+                  <h3 className="text-xl font-semibold mb-2" style={{ color: '#ffffff' }}>Henüz market yok</h3>
+                  <p style={{ color: '#ffffff', opacity: 0.7 }}>Bu kategoride market bulunmuyor</p>
                 </div>
               ) : (
                 filteredMarkets.map((market) => (
@@ -234,23 +234,23 @@ export default function HomePage() {
                           {market.status === 'open' ? 'Açık' : 
                            market.status === 'closed' ? 'Kapandı' : 'Sonuçlandı'}
                         </span>
-                        <ChevronRight className="w-5 h-5 transition-colors" style={{ color: '#EEFFDD', opacity: 0.5 }} />
+                        <ChevronRight className="w-5 h-5 transition-colors" style={{ color: '#ffffff', opacity: 0.5 }} />
                       </div>
 
                       {/* Title */}
-                      <h3 className="text-lg font-semibold mb-3 group-hover:text-brand-500 transition-colors line-clamp-2" style={{ color: '#EEFFDD' }}>
+                      <h3 className="text-lg font-semibold mb-3 group-hover:text-brand-500 transition-colors line-clamp-2" style={{ color: '#ffffff' }}>
                         {market.title}
                       </h3>
 
                       {/* Description */}
                       {market.description && (
-                        <p className="text-sm mb-4 line-clamp-2" style={{ color: '#EEFFDD', opacity: 0.7 }}>
+                        <p className="text-sm mb-4 line-clamp-2" style={{ color: '#ffffff', opacity: 0.7 }}>
                           {market.description}
                         </p>
                       )}
 
                       {/* Stats */}
-                      <div className="flex items-center gap-4 text-sm mb-4 pb-4" style={{ borderBottom: '1px solid #555555', color: '#EEFFDD', opacity: 0.7 }}>
+                      <div className="flex items-center gap-4 text-sm mb-4 pb-4" style={{ borderBottom: '1px solid #555555', color: '#ffffff', opacity: 0.7 }}>
                         <div className="flex items-center gap-1">
                           <TrendingUp className="w-4 h-4" />
                           <span>₺{parseFloat(market.volume || 0).toLocaleString('tr-TR')}</span>

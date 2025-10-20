@@ -16,7 +16,7 @@
   body {
     @apply font-sans antialiased;
     background-color: #111111;
-    color: #EEFFDD;
+    color: #ffffff;
   }
   
   * {
@@ -49,19 +49,19 @@
 
   .btn-primary {
     background-color: #555555;
-    color: #EEFFDD;
+    color: #ffffff;
     @apply hover:brightness-110 shadow-lg;
   }
 
   .btn-secondary {
     background-color: #555555;
-    color: #EEFFDD;
+    color: #ffffff;
     border: 1px solid #555555;
     @apply hover:brightness-110;
   }
 
   .btn-ghost {
-    color: #EEFFDD;
+    color: #ffffff;
     @apply hover:brightness-110;
   }
 
@@ -79,12 +79,12 @@
            focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500
            disabled:cursor-not-allowed disabled:opacity-50;
     background-color: #555555;
-    color: #EEFFDD;
+    color: #ffffff;
     border: 1px solid #555555;
   }
   
   .input::placeholder {
-    color: #EEFFDD;
+    color: #ffffff;
     opacity: 0.5;
   }
   

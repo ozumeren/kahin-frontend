@@ -76,11 +76,11 @@ export default function PortfolioPage() {
             <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)' }}>
               <AlertCircle className="w-8 h-8" style={{ color: '#22c55e' }} />
             </div>
-            <h2 className="text-2xl font-bold mb-2" style={{ color: '#EEFFDD' }}>Giriş Yapın</h2>
-            <p className="mb-6" style={{ color: '#EEFFDD', opacity: 0.7 }}>
+            <h2 className="text-2xl font-bold mb-2" style={{ color: '#ffffff' }}>Giriş Yapın</h2>
+            <p className="mb-6" style={{ color: '#ffffff', opacity: 0.7 }}>
               Portfolyonuzu görüntülemek için giriş yapmanız gerekiyor
             </p>
-            <Link to="/login" className="inline-block px-6 py-3 rounded-lg font-medium transition-all hover:brightness-110" style={{ backgroundColor: '#555555', color: '#EEFFDD' }}>
+            <Link to="/login" className="inline-block px-6 py-3 rounded-lg font-medium transition-all hover:brightness-110" style={{ backgroundColor: '#555555', color: '#ffffff' }}>
               Giriş Yap
             </Link>
           </div>
@@ -121,23 +121,23 @@ export default function PortfolioPage() {
       {/* Header Section */}
       <div style={{ borderBottom: '1px solid #555555' }}>
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-4xl font-bold mb-8" style={{ color: '#EEFFDD' }}>Portfolyo</h1>
+          <h1 className="text-4xl font-bold mb-8" style={{ color: '#ffffff' }}>Portfolyo</h1>
           
           {/* Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="rounded-xl p-6" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm" style={{ color: '#EEFFDD', opacity: 0.7 }}>Toplam Değer</span>
+                <span className="text-sm" style={{ color: '#ffffff', opacity: 0.7 }}>Toplam Değer</span>
                 <DollarSign className="w-5 h-5" style={{ color: '#22c55e' }} />
               </div>
-              <div className="text-3xl font-bold" style={{ color: '#EEFFDD' }}>
+              <div className="text-3xl font-bold" style={{ color: '#ffffff' }}>
                 ₺{parseFloat(summary.totalValue || 0).toFixed(2)}
               </div>
             </div>
 
             <div className="rounded-xl p-6" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm" style={{ color: '#EEFFDD', opacity: 0.7 }}>Kâr/Zarar</span>
+                <span className="text-sm" style={{ color: '#ffffff', opacity: 0.7 }}>Kâr/Zarar</span>
                 <TrendingUp className="w-5 h-5" style={{ color: summary.totalPnL >= 0 ? '#22c55e' : '#ef4444' }} />
               </div>
               <div className="text-3xl font-bold" style={{ color: summary.totalPnL >= 0 ? '#22c55e' : '#ef4444' }}>
@@ -147,20 +147,20 @@ export default function PortfolioPage() {
 
             <div className="rounded-xl p-6" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm" style={{ color: '#EEFFDD', opacity: 0.7 }}>Aktif Pozisyon</span>
+                <span className="text-sm" style={{ color: '#ffffff', opacity: 0.7 }}>Aktif Pozisyon</span>
                 <Target className="w-5 h-5" style={{ color: '#3b82f6' }} />
               </div>
-              <div className="text-3xl font-bold" style={{ color: '#EEFFDD' }}>
+              <div className="text-3xl font-bold" style={{ color: '#ffffff' }}>
                 {positions.length}
               </div>
             </div>
 
             <div className="rounded-xl p-6" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm" style={{ color: '#EEFFDD', opacity: 0.7 }}>Bekleyen Emir</span>
+                <span className="text-sm" style={{ color: '#ffffff', opacity: 0.7 }}>Bekleyen Emir</span>
                 <Activity className="w-5 h-5" style={{ color: '#a855f7' }} />
               </div>
-              <div className="text-3xl font-bold" style={{ color: '#EEFFDD' }}>
+              <div className="text-3xl font-bold" style={{ color: '#ffffff' }}>
                 {orders.filter(o => o.status === 'pending').length}
               </div>
             </div>
@@ -181,14 +181,14 @@ export default function PortfolioPage() {
                   className="flex items-center gap-2 py-4 font-medium transition-all"
                   style={{
                     borderBottom: activeTab === tab.id ? '2px solid #22c55e' : '2px solid transparent',
-                    color: activeTab === tab.id ? '#22c55e' : '#EEFFDD',
+                    color: activeTab === tab.id ? '#22c55e' : '#ffffff',
                     opacity: activeTab === tab.id ? 1 : 0.7
                   }}
                 >
                   <Icon className="w-4 h-4" />
                   {tab.label}
                   {tab.count > 0 && (
-                    <span className="ml-1 px-2 py-0.5 rounded-full text-xs" style={{ backgroundColor: '#555555', color: '#EEFFDD' }}>
+                    <span className="ml-1 px-2 py-0.5 rounded-full text-xs" style={{ backgroundColor: '#555555', color: '#ffffff' }}>
                       {tab.count}
                     </span>
                   )}
@@ -217,14 +217,14 @@ function PositionsPanel({ positions }) {
     return (
       <div className="rounded-2xl shadow-md p-12 text-center" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
         <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#555555' }}>
-          <Target className="w-10 h-10" style={{ color: '#EEFFDD', opacity: 0.5 }} />
+          <Target className="w-10 h-10" style={{ color: '#ffffff', opacity: 0.5 }} />
         </div>
-        <h3 className="text-xl font-semibold mb-2" style={{ color: '#EEFFDD' }}>Henüz pozisyon yok</h3>
-        <p className="mb-6" style={{ color: '#EEFFDD', opacity: 0.7 }}>Pazarlara göz atın ve ilk pozisyonunuzu açın</p>
+        <h3 className="text-xl font-semibold mb-2" style={{ color: '#ffffff' }}>Henüz pozisyon yok</h3>
+        <p className="mb-6" style={{ color: '#ffffff', opacity: 0.7 }}>Pazarlara göz atın ve ilk pozisyonunuzu açın</p>
         <Link 
           to="/markets" 
           className="inline-block px-6 py-3 rounded-lg font-medium transition-all hover:brightness-110"
-          style={{ backgroundColor: '#555555', color: '#EEFFDD' }}
+          style={{ backgroundColor: '#555555', color: '#ffffff' }}
         >
           Pazarları Keşfet
         </Link>
@@ -252,7 +252,7 @@ function PositionsPanel({ positions }) {
           >
             <div className="flex items-start justify-between mb-4">
               <div className="flex-1">
-                <h3 className="text-lg font-semibold mb-2 group-hover:text-brand-500 transition-colors" style={{ color: '#EEFFDD' }}>
+                <h3 className="text-lg font-semibold mb-2 group-hover:text-brand-500 transition-colors" style={{ color: '#ffffff' }}>
                   {position.marketTitle}
                 </h3>
                 <div className="flex items-center gap-2">
@@ -281,16 +281,16 @@ function PositionsPanel({ positions }) {
 
             <div className="grid grid-cols-3 gap-4 pt-4" style={{ borderTop: '1px solid #555555' }}>
               <div>
-                <div className="text-sm mb-1" style={{ color: '#EEFFDD', opacity: 0.7 }}>Hisse</div>
-                <div className="font-semibold" style={{ color: '#EEFFDD' }}>{quantity}</div>
+                <div className="text-sm mb-1" style={{ color: '#ffffff', opacity: 0.7 }}>Hisse</div>
+                <div className="font-semibold" style={{ color: '#ffffff' }}>{quantity}</div>
               </div>
               <div>
-                <div className="text-sm mb-1" style={{ color: '#EEFFDD', opacity: 0.7 }}>Yatırım</div>
-                <div className="font-semibold" style={{ color: '#EEFFDD' }}>₺{invested.toFixed(2)}</div>
+                <div className="text-sm mb-1" style={{ color: '#ffffff', opacity: 0.7 }}>Yatırım</div>
+                <div className="font-semibold" style={{ color: '#ffffff' }}>₺{invested.toFixed(2)}</div>
               </div>
               <div>
-                <div className="text-sm mb-1" style={{ color: '#EEFFDD', opacity: 0.7 }}>Güncel Değer</div>
-                <div className="font-semibold" style={{ color: '#EEFFDD' }}>₺{currentValue.toFixed(2)}</div>
+                <div className="text-sm mb-1" style={{ color: '#ffffff', opacity: 0.7 }}>Güncel Değer</div>
+                <div className="font-semibold" style={{ color: '#ffffff' }}>₺{currentValue.toFixed(2)}</div>
               </div>
             </div>
           </Link>
@@ -306,10 +306,10 @@ function OrdersPanel({ orders }) {
     return (
       <div className="rounded-2xl shadow-md p-12 text-center" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
         <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#555555' }}>
-          <Activity className="w-10 h-10" style={{ color: '#EEFFDD', opacity: 0.5 }} />
+          <Activity className="w-10 h-10" style={{ color: '#ffffff', opacity: 0.5 }} />
         </div>
-        <h3 className="text-xl font-semibold mb-2" style={{ color: '#EEFFDD' }}>Henüz emir yok</h3>
-        <p style={{ color: '#EEFFDD', opacity: 0.7 }}>Bir market seçip emir oluşturabilirsiniz</p>
+        <h3 className="text-xl font-semibold mb-2" style={{ color: '#ffffff' }}>Henüz emir yok</h3>
+        <p style={{ color: '#ffffff', opacity: 0.7 }}>Bir market seçip emir oluşturabilirsiniz</p>
       </div>
     )
   }
@@ -320,7 +320,7 @@ function OrdersPanel({ orders }) {
         <div key={order.id} className="rounded-xl shadow-md p-6" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
           <div className="flex items-start justify-between">
             <div className="flex-1">
-              <h4 className="font-semibold mb-2" style={{ color: '#EEFFDD' }}>{order.marketTitle}</h4>
+              <h4 className="font-semibold mb-2" style={{ color: '#ffffff' }}>{order.marketTitle}</h4>
               <div className="flex items-center gap-3 text-sm">
                 <span className="px-3 py-1 rounded-full font-medium"
                   style={{
@@ -338,12 +338,12 @@ function OrdersPanel({ orders }) {
                 >
                   {order.outcome}
                 </span>
-                <span style={{ color: '#EEFFDD', opacity: 0.7 }}>{order.quantity} Hisse</span>
+                <span style={{ color: '#ffffff', opacity: 0.7 }}>{order.quantity} Hisse</span>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-sm mb-1" style={{ color: '#EEFFDD', opacity: 0.7 }}>Fiyat</div>
-              <div className="text-xl font-bold" style={{ color: '#EEFFDD' }}>₺{parseFloat(order.price).toFixed(2)}</div>
+              <div className="text-sm mb-1" style={{ color: '#ffffff', opacity: 0.7 }}>Fiyat</div>
+              <div className="text-xl font-bold" style={{ color: '#ffffff' }}>₺{parseFloat(order.price).toFixed(2)}</div>
             </div>
           </div>
         </div>
@@ -358,10 +358,10 @@ function TradeHistoryPanel({ trades }) {
     return (
       <div className="rounded-2xl shadow-md p-12 text-center" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
         <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#555555' }}>
-          <Clock className="w-10 h-10" style={{ color: '#EEFFDD', opacity: 0.5 }} />
+          <Clock className="w-10 h-10" style={{ color: '#ffffff', opacity: 0.5 }} />
         </div>
-        <h3 className="text-xl font-semibold mb-2" style={{ color: '#EEFFDD' }}>Henüz işlem yok</h3>
-        <p style={{ color: '#EEFFDD', opacity: 0.7 }}>İşlemleriniz burada görünecek</p>
+        <h3 className="text-xl font-semibold mb-2" style={{ color: '#ffffff' }}>Henüz işlem yok</h3>
+        <p style={{ color: '#ffffff', opacity: 0.7 }}>İşlemleriniz burada görünecek</p>
       </div>
     )
   }
@@ -372,7 +372,7 @@ function TradeHistoryPanel({ trades }) {
         <div key={trade.id} className="rounded-xl shadow-md p-6" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
           <div className="flex items-start justify-between mb-3">
             <div className="flex-1">
-              <h4 className="font-semibold mb-2" style={{ color: '#EEFFDD' }}>{trade.marketTitle}</h4>
+              <h4 className="font-semibold mb-2" style={{ color: '#ffffff' }}>{trade.marketTitle}</h4>
               <div className="flex items-center gap-3 text-sm">
                 <span className="px-3 py-1 rounded-full font-medium"
                   style={{
@@ -382,15 +382,15 @@ function TradeHistoryPanel({ trades }) {
                 >
                   {trade.buyerSide}
                 </span>
-                <span style={{ color: '#EEFFDD', opacity: 0.7 }}>{trade.quantity} Hisse</span>
-                <span className="text-xs" style={{ color: '#EEFFDD', opacity: 0.5 }}>
+                <span style={{ color: '#ffffff', opacity: 0.7 }}>{trade.quantity} Hisse</span>
+                <span className="text-xs" style={{ color: '#ffffff', opacity: 0.5 }}>
                   {new Date(trade.createdAt).toLocaleString('tr-TR')}
                 </span>
               </div>
             </div>
             <div className="text-right">
-              <div className="text-sm mb-1" style={{ color: '#EEFFDD', opacity: 0.7 }}>Fiyat</div>
-              <div className="text-xl font-bold" style={{ color: '#EEFFDD' }}>
+              <div className="text-sm mb-1" style={{ color: '#ffffff', opacity: 0.7 }}>Fiyat</div>
+              <div className="text-xl font-bold" style={{ color: '#ffffff' }}>
                 ₺{parseFloat(trade.price).toFixed(2)}
               </div>
             </div>

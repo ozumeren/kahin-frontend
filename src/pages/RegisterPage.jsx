@@ -90,8 +90,8 @@ export default function RegisterPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
             <TrendingUp className="w-8 h-8" style={{ color: '#ccff33' }} />
           </div>
-          <h1 className="text-3xl font-bold mb-2" style={{ color: '#EEFFDD' }}>Hesap Oluştur</h1>
-          <p style={{ color: '#EEFFDD', opacity: 0.7 }}>Hemen başlayın ve tahminlerinizi yapın</p>
+          <h1 className="text-3xl font-bold mb-2" style={{ color: '#ffffff' }}>Hesap Oluştur</h1>
+          <p style={{ color: '#ffffff', opacity: 0.7 }}>Hemen başlayın ve tahminlerinizi yapın</p>
         </div>
 
         {/* Form Card */}
@@ -109,11 +109,11 @@ export default function RegisterPage() {
           <form onSubmit={handleSubmit} className="space-y-5">
             {/* Username Input */}
             <div>
-              <label htmlFor="username" className="block text-sm font-medium mb-2" style={{ color: '#EEFFDD' }}>
+              <label htmlFor="username" className="block text-sm font-medium mb-2" style={{ color: '#ffffff' }}>
                 Kullanıcı Adı
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: '#EEFFDD', opacity: 0.5 }} />
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: '#ffffff', opacity: 0.5 }} />
                 <input
                   type="text"
                   id="username"
@@ -129,11 +129,11 @@ export default function RegisterPage() {
 
             {/* Email Input */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium mb-2" style={{ color: '#EEFFDD' }}>
+              <label htmlFor="email" className="block text-sm font-medium mb-2" style={{ color: '#ffffff' }}>
                 E-posta
               </label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: '#EEFFDD', opacity: 0.5 }} />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: '#ffffff', opacity: 0.5 }} />
                 <input
                   type="email"
                   id="email"
@@ -149,11 +149,11 @@ export default function RegisterPage() {
 
             {/* Password Input */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium mb-2" style={{ color: '#EEFFDD' }}>
+              <label htmlFor="password" className="block text-sm font-medium mb-2" style={{ color: '#ffffff' }}>
                 Şifre
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: '#EEFFDD', opacity: 0.5 }} />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: '#ffffff', opacity: 0.5 }} />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   id="password"
@@ -168,7 +168,7 @@ export default function RegisterPage() {
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 transition-opacity hover:opacity-70"
-                  style={{ color: '#EEFFDD', opacity: 0.5 }}
+                  style={{ color: '#ffffff', opacity: 0.5 }}
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -189,7 +189,7 @@ export default function RegisterPage() {
                     ))}
                   </div>
                   {passwordStrength.text && (
-                    <p className="text-xs" style={{ color: '#EEFFDD', opacity: 0.7 }}>
+                    <p className="text-xs" style={{ color: '#ffffff', opacity: 0.7 }}>
                       Şifre gücü: <span className="font-medium" style={{ color: passwordStrength.color }}>{passwordStrength.text}</span>
                     </p>
                   )}
@@ -199,11 +199,11 @@ export default function RegisterPage() {
 
             {/* Confirm Password Input */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2" style={{ color: '#EEFFDD' }}>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium mb-2" style={{ color: '#ffffff' }}>
                 Şifre Tekrar
               </label>
               <div className="relative">
-                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: '#EEFFDD', opacity: 0.5 }} />
+                <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: '#ffffff', opacity: 0.5 }} />
                 <input
                   type={showConfirmPassword ? 'text' : 'password'}
                   id="confirmPassword"
@@ -218,7 +218,7 @@ export default function RegisterPage() {
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className="absolute right-3 top-1/2 transform -translate-y-1/2 transition-opacity hover:opacity-70"
-                  style={{ color: '#EEFFDD', opacity: 0.5 }}
+                  style={{ color: '#ffffff', opacity: 0.5 }}
                 >
                   {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -248,7 +248,7 @@ export default function RegisterPage() {
                 className="w-4 h-4 mt-1 rounded"
                 style={{ backgroundColor: '#555555', borderColor: '#555555' }}
               />
-              <label className="ml-2 text-sm" style={{ color: '#EEFFDD', opacity: 0.7 }}>
+              <label className="ml-2 text-sm" style={{ color: '#ffffff', opacity: 0.7 }}>
                 <a href="#" className="font-medium hover:opacity-80 transition-opacity" style={{ color: '#ccff33' }}>
                   Kullanım Koşulları
                 </a>{' '}
@@ -268,7 +268,7 @@ export default function RegisterPage() {
             >
               {isLoading ? (
                 <>
-                  <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#EEFFDD' }}></div>
+                  <div className="w-5 h-5 border-2 border-t-transparent rounded-full animate-spin" style={{ borderColor: '#ffffff' }}></div>
                   <span>Hesap oluşturuluyor...</span>
                 </>
               ) : (
@@ -286,13 +286,13 @@ export default function RegisterPage() {
               <div className="w-full" style={{ borderTop: '1px solid #555555' }}></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-4" style={{ backgroundColor: '#111111', color: '#EEFFDD', opacity: 0.5 }}>veya</span>
+              <span className="px-4" style={{ backgroundColor: '#111111', color: '#ffffff', opacity: 0.5 }}>veya</span>
             </div>
           </div>
 
           {/* Login Link */}
           <div className="text-center">
-            <p style={{ color: '#EEFFDD', opacity: 0.7 }}>
+            <p style={{ color: '#ffffff', opacity: 0.7 }}>
               Zaten hesabınız var mı?{' '}
               <Link to="/login" className="font-medium hover:opacity-80 transition-opacity" style={{ color: '#ccff33' }}>
                 Giriş yapın

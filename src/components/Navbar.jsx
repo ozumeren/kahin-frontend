@@ -22,9 +22,9 @@ export default function Navbar() {
           {/* Logo */}
           <Link to="/" className="flex items-center gap-2 group">
             <img 
-              src="https://api.kahinmarket.com/uploads/logo.png" 
+              src="https://i.ibb.co/qL5cd5C1/Logo.png" 
               alt="Kahinmarket Logo" 
-              className="w-10 h-10 rounded-xl object-cover"
+              className="w-10 h-10 object-contain"
               onError={(e) => {
                 // Eğer logo yüklenemezse, fallback icon göster
                 e.target.style.display = 'none'
@@ -34,7 +34,7 @@ export default function Navbar() {
             <div className="w-10 h-10 rounded-xl items-center justify-center transition-all hidden" style={{ backgroundColor: 'rgba(34, 197, 94, 0.2)', display: 'none' }}>
               <TrendingUp className="w-6 h-6" style={{ color: '#ccff33' }} />
             </div>
-            <span className="text-xl font-bold transition-colors" style={{ color: '#EEFFDD' }}>
+            <span className="text-2xl font-bold transition-colors" style={{ color: '#ffffff' }}>
               Kahinmarket
             </span>
           </Link>
@@ -46,7 +46,7 @@ export default function Navbar() {
               className="px-4 py-2 rounded-lg font-medium transition-all"
               style={{
                 backgroundColor: isActive('/') ? '#555555' : 'transparent',
-                color: '#EEFFDD'
+                color: '#ffffff'
               }}
             >
               Ana Sayfa
@@ -56,7 +56,7 @@ export default function Navbar() {
               className="px-4 py-2 rounded-lg font-medium transition-all"
               style={{
                 backgroundColor: isActive('/markets') ? '#555555' : 'transparent',
-                color: '#EEFFDD'
+                color: '#ffffff'
               }}
             >
               Pazarlar
@@ -67,7 +67,7 @@ export default function Navbar() {
                 className="px-4 py-2 rounded-lg font-medium transition-all"
                 style={{
                   backgroundColor: isActive('/portfolio') ? '#555555' : 'transparent',
-                  color: '#EEFFDD'
+                  color: '#ffffff'
                 }}
               >
                 Portfolyo
@@ -79,7 +79,7 @@ export default function Navbar() {
                 className="px-4 py-2 rounded-lg font-medium flex items-center gap-1 transition-all"
                 style={{
                   backgroundColor: isActive('/admin') ? '#555555' : 'transparent',
-                  color: '#EEFFDD'
+                  color: '#ffffff'
                 }}
               >
                 <Shield className="w-4 h-4" />
@@ -93,10 +93,10 @@ export default function Navbar() {
             {user ? (
               <>
                 <div className="flex items-center gap-3 px-4 py-2 rounded-lg" style={{ backgroundColor: '#555555', border: '1px solid #555555' }}>
-                  <User className="w-4 h-4 flex-shrink-0" style={{ color: '#EEFFDD', opacity: 0.7 }} />
+                  <User className="w-4 h-4 flex-shrink-0" style={{ color: '#ffffff', opacity: 0.7 }} />
                   <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-medium truncate" style={{ color: '#EEFFDD' }}>{user.username}</span>
-                    <span className="text-xs whitespace-nowrap" style={{ color: '#EEFFDD', opacity: 0.7 }}>
+                    <span className="text-sm font-medium truncate" style={{ color: '#ffffff' }}>{user.username}</span>
+                    <span className="text-xs whitespace-nowrap" style={{ color: '#ffffff', opacity: 0.7 }}>
                       ₺{parseFloat(user.balance || 0).toFixed(2)}
                     </span>
                   </div>
@@ -104,7 +104,7 @@ export default function Navbar() {
                 <button 
                   onClick={handleLogout} 
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all hover:brightness-110"
-                  style={{ backgroundColor: 'transparent', color: '#EEFFDD' }}
+                  style={{ backgroundColor: 'transparent', color: '#ffffff' }}
                 >
                   <LogOut className="w-4 h-4" />
                   <span>Çıkış</span>
@@ -115,14 +115,14 @@ export default function Navbar() {
                 <Link 
                   to="/login" 
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all hover:brightness-110"
-                  style={{ backgroundColor: 'transparent', color: '#EEFFDD' }}
+                  style={{ backgroundColor: 'transparent', color: '#ffffff' }}
                 >
                   Giriş
                 </Link>
                 <Link 
                   to="/register" 
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all hover:brightness-110 shadow-lg"
-                  style={{ backgroundColor: '#555555', color: '#EEFFDD' }}
+                  style={{ backgroundColor: '#555555', color: '#ffffff' }}
                 >
                   Kayıt Ol
                 </Link>
@@ -136,7 +136,7 @@ export default function Navbar() {
             className="md:hidden p-2 rounded-lg transition-all hover:brightness-110"
             style={{ backgroundColor: '#555555' }}
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" style={{ color: '#EEFFDD' }} /> : <Menu className="w-6 h-6" style={{ color: '#EEFFDD' }} />}
+            {mobileMenuOpen ? <X className="w-6 h-6" style={{ color: '#ffffff' }} /> : <Menu className="w-6 h-6" style={{ color: '#ffffff' }} />}
           </button>
         </div>
 
@@ -150,7 +150,7 @@ export default function Navbar() {
                 className="px-4 py-2 rounded-lg font-medium"
                 style={{
                   backgroundColor: isActive('/') ? '#555555' : 'transparent',
-                  color: '#EEFFDD'
+                  color: '#ffffff'
                 }}
               >
                 Ana Sayfa
@@ -161,7 +161,7 @@ export default function Navbar() {
                 className="px-4 py-2 rounded-lg font-medium"
                 style={{
                   backgroundColor: isActive('/markets') ? '#555555' : 'transparent',
-                  color: '#EEFFDD'
+                  color: '#ffffff'
                 }}
               >
                 Pazarlar
@@ -173,7 +173,7 @@ export default function Navbar() {
                   className="px-4 py-2 rounded-lg font-medium"
                   style={{
                     backgroundColor: isActive('/portfolio') ? '#555555' : 'transparent',
-                    color: '#EEFFDD'
+                    color: '#ffffff'
                   }}
                 >
                   Portfolyo
@@ -186,7 +186,7 @@ export default function Navbar() {
                   className="px-4 py-2 rounded-lg font-medium flex items-center gap-1"
                   style={{
                     backgroundColor: isActive('/admin') ? '#555555' : 'transparent',
-                    color: '#EEFFDD'
+                    color: '#ffffff'
                   }}
                 >
                   <Shield className="w-4 h-4" />
@@ -199,10 +199,10 @@ export default function Navbar() {
                   <>
                     <div className="px-4 py-2 rounded-lg" style={{ backgroundColor: '#555555', border: '1px solid #555555' }}>
                       <div className="flex items-center gap-2 mb-1">
-                        <User className="w-4 h-4" style={{ color: '#EEFFDD', opacity: 0.7 }} />
-                        <span className="text-sm font-medium" style={{ color: '#EEFFDD' }}>{user.username}</span>
+                        <User className="w-4 h-4" style={{ color: '#ffffff', opacity: 0.7 }} />
+                        <span className="text-sm font-medium" style={{ color: '#ffffff' }}>{user.username}</span>
                       </div>
-                      <div className="text-xs" style={{ color: '#EEFFDD', opacity: 0.7 }}>
+                      <div className="text-xs" style={{ color: '#ffffff', opacity: 0.7 }}>
                         Bakiye: ₺{parseFloat(user.balance || 0).toFixed(2)}
                       </div>
                     </div>
@@ -221,7 +221,7 @@ export default function Navbar() {
                       to="/login"
                       onClick={() => setMobileMenuOpen(false)}
                       className="block w-full px-4 py-2 text-center rounded-lg font-medium hover:brightness-110 transition-all"
-                      style={{ border: '1px solid #555555', color: '#EEFFDD' }}
+                      style={{ border: '1px solid #555555', color: '#ffffff' }}
                     >
                       Giriş
                     </Link>
@@ -229,7 +229,7 @@ export default function Navbar() {
                       to="/register"
                       onClick={() => setMobileMenuOpen(false)}
                       className="block w-full px-4 py-2 text-center rounded-lg font-medium hover:brightness-110 transition-all"
-                      style={{ backgroundColor: '#555555', color: '#EEFFDD' }}
+                      style={{ backgroundColor: '#555555', color: '#ffffff' }}
                     >
                       Kayıt Ol
                     </Link>

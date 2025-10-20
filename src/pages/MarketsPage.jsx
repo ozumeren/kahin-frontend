@@ -63,11 +63,11 @@ export default function MarketsPage() {
       {/* Header */}
       <div style={{ borderBottom: '1px solid #555555' }}>
         <div className="container mx-auto px-4 py-8">
-          <h1 className="text-4xl font-bold mb-6" style={{ color: '#EEFFDD' }}>Tüm Pazarlar</h1>
+          <h1 className="text-4xl font-bold mb-6" style={{ color: '#ffffff' }}>Tüm Pazarlar</h1>
           
           {/* Search Bar */}
           <div className="relative max-w-2xl">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: '#EEFFDD', opacity: 0.5 }} />
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: '#ffffff', opacity: 0.5 }} />
             <input
               type="text"
               placeholder="Market ara..."
@@ -90,7 +90,7 @@ export default function MarketsPage() {
                 className="flex items-center gap-2 px-4 py-2 rounded-lg font-medium whitespace-nowrap transition-all"
                 style={{
                   backgroundColor: activeCategory === cat.id ? '#555555' : 'transparent',
-                  color: '#EEFFDD',
+                  color: '#ffffff',
                   border: activeCategory === cat.id ? '1px solid #22c55e' : '1px solid transparent'
                 }}
               >
@@ -106,7 +106,7 @@ export default function MarketsPage() {
       <div style={{ borderBottom: '1px solid #555555' }}>
         <div className="container mx-auto px-4 py-4">
           <div className="flex items-center gap-3">
-            <Filter className="w-5 h-5" style={{ color: '#EEFFDD', opacity: 0.7 }} />
+            <Filter className="w-5 h-5" style={{ color: '#ffffff', opacity: 0.7 }} />
             <div className="flex gap-2">
               {filters.map((filter) => (
                 <button
@@ -115,7 +115,7 @@ export default function MarketsPage() {
                   className="px-4 py-2 rounded-lg font-medium transition-all"
                   style={{
                     backgroundColor: activeFilter === filter.id ? '#555555' : 'transparent',
-                    color: '#EEFFDD',
+                    color: '#ffffff',
                     border: `1px solid ${activeFilter === filter.id ? '#555555' : '#555555'}`
                   }}
                 >
@@ -123,7 +123,7 @@ export default function MarketsPage() {
                 </button>
               ))}
             </div>
-            <div className="ml-auto text-sm" style={{ color: '#EEFFDD', opacity: 0.7 }}>
+            <div className="ml-auto text-sm" style={{ color: '#ffffff', opacity: 0.7 }}>
               {filteredMarkets.length} market bulundu
             </div>
           </div>
@@ -164,10 +164,10 @@ export default function MarketsPage() {
             {filteredMarkets.length === 0 ? (
               <div className="rounded-2xl p-12 text-center" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
                 <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#555555' }}>
-                  <Search className="w-10 h-10" style={{ color: '#EEFFDD', opacity: 0.5 }} />
+                  <Search className="w-10 h-10" style={{ color: '#ffffff', opacity: 0.5 }} />
                 </div>
-                <h3 className="text-xl font-semibold mb-2" style={{ color: '#EEFFDD' }}>Market bulunamadı</h3>
-                <p style={{ color: '#EEFFDD', opacity: 0.7 }}>
+                <h3 className="text-xl font-semibold mb-2" style={{ color: '#ffffff' }}>Market bulunamadı</h3>
+                <p style={{ color: '#ffffff', opacity: 0.7 }}>
                   Arama kriterlerinize uygun market bulunmuyor
                 </p>
               </div>
@@ -195,23 +195,23 @@ export default function MarketsPage() {
                           {market.status === 'open' ? 'Açık' : 
                            market.status === 'closed' ? 'Kapandı' : 'Sonuçlandı'}
                         </span>
-                        <ChevronRight className="w-5 h-5 transition-colors" style={{ color: '#EEFFDD', opacity: 0.5 }} />
+                        <ChevronRight className="w-5 h-5 transition-colors" style={{ color: '#ffffff', opacity: 0.5 }} />
                       </div>
 
                       {/* Title */}
-                      <h3 className="text-lg font-semibold mb-3 line-clamp-2 group-hover:text-brand-500 transition-colors" style={{ color: '#EEFFDD' }}>
+                      <h3 className="text-lg font-semibold mb-3 line-clamp-2 group-hover:text-brand-500 transition-colors" style={{ color: '#ffffff' }}>
                         {market.title}
                       </h3>
 
                       {/* Description */}
                       {market.description && (
-                        <p className="text-sm mb-4 line-clamp-2" style={{ color: '#EEFFDD', opacity: 0.7 }}>
+                        <p className="text-sm mb-4 line-clamp-2" style={{ color: '#ffffff', opacity: 0.7 }}>
                           {market.description}
                         </p>
                       )}
 
                       {/* Stats */}
-                      <div className="flex items-center gap-4 text-sm mb-4 pb-4" style={{ borderBottom: '1px solid #555555', color: '#EEFFDD', opacity: 0.7 }}>
+                      <div className="flex items-center gap-4 text-sm mb-4 pb-4" style={{ borderBottom: '1px solid #555555', color: '#ffffff', opacity: 0.7 }}>
                         <div className="flex items-center gap-1">
                           <TrendingUp className="w-4 h-4" />
                           <span>₺{parseFloat(market.volume || 0).toLocaleString('tr-TR')}</span>
