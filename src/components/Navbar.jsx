@@ -83,19 +83,6 @@ export default function Navbar({ activeCategory, setActiveCategory, showCategori
                 Portfolyo
               </Link>
             )}
-            {user?.role === 'admin' && (
-              <Link 
-                to="/admin" 
-                className="px-4 py-2 rounded-lg font-medium flex items-center gap-1 transition-all"
-                style={{
-                  backgroundColor: isActive('/admin') ? '#555555' : 'transparent',
-                  color: '#ffffff'
-                }}
-              >
-                <Shield className="w-4 h-4" />
-                Admin
-              </Link>
-            )}
           </div>
 
           {/* Desktop User Section */}
