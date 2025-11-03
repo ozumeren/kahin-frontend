@@ -274,6 +274,24 @@ function UsersPanel({ searchQuery, setSearchQuery }) {
 // Markets Panel
 function MarketsPanel() {
   const queryClient = useQueryClient()
+  const [editingMarket, setEditingMarket] = useState(null)
+  const [editForm, setEditForm] = useState({
+    title: '',
+    description: '',
+    closing_date: '',
+    image_url: '',
+    category: ''
+  })
+
+  // Kategoriler
+  const categories = [
+    { id: 'politics', name: 'Siyaset' },
+    { id: 'sports', name: 'Spor' },
+    { id: 'crypto', name: 'Kripto' },
+    { id: 'economy', name: 'Ekonomi' },
+    { id: 'entertainment', name: 'Eğlence' },
+    { id: 'technology', name: 'Teknoloji' },
+  ]
 
   const { data: marketsData, isLoading, error } = useQuery({
     queryKey: ['adminMarkets'],
@@ -317,6 +335,83 @@ function MarketsPanel() {
       toast.error(error.response?.data?.message || 'Market sonuçlandırılırken hata oluştu')
     }
   })
+
+  // Market güncelleme mutation
+  const updateMarketMutation = useMutation({
+    mutationFn: async ({ marketId, data }) => {
+      const response = await apiClient.put(`/admin/markets/${marketId}`, data)
+      return response.data
+    },
+    onSuccess: () => {
+      toast.success('Market başarıyla güncellendi')
+      queryClient.invalidateQueries(['adminMarkets'])
+      queryClient.invalidateQueries(['markets']) // Ana sayfa için
+      setEditingMarket(null)
+      setEditForm({
+        title: '',
+        description: '',
+        closing_date: '',
+        image_url: '',
+        category: ''
+      })
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Market güncellenirken hata oluştu')
+    }
+  })
+
+  // Market silme mutation
+  const deleteMarketMutation = useMutation({
+    mutationFn: async (marketId) => {
+      const response = await apiClient.delete(`/admin/markets/${marketId}`)
+      return response.data
+    },
+    onSuccess: () => {
+      toast.success('Market başarıyla silindi')
+      queryClient.invalidateQueries(['adminMarkets'])
+      queryClient.invalidateQueries(['markets']) // Ana sayfa için
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Market silinirken hata oluştu')
+    }
+  })
+
+  // Market düzenlemeye başla
+  const handleStartEdit = (market) => {
+    setEditingMarket(market)
+    setEditForm({
+      title: market.title,
+      description: market.description || '',
+      closing_date: market.closing_date ? new Date(market.closing_date).toISOString().slice(0, 16) : '',
+      image_url: market.image_url || '',
+      category: market.category || 'politics'
+    })
+  }
+
+  // Market güncellemeyi kaydet
+  const handleSaveEdit = () => {
+    if (!editForm.title || !editForm.closing_date) {
+      toast.error('Başlık ve kapanış tarihi zorunludur')
+      return
+    }
+
+    updateMarketMutation.mutate({
+      marketId: editingMarket.id,
+      data: editForm
+    })
+  }
+
+  // Market silme (onay ile)
+  const handleDeleteMarket = (market) => {
+    const confirmDelete = window.confirm(
+      `"${market.title}" adlı marketi silmek istediğinizden emin misiniz?\n\n` +
+      `Bu işlem geri alınamaz ve market ile ilgili tüm veriler silinecektir.`
+    )
+    
+    if (confirmDelete) {
+      deleteMarketMutation.mutate(market.id)
+    }
+  }
 
   if (isLoading) {
     return (
@@ -445,6 +540,34 @@ function MarketsPanel() {
                   <div className="text-xs font-medium text-center mb-2" style={{ color: '#ffffff', opacity: 0.7 }}>
                     Market Sonuçlandır
                   </div>
+                  <div className="flex gap-2 mb-2">
+                    <button
+                      onClick={() => handleStartEdit(market)}
+                      className="flex-1 px-3 py-2 rounded-xl transition-all text-sm font-bold hover:scale-105"
+                      style={{ 
+                        backgroundColor: '#ccff33', 
+                        color: '#000000',
+                        border: 'none'
+                      }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#b8e62e'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = '#ccff33'}
+                    >
+                      ✏️ Düzenle
+                    </button>
+                    <button
+                      onClick={() => handleDeleteMarket(market)}
+                      disabled={deleteMarketMutation.isPending}
+                      className="px-3 py-2 rounded-xl transition-all text-sm font-bold hover:scale-105 disabled:opacity-50"
+                      style={{ 
+                        backgroundColor: '#FF0000', 
+                        color: '#ffffff'
+                      }}
+                      onMouseEnter={(e) => !e.target.disabled && (e.target.style.backgroundColor = '#cc0000')}
+                      onMouseLeave={(e) => !e.target.disabled && (e.target.style.backgroundColor = '#FF0000')}
+                    >
+                      {deleteMarketMutation.isPending ? '⏳' : '🗑️'}
+                    </button>
+                  </div>
                   <div className="flex gap-3">
                     <button
                       onClick={() => resolveMarketMutation.mutate({ marketId: market.id, outcome: true })}
@@ -476,6 +599,34 @@ function MarketsPanel() {
                       <TrendingUp className="w-6 h-6" style={{ color: '#ccff33' }} />
                     </div>
                     <p className="text-xs font-medium mb-3" style={{ color: '#ccff33' }}>Aktif Market</p>
+                  </div>
+                  <div className="flex gap-2 mb-2">
+                    <button
+                      onClick={() => handleStartEdit(market)}
+                      className="flex-1 px-3 py-2 rounded-xl transition-all text-sm font-bold hover:scale-105"
+                      style={{ 
+                        backgroundColor: '#ccff33', 
+                        color: '#000000',
+                        border: 'none'
+                      }}
+                      onMouseEnter={(e) => e.target.style.backgroundColor = '#b8e62e'}
+                      onMouseLeave={(e) => e.target.style.backgroundColor = '#ccff33'}
+                    >
+                      ✏️ Düzenle
+                    </button>
+                    <button
+                      onClick={() => handleDeleteMarket(market)}
+                      disabled={deleteMarketMutation.isPending}
+                      className="px-3 py-2 rounded-xl transition-all text-sm font-bold hover:scale-105 disabled:opacity-50"
+                      style={{ 
+                        backgroundColor: '#FF0000', 
+                        color: '#ffffff'
+                      }}
+                      onMouseEnter={(e) => !e.target.disabled && (e.target.style.backgroundColor = '#cc0000')}
+                      onMouseLeave={(e) => !e.target.disabled && (e.target.style.backgroundColor = '#FF0000')}
+                    >
+                      {deleteMarketMutation.isPending ? '⏳' : '🗑️'}
+                    </button>
                   </div>
                   <button
                     onClick={() => closeMarketMutation.mutate(market.id)}
@@ -517,6 +668,202 @@ function MarketsPanel() {
           </div>
         )}
       </div>
+
+      {/* Edit Market Modal */}
+      {editingMarket && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50 p-4"
+          onClick={() => setEditingMarket(null)}
+        >
+          <div 
+            className="rounded-2xl shadow-2xl p-8 max-w-2xl w-full max-h-[90vh] overflow-y-auto"
+            style={{ backgroundColor: '#111111', border: '1px solid #333333' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-bold" style={{ color: '#ffffff' }}>
+                Market Düzenle
+              </h2>
+              <button
+                onClick={() => setEditingMarket(null)}
+                className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+                style={{ backgroundColor: '#333333', color: '#ffffff' }}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#444444'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = '#333333'}
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Başlık */}
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: '#ffffff' }}>
+                  Başlık *
+                </label>
+                <input
+                  type="text"
+                  value={editForm.title}
+                  onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl font-medium transition-colors"
+                  style={{ 
+                    backgroundColor: '#1a1a1a', 
+                    color: '#ffffff',
+                    border: '1px solid #333333'
+                  }}
+                  placeholder="Market başlığı"
+                />
+              </div>
+
+              {/* Açıklama */}
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: '#ffffff' }}>
+                  Açıklama
+                </label>
+                <textarea
+                  value={editForm.description}
+                  onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                  rows={4}
+                  className="w-full px-4 py-3 rounded-xl font-medium transition-colors resize-none"
+                  style={{ 
+                    backgroundColor: '#1a1a1a', 
+                    color: '#ffffff',
+                    border: '1px solid #333333'
+                  }}
+                  placeholder="Market açıklaması"
+                />
+              </div>
+
+              {/* Kategori */}
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: '#ffffff' }}>
+                  Kategori
+                </label>
+                <select
+                  value={editForm.category}
+                  onChange={(e) => setEditForm({ ...editForm, category: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl font-medium transition-colors"
+                  style={{ 
+                    backgroundColor: '#1a1a1a', 
+                    color: '#ffffff',
+                    border: '1px solid #333333'
+                  }}
+                >
+                  {categories.map((cat) => (
+                    <option key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Kapanış Tarihi */}
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: '#ffffff' }}>
+                  Kapanış Tarihi *
+                </label>
+                <input
+                  type="datetime-local"
+                  value={editForm.closing_date}
+                  onChange={(e) => setEditForm({ ...editForm, closing_date: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl font-medium transition-colors"
+                  style={{ 
+                    backgroundColor: '#1a1a1a', 
+                    color: '#ffffff',
+                    border: '1px solid #333333'
+                  }}
+                />
+              </div>
+
+              {/* Görsel URL */}
+              <div>
+                <label className="block text-sm font-medium mb-2" style={{ color: '#ffffff' }}>
+                  Görsel URL
+                </label>
+                <input
+                  type="text"
+                  value={editForm.image_url}
+                  onChange={(e) => setEditForm({ ...editForm, image_url: e.target.value })}
+                  className="w-full px-4 py-3 rounded-xl font-medium transition-colors"
+                  style={{ 
+                    backgroundColor: '#1a1a1a', 
+                    color: '#ffffff',
+                    border: '1px solid #333333'
+                  }}
+                  placeholder="https://example.com/image.jpg"
+                />
+              </div>
+
+              {/* Önizleme */}
+              {editForm.image_url && (
+                <div className="rounded-xl overflow-hidden" style={{ border: '1px solid #333333' }}>
+                  <img 
+                    src={editForm.image_url} 
+                    alt="Önizleme" 
+                    className="w-full h-48 object-cover"
+                    onError={(e) => e.target.style.display = 'none'}
+                  />
+                </div>
+              )}
+
+              {/* Butonlar */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  onClick={() => setEditingMarket(null)}
+                  className="flex-1 px-4 py-3 rounded-xl font-medium transition-colors"
+                  style={{ 
+                    backgroundColor: '#333333', 
+                    color: '#ffffff',
+                    border: '1px solid #555555'
+                  }}
+                  onMouseEnter={(e) => e.target.style.backgroundColor = '#444444'}
+                  onMouseLeave={(e) => e.target.style.backgroundColor = '#333333'}
+                >
+                  İptal
+                </button>
+                
+                <button
+                  onClick={() => {
+                    const confirmDelete = window.confirm(
+                      `"${editingMarket.title}" adlı marketi silmek istediğinizden emin misiniz?\n\n` +
+                      `Bu işlem geri alınamaz ve market ile ilgili tüm veriler silinecektir.`
+                    )
+                    
+                    if (confirmDelete) {
+                      deleteMarketMutation.mutate(editingMarket.id)
+                      setEditingMarket(null)
+                    }
+                  }}
+                  disabled={deleteMarketMutation.isPending}
+                  className="px-4 py-3 rounded-xl font-medium transition-colors disabled:opacity-50"
+                  style={{ 
+                    backgroundColor: '#FF0000', 
+                    color: '#ffffff'
+                  }}
+                  onMouseEnter={(e) => !deleteMarketMutation.isPending && (e.target.style.backgroundColor = '#cc0000')}
+                  onMouseLeave={(e) => !deleteMarketMutation.isPending && (e.target.style.backgroundColor = '#FF0000')}
+                >
+                  {deleteMarketMutation.isPending ? 'Siliniyor...' : '🗑️ Sil'}
+                </button>
+                
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={updateMarketMutation.isPending}
+                  className="flex-1 px-4 py-3 rounded-xl font-medium transition-colors disabled:opacity-50"
+                  style={{ 
+                    backgroundColor: '#ccff33', 
+                    color: '#000000'
+                  }}
+                  onMouseEnter={(e) => !updateMarketMutation.isPending && (e.target.style.backgroundColor = '#b8e62e')}
+                  onMouseLeave={(e) => !updateMarketMutation.isPending && (e.target.style.backgroundColor = '#ccff33')}
+                >
+                  {updateMarketMutation.isPending ? 'Kaydediliyor...' : 'Kaydet'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

@@ -48,51 +48,10 @@ export default function HomePage() {
     return statusFilter && market.category === activeCategory
   })
 
-  const stats = {
-    totalVolume: markets.reduce((sum, m) => sum + parseFloat(m.volume || 0), 0),
-    totalTraders: markets.reduce((sum, m) => sum + (m.tradersCount || 0), 0),
-    activeMarkets: markets.filter(m => m.status === 'open').length
-  }
-
-  const formatVolume = (volume) => {
-    if (volume >= 1000) {
-      return `₺${(volume / 1000).toFixed(1)}k`
-    }
-    return `₺${volume.toFixed(0)}`
-  }
-
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#111111' }}>
-      {/* Hero Section */}
-      <div className="container mx-auto px-4 py-12">
-        <div className="text-center mb-12">
-          <h2 className="text-4xl md:text-5xl font-bold mb-4" style={{ color: '#EEFFDD' }}>
-            Geleceği Tahmin Et, Kazan
-          </h2>
-          <p className="text-lg max-w-2xl mx-auto" style={{ color: '#EEFFDD', opacity: 0.7 }}>
-            Siyaset, spor, ekonomi ve daha fazlası hakkında tahminlerde bulun. 
-            Bilgini paraya çevir.
-          </p>
-        </div>
-
-        {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-12">
-          {[
-            { label: 'Toplam Hacim', value: formatVolume(stats.totalVolume) },
-            { label: 'Aktif Kullanıcı', value: `${stats.totalTraders.toLocaleString()}+` },
-            { label: 'Aktif Market', value: stats.activeMarkets },
-            { label: 'Başarı Oranı', value: '%99.2' }
-          ].map((stat, idx) => (
-            <div key={idx} className="rounded-2xl p-6 text-center" style={{ backgroundColor: '#1D1D1F', border: '1px solid #555555' }}>
-              <div className="text-3xl font-bold mb-1" style={{ color: '#EEFFDD' }}>
-                {stat.value}
-              </div>
-              <div className="text-sm" style={{ color: '#EEFFDD', opacity: 0.7 }}>{stat.label}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* Markets Grid */}
+      {/* Markets Grid */}
+      <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-bold flex items-center gap-2" style={{ color: '#EEFFDD' }}>

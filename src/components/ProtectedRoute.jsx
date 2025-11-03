@@ -1,33 +1,6 @@
 import { Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
-/**
- * ProtectedRoute Component
- * 
- * Kullanıcının giriş yapmış olmasını gerektiren sayfaları korur.
- * Loading durumunda loading gösterir, giriş yapmamışsa login sayfasına yönlendirir.
- * requireAdmin prop'u ile admin yetkisi kontrolü yapılabilir.
- * 
- * @example
- * <Route 
- *   path="/portfolio" 
- *   element={
- *     <ProtectedRoute>
- *       <PortfolioPage />
- *     </ProtectedRoute>
- *   } 
- * />
- * 
- * @example
- * <Route 
- *   path="/admin" 
- *   element={
- *     <ProtectedRoute requireAdmin>
- *       <AdminPage />
- *     </ProtectedRoute>
- *   } 
- * />
- */
 export default function ProtectedRoute({ children, redirectTo = '/login', requireAdmin = false }) {
   const { isAuthenticated, loading, user } = useAuth()
 
