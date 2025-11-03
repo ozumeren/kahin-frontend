@@ -3,6 +3,15 @@ import { Link, useOutletContext } from 'react-router-dom'
 import { TrendingUp, ChevronRight, Users } from 'lucide-react'
 import apiClient from '../api/client'
 
+// Import category icons
+import AllIcon from '../assets/all.svg'
+import PoliticsIcon from '../assets/financial.svg'
+import SportsIcon from '../assets/sports.svg'
+import CryptoIcon from '../assets/crypto.svg'
+import EconomyIcon from '../assets/icons-04.svg'
+import EntertainmentIcon from '../assets/entertainment.svg'
+import TechnologyIcon from '../assets/icons-04.svg'
+
 export default function HomePage() {
   const { activeCategory, setActiveCategory } = useOutletContext()
   const [markets, setMarkets] = useState([])
@@ -10,13 +19,13 @@ export default function HomePage() {
   const [error, setError] = useState(null)
 
   const categories = [
-    { id: 'all', name: 'Tüm Marketler', icon: '🎯' },
-    { id: 'politics', name: 'Siyaset', icon: '🏛️' },
-    { id: 'sports', name: 'Spor', icon: '⚽' },
-    { id: 'crypto', name: 'Kripto', icon: '₿' },
-    { id: 'economy', name: 'Ekonomi', icon: '📈' },
-    { id: 'entertainment', name: 'Eğlence', icon: '🎬' },
-    { id: 'technology', name: 'Teknoloji', icon: '💻' }
+    { id: 'all', name: 'Tüm Marketler', icon: AllIcon },
+    { id: 'politics', name: 'Siyaset', icon: PoliticsIcon },
+    { id: 'sports', name: 'Spor', icon: SportsIcon },
+    { id: 'crypto', name: 'Kripto', icon: CryptoIcon },
+    { id: 'economy', name: 'Ekonomi', icon: EconomyIcon },
+    { id: 'entertainment', name: 'Eğlence', icon: EntertainmentIcon },
+    { id: 'technology', name: 'Teknoloji', icon: TechnologyIcon }
   ]
 
   useEffect(() => {

@@ -3,19 +3,28 @@ import { useAuth } from '../context/AuthContext'
 import { TrendingUp, User, LogOut, Menu, X, Shield } from 'lucide-react'
 import { useState } from 'react'
 
+// Import category icons
+import AllIcon from '../assets/all.svg'
+import PoliticsIcon from '../assets/financial.svg'
+import SportsIcon from '../assets/sports.svg'
+import CryptoIcon from '../assets/crypto.svg'
+import EconomyIcon from '../assets/icons-04.svg'
+import EntertainmentIcon from '../assets/entertainment.svg'
+import TechnologyIcon from '../assets/icons-04.svg'
+
 export default function Navbar({ activeCategory, setActiveCategory, showCategories = false }) {
   const { user, logout } = useAuth()
   const location = useLocation()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
   const categories = [
-    { id: 'all', name: 'Tüm Marketler', icon: '🎯' },
-    { id: 'politics', name: 'Siyaset', icon: '🏛️' },
-    { id: 'sports', name: 'Spor', icon: '⚽' },
-    { id: 'crypto', name: 'Kripto', icon: '₿' },
-    { id: 'economy', name: 'Ekonomi', icon: '📈' },
-    { id: 'entertainment', name: 'Eğlence', icon: '🎬' },
-    { id: 'technology', name: 'Teknoloji', icon: '💻' }
+    { id: 'all', name: 'Tüm Marketler', icon: AllIcon },
+    { id: 'politics', name: 'Siyaset', icon: PoliticsIcon },
+    { id: 'sports', name: 'Spor', icon: SportsIcon },
+    { id: 'crypto', name: 'Kripto', icon: CryptoIcon },
+    { id: 'economy', name: 'Ekonomi', icon: EconomyIcon },
+    { id: 'entertainment', name: 'Eğlence', icon: EntertainmentIcon },
+    { id: 'technology', name: 'Teknoloji', icon: TechnologyIcon }
   ]
 
   const isActive = (path) => location.pathname === path
@@ -155,7 +164,7 @@ export default function Navbar({ activeCategory, setActiveCategory, showCategori
                     border: activeCategory === cat.id ? '1px solid #ccff33' : '1px solid transparent'
                   }}
                 >
-                  <span>{cat.icon}</span>
+                  <img src={cat.icon} alt="" className="w-4 h-4" />
                   {cat.name}
                 </button>
               ))}
@@ -168,7 +177,7 @@ export default function Navbar({ activeCategory, setActiveCategory, showCategori
                 style={{ backgroundColor: '#555555', color: '#ffffff' }}
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               >
-                <span>{categories.find(c => c.id === activeCategory)?.icon}</span>
+                <img src={categories.find(c => c.id === activeCategory)?.icon} alt="" className="w-4 h-4" />
                 <span className="text-sm font-medium">{categories.find(c => c.id === activeCategory)?.name}</span>
                 {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
               </button>
@@ -184,13 +193,13 @@ export default function Navbar({ activeCategory, setActiveCategory, showCategori
                       setActiveCategory(cat.id)
                       setMobileMenuOpen(false)
                     }}
-                    className="w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-all"
+                    className="w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2"
                     style={{
                       backgroundColor: activeCategory === cat.id ? '#555555' : 'transparent',
                       color: '#ffffff'
                     }}
                   >
-                    <span className="mr-2">{cat.icon}</span>
+                    <img src={cat.icon} alt="" className="w-4 h-4" />
                     {cat.name}
                   </button>
                 ))}
