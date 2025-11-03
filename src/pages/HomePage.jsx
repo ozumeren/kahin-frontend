@@ -57,6 +57,18 @@ export default function HomePage() {
     return statusFilter && market.category === activeCategory
   })
 
+  // Debug: Log market images
+  useEffect(() => {
+    if (filteredMarkets.length > 0) {
+      console.log('=== Market Images Debug ===')
+      filteredMarkets.forEach(m => {
+        console.log(`Market: ${m.title}`)
+        console.log(`  - image_url: ${m.image_url}`)
+        console.log(`  - category: ${m.category}`)
+      })
+    }
+  }, [filteredMarkets])
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#111111' }}>
       {/* Markets Grid */}
@@ -115,6 +127,9 @@ export default function HomePage() {
                   const yesPrice = parseFloat(market.yesMidPrice || market.yesPrice || 0.50)
                   const noPrice = parseFloat(market.noMidPrice || market.noPrice || 0.50)
                   const yesPercentage = Math.round(yesPrice * 100)
+                  
+                  // Get category icon for fallback
+                  const categoryIcon = categories.find(c => c.id === market.category)?.icon
 
                   return (
                     <div 
@@ -130,12 +145,29 @@ export default function HomePage() {
                         <div className="flex items-start gap-3 mb-4">
                           {/* Icon */}
                           <div 
-                            className="w-12 h-12 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center text-2xl"
+                            className="w-12 h-12 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center"
                             style={{ backgroundColor: 'rgba(204, 255, 51, 0.1)' }}
                           >
                             {market.image_url ? (
-                              <img src={market.image_url} alt="" className="w-full h-full object-cover" />
-                            ) : '📊'}
+                              <img 
+                                src={market.image_url}
+                                alt={market.title}
+                                className="w-full h-full object-cover"
+                                onError={(e) => {
+                                  console.error('Image failed to load:', market.image_url)
+                                  console.log('Market data:', market)
+                                  e.target.onerror = null // Prevent infinite loop
+                                  e.target.style.display = 'none'
+                                  e.target.parentElement.innerHTML = `<img src="${categoryIcon || AllIcon}" class="w-full h-full object-contain p-2" />`
+                                }}
+                              />
+                            ) : (
+                              <img 
+                                src={categoryIcon || AllIcon}
+                                alt={market.title}
+                                className="w-full h-full object-contain p-2"
+                              />
+                            )}
                           </div>
 
                           {/* Title */}

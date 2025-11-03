@@ -1086,7 +1086,16 @@ function CreateMarketPanel() {
 
   const createMarketMutation = useMutation({
     mutationFn: async (data) => {
-      let finalData = { ...data }
+      let finalData = { 
+        title: data.title,
+        description: data.description,
+        category: data.category,
+        closing_date: data.closing_date,
+        market_type: data.type, // Frontend'de 'type' ama backend 'market_type' bekliyor
+        image_url: data.image_url
+      }
+      
+      console.log('📝 Sending market data:', finalData)
       
       // Upload image if selected
       if (imageFile) {
@@ -1100,11 +1109,18 @@ function CreateMarketPanel() {
       }
       
       // Handle options for multiple choice markets
-      if (finalData.type === 'multiple_choice') {
-        finalData.options = customOptions.filter(opt => opt.trim() !== '')
+      if (data.type === 'multiple_choice') {
+        const validOptions = customOptions.filter(opt => opt.trim() !== '').map((opt, idx) => ({
+          option_text: opt,
+          option_order: idx
+        }))
+        finalData.options = validOptions
       }
       
+      console.log('📤 Final market data being sent:', finalData)
+      
       const response = await apiClient.post('/admin/markets', finalData)
+      console.log('✅ Market created response:', response.data)
       return response.data
     },
     onSuccess: () => {

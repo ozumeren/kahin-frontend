@@ -28,7 +28,7 @@ export default function Layout() {
       </main>
       <footer className="py-8 mt-16" style={{ borderTop: '1px solid #555555', backgroundColor: '#111111' }}>
         <div className="container mx-auto px-4 text-center text-sm" style={{ color: '#ffffff', opacity: 0.7 }}>
-          <p>© 2025 Kahin Market. Tüm hakları saklıdır.</p>
+          <p>© 2025 Kahinmarket. Tüm hakları saklıdır.</p>
         </div>
       </footer>
     </div>
