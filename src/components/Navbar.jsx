@@ -10,7 +10,7 @@ import SportsIcon from '../assets/sports.svg'
 import CryptoIcon from '../assets/crypto.svg'
 import EconomyIcon from '../assets/icons-04.svg'
 import EntertainmentIcon from '../assets/entertainment.svg'
-import TechnologyIcon from '../assets/icons-04.svg'
+import TechnologyIcon from '../assets/technology.svg'
 
 export default function Navbar({ activeCategory, setActiveCategory, showCategories = false }) {
   const { user, logout } = useAuth()
