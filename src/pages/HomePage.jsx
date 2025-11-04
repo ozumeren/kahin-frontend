@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Link, useOutletContext } from 'react-router-dom'
+import { Link, useOutletContext, useSearchParams } from 'react-router-dom'
 import { TrendingUp, ChevronRight, Users } from 'lucide-react'
 import apiClient from '../api/client'
 
@@ -14,9 +14,13 @@ import TechnologyIcon from '../assets/technology.svg'
 
 export default function HomePage() {
   const { activeCategory, setActiveCategory } = useOutletContext()
+  const [searchParams] = useSearchParams()
   const [markets, setMarkets] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
+
+  // Get search query from URL
+  const searchQuery = searchParams.get('search') || ''
 
   const categories = [
     { id: 'all', name: 'Tüm Marketler', icon: AllIcon },
@@ -51,10 +55,14 @@ export default function HomePage() {
 
   const filteredMarkets = markets.filter((market) => {
     const statusFilter = market.status === 'open' || market.status === 'closed'
-    if (activeCategory === 'all') {
-      return statusFilter
-    }
-    return statusFilter && market.category === activeCategory
+    const categoryFilter = activeCategory === 'all' || market.category === activeCategory
+    
+    // Search filter
+    const searchFilter = !searchQuery || 
+      market.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      market.description?.toLowerCase().includes(searchQuery.toLowerCase())
+    
+    return statusFilter && categoryFilter && searchFilter
   })
 
   // Debug: Log market images
@@ -77,7 +85,7 @@ export default function HomePage() {
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-bold flex items-center gap-2" style={{ color: '#EEFFDD' }}>
               <TrendingUp className="w-6 h-6" style={{ color: '#ccff33' }} />
-              {categories.find(c => c.id === activeCategory)?.name}
+              {searchQuery ? `"${searchQuery}" için sonuçlar` : categories.find(c => c.id === activeCategory)?.name}
             </h3>
             <button 
               onClick={fetchMarkets}
@@ -119,8 +127,12 @@ export default function HomePage() {
                   <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#555555' }}>
                     <TrendingUp className="w-10 h-10" style={{ color: '#EEFFDD', opacity: 0.5 }} />
                   </div>
-                  <h3 className="text-xl font-semibold mb-2" style={{ color: '#EEFFDD' }}>Henüz market yok</h3>
-                  <p style={{ color: '#EEFFDD', opacity: 0.7 }}>Bu kategoride market bulunmuyor</p>
+                  <h3 className="text-xl font-semibold mb-2" style={{ color: '#EEFFDD' }}>
+                    {searchQuery ? 'Sonuç bulunamadı' : 'Henüz market yok'}
+                  </h3>
+                  <p style={{ color: '#EEFFDD', opacity: 0.7 }}>
+                    {searchQuery ? `"${searchQuery}" için sonuç bulunamadı` : 'Bu kategoride market bulunmuyor'}
+                  </p>
                 </div>
               ) : (
                 filteredMarkets.map((market) => {
@@ -134,11 +146,7 @@ export default function HomePage() {
                   return (
                     <div 
                       key={market.id}
-                      className="rounded-2xl p-5 transition-all hover:shadow-xl border group"
-                      style={{ 
-                        backgroundColor: '#1D1D1F',
-                        borderColor: '#555555'
-                      }}
+                      className="market-card p-5 group"
                     >
                       <Link to={`/markets/${market.id}`} className="block">
                         {/* Header */}

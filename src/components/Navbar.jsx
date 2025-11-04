@@ -1,6 +1,6 @@
-import { Link, useLocation } from 'react-router-dom'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { TrendingUp, User, LogOut, Menu, X, Shield } from 'lucide-react'
+import { TrendingUp, User, LogOut, Menu, X, Shield, Search } from 'lucide-react'
 import { useState } from 'react'
 
 // Import category icons
@@ -15,7 +15,10 @@ import TechnologyIcon from '../assets/technology.svg'
 export default function Navbar({ activeCategory, setActiveCategory, showCategories = false }) {
   const { user, logout } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [showProfileMenu, setShowProfileMenu] = useState(false)
 
   const categories = [
     { id: 'all', name: 'Tüm Marketler', icon: AllIcon },
@@ -32,6 +35,15 @@ export default function Navbar({ activeCategory, setActiveCategory, showCategori
   const handleLogout = () => {
     logout()
     setMobileMenuOpen(false)
+  }
+
+  const handleSearch = (e) => {
+    e.preventDefault()
+    if (searchQuery.trim()) {
+      navigate(`/?search=${encodeURIComponent(searchQuery.trim())}`)
+    } else {
+      navigate('/')
+    }
   }
 
   return (
@@ -60,61 +72,83 @@ export default function Navbar({ activeCategory, setActiveCategory, showCategori
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center gap-2">
-            <Link 
-              to="/" 
-              className="px-4 py-2 rounded-lg font-medium transition-all"
-              style={{
-                backgroundColor: isActive('/') ? '#555555' : 'transparent',
-                color: '#ffffff'
-              }}
-            >
-              Ana Sayfa
-            </Link>
-            <Link 
-              to="/markets" 
-              className="px-4 py-2 rounded-lg font-medium transition-all"
-              style={{
-                backgroundColor: isActive('/markets') ? '#555555' : 'transparent',
-                color: '#ffffff'
-              }}
-            >
-              Pazarlar
-            </Link>
-            {user && (
-              <Link 
-                to="/portfolio" 
-                className="px-4 py-2 rounded-lg font-medium transition-all"
-                style={{
-                  backgroundColor: isActive('/portfolio') ? '#555555' : 'transparent',
-                  color: '#ffffff'
-                }}
-              >
-                Portfolyo
-              </Link>
-            )}
+            {/* Navigation items removed - only logo remains */}
           </div>
+
+          {/* Spacer to push search to the right */}
+          <div className="flex-1"></div>
+
+          {/* Search Bar - Desktop */}
+          <form onSubmit={handleSearch} className="hidden lg:flex max-w-md mr-4">
+            <div className="relative w-full">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4" style={{ color: '#ffffff', opacity: 0.5 }} />
+              <input
+                type="text"
+                placeholder="Market ara..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-10 pr-4 py-2 rounded-lg text-sm transition-all focus:outline-none"
+                style={{
+                  backgroundColor: '#1a1a1a',
+                  color: '#ffffff',
+                  border: '1px solid #555555'
+                }}
+              />
+            </div>
+          </form>
 
           {/* Desktop User Section */}
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <>
-                <div className="flex items-center gap-3 px-4 py-2 rounded-lg" style={{ backgroundColor: '#555555', border: '1px solid #555555' }}>
-                  <User className="w-4 h-4 flex-shrink-0" style={{ color: '#ffffff', opacity: 0.7 }} />
-                  <div className="flex flex-col min-w-0">
-                    <span className="text-sm font-medium truncate" style={{ color: '#ffffff' }}>{user.username}</span>
-                    <span className="text-xs whitespace-nowrap" style={{ color: '#ffffff', opacity: 0.7 }}>
-                      ₺{parseFloat(user.balance || 0).toFixed(2)}
-                    </span>
-                  </div>
+                <div className="relative">
+                  <button
+                    onClick={() => setShowProfileMenu(!showProfileMenu)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all hover:brightness-110"
+                    style={{ backgroundColor: '#555555', border: '1px solid #555555' }}
+                  >
+                    <User className="w-4 h-4 flex-shrink-0" style={{ color: '#ffffff', opacity: 0.7 }} />
+                    <div className="flex flex-col">
+                      <span className="text-sm font-medium leading-tight" style={{ color: '#ffffff' }}>{user.username}</span>
+                      <span className="text-xs leading-tight" style={{ color: '#ffffff', opacity: 0.7 }}>
+                        ₺{parseFloat(user.balance || 0).toFixed(2)}
+                      </span>
+                    </div>
+                  </button>
+
+                  {/* Profile Dropdown */}
+                  {showProfileMenu && (
+                    <div 
+                      className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg overflow-hidden z-50"
+                      style={{ backgroundColor: '#1a1a1a', border: '1px solid #555555' }}
+                    >
+                      <Link
+                        to="/portfolio"
+                        onClick={() => setShowProfileMenu(false)}
+                        className="flex items-center gap-2 px-4 py-3 transition-all hover:brightness-110"
+                        style={{ 
+                          backgroundColor: isActive('/portfolio') ? '#555555' : 'transparent',
+                          color: '#ffffff',
+                          borderBottom: '1px solid #555555'
+                        }}
+                      >
+                        <TrendingUp className="w-4 h-4" />
+                        Portfolyo
+                      </Link>
+                      <button
+                        onClick={() => {
+                          setShowProfileMenu(false)
+                          handleLogout()
+                        }}
+                        className="w-full flex items-center gap-2 px-4 py-3 transition-all hover:brightness-110"
+                        style={{ backgroundColor: 'transparent', color: '#FF0000' }}
+                      >
+                        <LogOut className="w-4 h-4" />
+                        Çıkış Yap
+                      </button>
+                    </div>
+                  )}
                 </div>
-                <button 
-                  onClick={handleLogout} 
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all hover:brightness-110"
-                  style={{ backgroundColor: 'transparent', color: '#ffffff' }}
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>Çıkış</span>
-                </button>
               </>
             ) : (
               <>
@@ -212,28 +246,6 @@ export default function Navbar({ activeCategory, setActiveCategory, showCategori
         {mobileMenuOpen && !showCategories && (
           <div className="md:hidden py-4" style={{ borderTop: '1px solid #555555' }}>
             <div className="flex flex-col space-y-2">
-              <Link
-                to="/"
-                onClick={() => setMobileMenuOpen(false)}
-                className="px-4 py-2 rounded-lg font-medium"
-                style={{
-                  backgroundColor: isActive('/') ? '#555555' : 'transparent',
-                  color: '#ffffff'
-                }}
-              >
-                Ana Sayfa
-              </Link>
-              <Link
-                to="/markets"
-                onClick={() => setMobileMenuOpen(false)}
-                className="px-4 py-2 rounded-lg font-medium"
-                style={{
-                  backgroundColor: isActive('/markets') ? '#555555' : 'transparent',
-                  color: '#ffffff'
-                }}
-              >
-                Pazarlar
-              </Link>
               {user && (
                 <Link
                   to="/portfolio"

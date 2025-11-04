@@ -1,9 +1,8 @@
-import React, { useState } from 'react'
-import { Link, useOutletContext } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { Link, useOutletContext, useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import apiClient from '../api/client'
 import { 
-  Search, 
   TrendingUp, 
   Clock, 
   Users,
@@ -14,8 +13,11 @@ import {
 
 export default function MarketsPage() {
   const { activeCategory, setActiveCategory } = useOutletContext() || { activeCategory: 'all', setActiveCategory: () => {} }
-  const [searchQuery, setSearchQuery] = useState('')
+  const [searchParams] = useSearchParams()
   const [activeFilter, setActiveFilter] = useState('all')
+  
+  // Get search query from URL
+  const searchQuery = searchParams.get('search') || ''
 
   const { data: marketsData, isLoading, error } = useQuery({
     queryKey: ['markets'],
@@ -50,25 +52,6 @@ export default function MarketsPage() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#111111' }}>
-      {/* Header */}
-      <div style={{ borderBottom: '1px solid #555555' }}>
-        <div className="container mx-auto px-4 py-8">
-          <h1 className="text-4xl font-bold mb-6" style={{ color: '#ffffff' }}>Tüm Pazarlar</h1>
-          
-          {/* Search Bar */}
-          <div className="relative max-w-2xl">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5" style={{ color: '#ffffff', opacity: 0.5 }} />
-            <input
-              type="text"
-              placeholder="Market ara..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="input w-full pl-12"
-            />
-          </div>
-        </div>
-      </div>
-
       {/* Filters */}
       <div style={{ borderBottom: '1px solid #555555' }}>
         <div className="container mx-auto px-4 py-4">
@@ -131,11 +114,11 @@ export default function MarketsPage() {
             {filteredMarkets.length === 0 ? (
               <div className="rounded-2xl p-12 text-center" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
                 <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#555555' }}>
-                  <Search className="w-10 h-10" style={{ color: '#ffffff', opacity: 0.5 }} />
+                  <TrendingUp className="w-10 h-10" style={{ color: '#ffffff', opacity: 0.5 }} />
                 </div>
                 <h3 className="text-xl font-semibold mb-2" style={{ color: '#ffffff' }}>Market bulunamadı</h3>
                 <p style={{ color: '#ffffff', opacity: 0.7 }}>
-                  Arama kriterlerinize uygun market bulunmuyor
+                  {searchQuery ? `"${searchQuery}" için sonuç bulunamadı` : 'Arama kriterlerinize uygun market bulunmuyor'}
                 </p>
               </div>
             ) : (
