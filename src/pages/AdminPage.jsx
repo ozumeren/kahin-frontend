@@ -1091,7 +1091,7 @@ function CreateMarketPanel() {
         description: data.description,
         category: data.category,
         closing_date: data.closing_date,
-        market_type: data.type, // Frontend'de 'type' ama backend 'market_type' bekliyor
+        market_type: data.type,
         image_url: data.image_url
       }
       

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, TrendingUp, Users, Clock, Wifi, RefreshCw, X, BarChart3 } from 'lucide-react';
+import { ArrowLeft, TrendingUp, Users, MessageCircle, Share2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import toast from 'react-hot-toast';
 import { ParentSize } from '@visx/responsive';
@@ -8,7 +8,6 @@ import { useMarketWebSocket, useNewTrades } from '../hooks/useWebSocket';
 import { useAuth } from '../context/AuthContext';
 import { useMarket, useOrderBook, useMarketTrades, useCreateOrder, usePortfolio } from '../hooks/useMarketQueries';
 import MarketChart from '../components/MarketChart';
-import VolumeBarChart from '../components/VolumeBarChart';
 
 const MarketDetailPage = () => {
   const { id: marketId } = useParams();
@@ -16,7 +15,7 @@ const MarketDetailPage = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   
-  // React Query hooks - API verilerini yönet
+  // React Query hooks
   const { data: market, isLoading: marketLoading, error: marketError } = useMarket(marketId);
   const { data: initialOrderBook, isLoading: orderBookLoading } = useOrderBook(marketId);
   const { data: trades = [], isLoading: tradesLoading } = useMarketTrades(marketId, 100);
@@ -26,79 +25,70 @@ const MarketDetailPage = () => {
   // Modal states
   const [showBuyModal, setShowBuyModal] = useState(false);
   const [selectedOutcome, setSelectedOutcome] = useState(null);
-  const [orderType, setOrderType] = useState('BUY');
+  const [selectedOptionId, setSelectedOptionId] = useState(null);
   const [orderQuantity, setOrderQuantity] = useState('');
   const [orderPrice, setOrderPrice] = useState('');
+  const [chartTimeframe, setChartTimeframe] = useState('ALL');
 
-  // Chart options
-  const [chartTimeframe, setChartTimeframe] = useState('all');
-  const [showChartGrid, setShowChartGrid] = useState(true);
-  const [showChartArea, setShowChartArea] = useState(true);
-
-  // WebSocket hook - real-time güncellemeler için
+  // WebSocket hook
   const { isConnected: wsConnected, orderBook: liveOrderBook, lastUpdate } = useMarketWebSocket(marketId);
   
-  // WebSocket'ten yeni trade geldiğinde trades listesini güncelle
   const handleNewTrade = useCallback((newTrade) => {
     queryClient.invalidateQueries({ queryKey: ['trades', marketId] });
   }, [queryClient, marketId]);
   
   useNewTrades(marketId, handleNewTrade);
 
-  // Prepare chart data from trades with timeframe filtering
+  // Chart data
   const chartData = useMemo(() => {
     if (!trades || trades.length === 0) return [];
-
-    const sortedTrades = [...trades].sort((a, b) => 
-      new Date(a.createdAt) - new Date(b.createdAt)
-    );
-
-    let filteredTrades = sortedTrades;
-    const now = new Date();
-    
-    if (chartTimeframe !== 'all') {
-      const cutoffTime = new Date(now);
-      
-      switch (chartTimeframe) {
-        case '1h':
-          cutoffTime.setHours(now.getHours() - 1);
-          break;
-        case '6h':
-          cutoffTime.setHours(now.getHours() - 6);
-          break;
-        case '24h':
-          cutoffTime.setHours(now.getHours() - 24);
-          break;
-        case '7d':
-          cutoffTime.setDate(now.getDate() - 7);
-          break;
-        default:
-          break;
-      }
-      
-      filteredTrades = sortedTrades.filter(trade => 
-        new Date(trade.createdAt) >= cutoffTime
-      );
-    }
-
-    // Trade'lerden chart data oluştur
-    const tradeData = filteredTrades.map((trade) => {
+    const sortedTrades = [...trades].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt));
+    return sortedTrades.map((trade) => {
       let tradePrice = parseFloat(trade.price);
-      
-      // Eğer fiyat 0-1 arasındaysa (0.499 gibi), 100 ile çarp
-      if (tradePrice <= 1) {
-        tradePrice = tradePrice * 100;
-      }
-      
-      // EVET olasılığı
+      if (tradePrice <= 1) tradePrice = tradePrice * 100;
       const yesProbability = trade.outcome ? tradePrice : (100 - tradePrice);
-      const noProbability = 100 - yesProbability;
-      
       return {
-        time: new Date(trade.createdAt).toLocaleTimeString('tr-TR', { 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        }),
+        time: new Date(trade.createdAt).toLocaleTimeString('tr-TR', { hour: '2-digit', minute: '2-digit' }),
+        timestamp: new Date(trade.createdAt).getTime(),
+        yes: yesProbability,
+        no: 100 - yesProbability,
+      };
+    });
+  }, [trades, chartTimeframe]);
+
+  const orderBook = useMemo(() => {
+    return liveOrderBook || initialOrderBook || { 
+      yes: { bids: [], asks: [] }, 
+      no: { bids: [], asks: [] } 
+    };
+  }, [liveOrderBook, initialOrderBook]);
+
+  if (marketLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#ffffff' }}>
+        <div className="text-center">
+          <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+          <p style={{ color: '#666666' }}>Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (marketError || !market) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#ffffff' }}>
+        <div className="text-center">
+          <p style={{ color: '#666666' }}>Market not found</p>
+          <button onClick={() => navigate('/')} className="mt-4 text-blue-600 hover:underline">
+            Go back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const isMultipleChoice = market?.options && market.options.length > 0;
+  const isBinaryMarket = !isMultipleChoice;
         timestamp: new Date(trade.createdAt).getTime(),
         yes: yesProbability,
         no: noProbability,

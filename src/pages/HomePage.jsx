@@ -142,6 +142,9 @@ export default function HomePage() {
                   
                   // Get category icon for fallback
                   const categoryIcon = categories.find(c => c.id === market.category)?.icon
+                  
+                  // Check if this is a multiple choice market
+                  const isMultipleChoice = market.options && market.options.length > 0
 
                   return (
                     <div 
@@ -186,46 +189,83 @@ export default function HomePage() {
                             >
                               {market.title}
                             </h3>
-                            <div className="flex items-baseline gap-2">
-                              <span className="text-2xl font-bold" style={{ color: '#ccff33' }}>
-                                {yesPercentage}%
-                              </span>
-                              <span className="text-xs" style={{ color: '#EEFFDD', opacity: 0.5 }}>
-                                EVET
-                              </span>
-                            </div>
+                            {isMultipleChoice ? (
+                              <div className="text-xs" style={{ color: '#ccff33', opacity: 0.7 }}>
+                                {market.options.length} seçenek
+                              </div>
+                            ) : (
+                              <div className="flex items-baseline gap-2">
+                                <span className="text-2xl font-bold" style={{ color: '#ccff33' }}>
+                                  {yesPercentage}%
+                                </span>
+                                <span className="text-xs" style={{ color: '#EEFFDD', opacity: 0.5 }}>
+                                  EVET
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
 
-                        {/* Buttons */}
-                        <div className="grid grid-cols-2 gap-2 mb-3">
-                          <button
-                            className="py-2.5 px-3 rounded-lg font-semibold text-sm transition-all hover:brightness-110"
-                            style={{ 
-                              backgroundColor: 'rgba(204, 255, 51, 0.15)',
-                              color: '#ccff33',
-                              border: '1px solid rgba(204, 255, 51, 0.3)'
-                            }}
-                          >
-                            Yes
-                          </button>
-                          <button
-                            className="py-2.5 px-3 rounded-lg font-semibold text-sm transition-all hover:brightness-110"
-                            style={{ 
-                              backgroundColor: 'rgba(239, 68, 68, 0.15)',
-                              color: '#ef4444',
-                              border: '1px solid rgba(239, 68, 68, 0.3)'
-                            }}
-                          >
-                            No
-                          </button>
-                        </div>
+                        {isMultipleChoice ? (
+                          /* Multiple Choice Options Display */
+                          <div className="space-y-2 mb-3">
+                            {market.options.slice(0, 3).map((option, idx) => (
+                              <div 
+                                key={option.id}
+                                className="flex items-center justify-between py-2 px-3 rounded-lg"
+                                style={{ 
+                                  backgroundColor: 'rgba(204, 255, 51, 0.1)',
+                                  border: '1px solid rgba(204, 255, 51, 0.2)'
+                                }}
+                              >
+                                <span className="text-sm font-medium truncate" style={{ color: '#EEFFDD', opacity: 0.9 }}>
+                                  {option.option_text}
+                                </span>
+                                <span className="text-sm font-bold ml-2" style={{ color: '#ccff33' }}>
+                                  {parseFloat(option.probability || 50).toFixed(0)}%
+                                </span>
+                              </div>
+                            ))}
+                            {market.options.length > 3 && (
+                              <div className="text-xs text-center py-1" style={{ color: '#EEFFDD', opacity: 0.5 }}>
+                                +{market.options.length - 3} seçenek daha
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          /* Binary Market Buttons */
+                          <>
+                            {/* Buttons */}
+                            <div className="grid grid-cols-2 gap-2 mb-3">
+                              <button
+                                className="py-2.5 px-3 rounded-lg font-semibold text-sm transition-all hover:brightness-110"
+                                style={{ 
+                                  backgroundColor: 'rgba(204, 255, 51, 0.15)',
+                                  color: '#ccff33',
+                                  border: '1px solid rgba(204, 255, 51, 0.3)'
+                                }}
+                              >
+                                Yes
+                              </button>
+                              <button
+                                className="py-2.5 px-3 rounded-lg font-semibold text-sm transition-all hover:brightness-110"
+                                style={{ 
+                                  backgroundColor: 'rgba(239, 68, 68, 0.15)',
+                                  color: '#ef4444',
+                                  border: '1px solid rgba(239, 68, 68, 0.3)'
+                                }}
+                              >
+                                No
+                              </button>
+                            </div>
 
-                        {/* Prices */}
-                        <div className="grid grid-cols-2 gap-2 mb-3 text-xs text-center" style={{ color: '#EEFFDD', opacity: 0.5 }}>
-                          <div>₺100 → <span style={{ color: '#ccff33' }}>₺{(100 * yesPrice).toFixed(0)}</span></div>
-                          <div>₺100 → <span style={{ color: '#ef4444' }}>₺{(100 * noPrice).toFixed(0)}</span></div>
-                        </div>
+                            {/* Prices */}
+                            <div className="grid grid-cols-2 gap-2 mb-3 text-xs text-center" style={{ color: '#EEFFDD', opacity: 0.5 }}>
+                              <div>₺100 → <span style={{ color: '#ccff33' }}>₺{(100 * yesPrice).toFixed(0)}</span></div>
+                              <div>₺100 → <span style={{ color: '#ef4444' }}>₺{(100 * noPrice).toFixed(0)}</span></div>
+                            </div>
+                          </>
+                        )}
 
                         {/* Footer */}
                         <div className="flex items-center justify-between pt-3 text-xs" style={{ borderTop: '1px solid #555555', color: '#EEFFDD', opacity: 0.6 }}>
