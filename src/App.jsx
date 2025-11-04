@@ -7,13 +7,14 @@ import PortfolioPage from './pages/PortfolioPage'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import ProtectedRoute from './components/ProtectedRoute'
+import MarketDetailPageV2 from './pages/MarketDetailPageV2'
 
 function App() {
   return (
     <Routes>
       <Route path="/" element={<Layout />}>
         <Route index element={<HomePage />} />
-        <Route path="markets/:id" element={<MarketDetailPage />} />
+        <Route path="markets/:id" element={<MarketDetailPageV2 />} />
         <Route 
           path="portfolio" 
           element={
@@ -22,7 +23,6 @@ function App() {
             </ProtectedRoute>
           } 
         />
-        {/* Admin route kaldırıldı - artık ayrı bir CMS */}
         <Route path="login" element={<LoginPage />} />
         <Route path="register" element={<RegisterPage />} />
       </Route>
