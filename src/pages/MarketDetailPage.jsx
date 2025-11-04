@@ -249,27 +249,57 @@ const MarketDetailPage = () => {
 
               <div className="pt-4" style={{ borderTop: '1px solid #555555' }}>
                 <div className="flex justify-between text-sm mb-2">
+                  <span style={{ color: '#ffffff', opacity: 0.7 }}>Mevcut Bakiye:</span>
+                  <span className="font-medium" style={{ color: '#ccff33' }}>
+                    ₺{parseFloat(user?.balance || 0).toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm mb-2">
                   <span style={{ color: '#ffffff', opacity: 0.7 }}>Toplam Tutar:</span>
                   <span className="font-bold" style={{ color: '#ffffff' }}>
                     ₺{(parseFloat(orderQuantity || 0) * parseFloat(orderPrice || 0)).toFixed(2)}
+                  </span>
+                </div>
+                <div className="flex justify-between text-sm">
+                  <span style={{ color: '#ffffff', opacity: 0.7 }}>Kalan Bakiye:</span>
+                  <span className="font-bold" style={{ 
+                    color: (parseFloat(user?.balance || 0) - (parseFloat(orderQuantity || 0) * parseFloat(orderPrice || 0))) >= 0 
+                      ? '#ccff33' 
+                      : '#FF0000' 
+                  }}>
+                    ₺{(parseFloat(user?.balance || 0) - (parseFloat(orderQuantity || 0) * parseFloat(orderPrice || 0))).toFixed(2)}
                   </span>
                 </div>
               </div>
 
               <button
                 type="submit"
-                disabled={createOrderMutation.isPending || !orderQuantity || !orderPrice}
+                disabled={
+                  createOrderMutation.isPending || 
+                  !orderQuantity || 
+                  !orderPrice ||
+                  (orderType === 'BUY' && (parseFloat(orderQuantity || 0) * parseFloat(orderPrice || 0)) > parseFloat(user?.balance || 0))
+                }
                 className="w-full py-3 rounded-lg font-medium transition-colors"
                 style={{
-                  backgroundColor: createOrderMutation.isPending || !orderQuantity || !orderPrice
+                  backgroundColor: createOrderMutation.isPending || !orderQuantity || !orderPrice || 
+                    (orderType === 'BUY' && (parseFloat(orderQuantity || 0) * parseFloat(orderPrice || 0)) > parseFloat(user?.balance || 0))
                     ? '#555555'
                     : selectedOutcome ? '#ccff33' : '#FF0000',
                   color: '#ffffff',
-                  cursor: (createOrderMutation.isPending || !orderQuantity || !orderPrice) ? 'not-allowed' : 'pointer',
-                  opacity: (createOrderMutation.isPending || !orderQuantity || !orderPrice) ? 0.5 : 1
+                  cursor: (createOrderMutation.isPending || !orderQuantity || !orderPrice || 
+                    (orderType === 'BUY' && (parseFloat(orderQuantity || 0) * parseFloat(orderPrice || 0)) > parseFloat(user?.balance || 0))) 
+                    ? 'not-allowed' : 'pointer',
+                  opacity: (createOrderMutation.isPending || !orderQuantity || !orderPrice || 
+                    (orderType === 'BUY' && (parseFloat(orderQuantity || 0) * parseFloat(orderPrice || 0)) > parseFloat(user?.balance || 0))) 
+                    ? 0.5 : 1
                 }}
               >
-                {createOrderMutation.isPending ? 'İşleniyor...' : `${orderType === 'BUY' ? 'Satın Al' : 'Sat'}`}
+                {createOrderMutation.isPending ? 'İşleniyor...' : 
+                 (orderType === 'BUY' && (parseFloat(orderQuantity || 0) * parseFloat(orderPrice || 0)) > parseFloat(user?.balance || 0)) 
+                  ? 'Yetersiz Bakiye' 
+                  : `${orderType === 'BUY' ? 'Satın Al' : 'Sat'}`
+                }
               </button>
             </form>
           </div>
@@ -635,16 +665,20 @@ const MarketDetailPage = () => {
 
             <div className="space-y-2 mb-6">
               <button
-                onClick={() => {
-                  setSelectedOutcome(true);
-                  setOrderType('BUY');
-                  setShowBuyModal(true);
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (market.status === 'open' && user) {
+                    setSelectedOutcome(true);
+                    setOrderType('BUY');
+                    setShowBuyModal(true);
+                  }
                 }}
                 disabled={market.status !== 'open' || !user}
-                className="w-full font-medium py-3 rounded-lg transition-colors"
+                className="w-full font-medium py-3 rounded-lg transition-colors relative z-10"
                 style={{
                   backgroundColor: (market.status !== 'open' || !user) ? '#555555' : '#ccff33',
-                  color: '#ffffff',
+                  color: '#111111',
                   cursor: (market.status !== 'open' || !user) ? 'not-allowed' : 'pointer',
                   opacity: (market.status !== 'open' || !user) ? 0.5 : 1
                 }}
@@ -652,13 +686,17 @@ const MarketDetailPage = () => {
                 {!user ? 'Giriş Yapın' : 'EVET Satın Al'}
               </button>
               <button
-                onClick={() => {
-                  setSelectedOutcome(true);
-                  setOrderType('SELL');
-                  setShowBuyModal(true);
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (market.status === 'open' && user) {
+                    setSelectedOutcome(true);
+                    setOrderType('SELL');
+                    setShowBuyModal(true);
+                  }
                 }}
                 disabled={market.status !== 'open' || !user}
-                className="w-full font-medium py-3 rounded-lg transition-colors"
+                className="w-full font-medium py-3 rounded-lg transition-colors relative z-10"
                 style={{
                   backgroundColor: (market.status !== 'open' || !user) ? '#555555' : 'rgba(204, 255, 51, 0.2)',
                   color: '#ccff33',
@@ -728,13 +766,17 @@ const MarketDetailPage = () => {
 
             <div className="space-y-2 mb-6">
               <button
-                onClick={() => {
-                  setSelectedOutcome(false);
-                  setOrderType('BUY');
-                  setShowBuyModal(true);
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (market.status === 'open' && user) {
+                    setSelectedOutcome(false);
+                    setOrderType('BUY');
+                    setShowBuyModal(true);
+                  }
                 }}
                 disabled={market.status !== 'open' || !user}
-                className="w-full font-medium py-3 rounded-lg transition-colors"
+                className="w-full font-medium py-3 rounded-lg transition-colors relative z-10"
                 style={{
                   backgroundColor: (market.status !== 'open' || !user) ? '#555555' : '#FF0000',
                   color: '#ffffff',
@@ -745,13 +787,17 @@ const MarketDetailPage = () => {
                 {!user ? 'Giriş Yapın' : 'HAYIR Satın Al'}
               </button>
               <button
-                onClick={() => {
-                  setSelectedOutcome(false);
-                  setOrderType('SELL');
-                  setShowBuyModal(true);
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  if (market.status === 'open' && user) {
+                    setSelectedOutcome(false);
+                    setOrderType('SELL');
+                    setShowBuyModal(true);
+                  }
                 }}
                 disabled={market.status !== 'open' || !user}
-                className="w-full font-medium py-3 rounded-lg transition-colors"
+                className="w-full font-medium py-3 rounded-lg transition-colors relative z-10"
                 style={{
                   backgroundColor: (market.status !== 'open' || !user) ? '#555555' : 'rgba(255, 0, 0, 0.2)',
                   color: '#FF0000',

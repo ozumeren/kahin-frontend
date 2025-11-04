@@ -4,7 +4,8 @@ import toast from 'react-hot-toast';
 
 const TradingPanel = ({ 
   market, 
-  selectedOutcome, 
+  selectedOutcome,
+  setSelectedOutcome,
   orderType, 
   setOrderType,
   portfolio,
@@ -123,30 +124,42 @@ const TradingPanel = ({
         </label>
         <div className="grid grid-cols-2 gap-2">
           <button
-            onClick={() => setSelectedOutcome('YES')}
-            className={`py-3 px-4 rounded-lg font-medium transition-all ${
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setSelectedOutcome('YES');
+            }}
+            className={`py-3 px-4 rounded-lg font-medium transition-all relative z-10 ${
               selectedOutcome === 'YES' ? 'ring-2' : ''
             }`}
             style={{
               backgroundColor: selectedOutcome === 'YES' ? 'rgba(0, 255, 136, 0.1)' : '#0a0a0a',
               color: selectedOutcome === 'YES' ? '#00ff88' : '#666666',
               borderColor: '#00ff88',
-              border: selectedOutcome === 'YES' ? '1px solid' : '1px solid #1a1a1a'
+              border: selectedOutcome === 'YES' ? '1px solid' : '1px solid #1a1a1a',
+              cursor: 'pointer'
             }}
           >
             <div className="text-sm">Evet</div>
             <div className="text-lg font-bold mt-1">{yesPrice.toFixed(2)}₺</div>
           </button>
           <button
-            onClick={() => setSelectedOutcome('NO')}
-            className={`py-3 px-4 rounded-lg font-medium transition-all ${
+            type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setSelectedOutcome('NO');
+            }}
+            className={`py-3 px-4 rounded-lg font-medium transition-all relative z-10 ${
               selectedOutcome === 'NO' ? 'ring-2' : ''
             }`}
             style={{
               backgroundColor: selectedOutcome === 'NO' ? 'rgba(255, 68, 68, 0.1)' : '#0a0a0a',
               color: selectedOutcome === 'NO' ? '#ff4444' : '#666666',
               borderColor: '#ff4444',
-              border: selectedOutcome === 'NO' ? '1px solid' : '1px solid #1a1a1a'
+              border: selectedOutcome === 'NO' ? '1px solid' : '1px solid #1a1a1a',
+              cursor: 'pointer'
             }}
           >
             <div className="text-sm">Hayır</div>
@@ -185,7 +198,7 @@ const TradingPanel = ({
             />
             <button
               type="button"
-              onClick={() => adjustContracts(10)}
+              onClick={() => adjustContracts(1)}
               className="p-2 rounded-lg hover:opacity-80 transition-opacity"
               style={{ backgroundColor: '#1a1a1a' }}
             >

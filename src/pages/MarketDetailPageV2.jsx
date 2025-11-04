@@ -73,10 +73,40 @@ const MarketDetailPageV2 = () => {
   
   // Format outcomes for display
   const outcomes = isMultipleChoice 
-    ? market.options 
+    ? market.options.map(option => ({
+        id: option.id,
+        name: option.option_text || option.name || 'Seçenek',
+        image: option.option_image_url || option.image,
+        party: option.party || null,
+        percentage: Math.round(parseFloat(option.probability || 0) * 100),
+        yesPrice: parseFloat(option.yes_price || 0).toFixed(2),
+        noPrice: parseFloat(option.no_price || 0).toFixed(2),
+        change: parseFloat(option.change || 0),
+        color: null
+      }))
     : [
-        { id: 'YES', name: 'Evet', price: yesPrice, percentage: yesPercentage, color: '#00ff88' },
-        { id: 'NO', name: 'Hayır', price: noPrice, percentage: noPercentage, color: '#ff4444' }
+        { 
+          id: 'YES', 
+          name: 'Evet', 
+          image: null,
+          party: null,
+          percentage: yesPercentage, 
+          yesPrice: yesPrice.toFixed(2),
+          noPrice: null,
+          change: 0,
+          color: '#ccff33' 
+        },
+        { 
+          id: 'NO', 
+          name: 'Hayır', 
+          image: null,
+          party: null,
+          percentage: noPercentage, 
+          yesPrice: null,
+          noPrice: noPrice.toFixed(2),
+          change: 0,
+          color: '#FF0000' 
+        }
       ];
   
   // Top outcomes for display
@@ -267,6 +297,7 @@ const MarketDetailPageV2 = () => {
               <TradingPanel
                 market={market}
                 selectedOutcome={selectedOutcome}
+                setSelectedOutcome={setSelectedOutcome}
                 orderType={orderType}
                 setOrderType={setOrderType}
                 portfolio={portfolio}
