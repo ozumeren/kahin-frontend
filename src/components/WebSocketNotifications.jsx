@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import toast from 'react-hot-toast'
-import { useWebSocket, useNewTrades, useMyOrderEvents } from '../hooks/useWebSocket'
+import { useNewTrades, useMyOrderEvents } from '../hooks/useWebSocket'
 import { useAuth } from '../context/AuthContext'
 
 /**
@@ -14,15 +14,10 @@ import { useAuth } from '../context/AuthContext'
  */
 export default function WebSocketNotifications({ marketId = null }) {
   const { user } = useAuth()
-  const ws = useWebSocket()
   const [recentTrades, setRecentTrades] = useState([])
 
-  // Kullanıcı giriş yaptığında WebSocket'e subscribe ol
-  useEffect(() => {
-    if (user && ws.isConnected && ws.subscribeUser) {
-      ws.subscribeUser(user.id)
-    }
-  }, [user?.id, ws.isConnected, ws.subscribeUser])
+  // NOT: WebSocket subscription AuthContext tarafından yapılıyor
+  // Burada tekrar yapmaya gerek yok
 
   // Yeni trade'leri dinle
   useNewTrades(marketId, (trade) => {

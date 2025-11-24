@@ -45,15 +45,40 @@ export function AuthProvider({ children }) {
   useBalanceUpdates(handleBalanceUpdate)
 
   // ============================================
+  // Logout Function (önce tanımla)
+  // ============================================
+
+  const doLogout = useCallback(() => {
+    // Timer'ları temizle
+    if (inactivityTimerRef.current) {
+      clearTimeout(inactivityTimerRef.current)
+    }
+    if (warningTimerRef.current) {
+      clearTimeout(warningTimerRef.current)
+    }
+
+    // Storage'ı temizle
+    localStorage.removeItem('token')
+    localStorage.removeItem('refreshToken')
+    localStorage.removeItem('lastActivity')
+    secureStorage.remove('loginTime')
+
+    // State'i temizle
+    setUser(null)
+    setSessionInfo(null)
+    setShowInactivityWarning(false)
+  }, [])
+
+  // ============================================
   // Inactivity Logout
   // ============================================
 
   const handleInactivityLogout = useCallback(() => {
     console.log('Inaktivite nedeniyle oturum kapatılıyor...')
     setShowInactivityWarning(false)
-    logout()
+    doLogout()
     window.location.href = '/login?reason=inactivity'
-  }, [])
+  }, [doLogout])
 
   const resetInactivityTimer = useCallback(() => {
     // Uyarıyı kapat
@@ -194,17 +219,11 @@ export function AuthProvider({ children }) {
         deviceInfo: getDeviceInfo()
       })
 
-      // WebSocket subscription
-      if (isConnected) {
-        if (import.meta.env.DEV) {
-          console.log('Login sonrası WebSocket user subscription:', userData.id)
-        }
-        subscribeUser(userData.id)
-      }
-
       // Inactivity timer'ı başlat
       resetActivityTime()
-      resetInactivityTimer()
+
+      // NOT: WebSocket subscription useEffect tarafından otomatik yapılacak
+      // (user state değiştiğinde tetiklenir)
 
     } catch (error) {
       console.error('Failed to fetch user after login:', error)
@@ -224,27 +243,6 @@ export function AuthProvider({ children }) {
     })
     return response.data
   }
-
-  const logout = useCallback(() => {
-    // Timer'ları temizle
-    if (inactivityTimerRef.current) {
-      clearTimeout(inactivityTimerRef.current)
-    }
-    if (warningTimerRef.current) {
-      clearTimeout(warningTimerRef.current)
-    }
-
-    // Storage'ı temizle
-    localStorage.removeItem('token')
-    localStorage.removeItem('refreshToken')
-    localStorage.removeItem('lastActivity')
-    secureStorage.remove('loginTime')
-
-    // State'i temizle
-    setUser(null)
-    setSessionInfo(null)
-    setShowInactivityWarning(false)
-  }, [])
 
   const refreshUser = async () => {
     try {
@@ -274,7 +272,7 @@ export function AuthProvider({ children }) {
     loading,
     login,
     register,
-    logout,
+    logout: doLogout,
     refreshUser,
     isAuthenticated: !!user,
     // Yeni güvenlik özellikleri

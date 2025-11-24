@@ -53,12 +53,12 @@ export default function LoginPage() {
 
     try {
       await login(formValues.email, formValues.password)
-      toast.success('Başarıyla giriş yapıldı!')
+      toast.success('Başarıyla giriş yapıldı!', { id: 'login-success' })
       navigate(from, { replace: true })
     } catch (err) {
       const errorMessage = sanitizeError(err)
       setServerError(errorMessage)
-      toast.error(errorMessage)
+      toast.error(errorMessage, { id: 'login-error' })
     }
   }
 

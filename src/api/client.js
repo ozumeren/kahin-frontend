@@ -71,9 +71,6 @@ apiClient.interceptors.request.use(
       }
     }
 
-    // Request ID ekle (debugging için)
-    config.headers['X-Request-ID'] = generateRequestId()
-
     return config
   },
   (error) => {
@@ -88,6 +85,11 @@ apiClient.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config
+
+    // Config yoksa (rate limit hatası gibi), direkt reject et
+    if (!originalRequest) {
+      return Promise.reject(error)
+    }
 
     // Token expired - refresh dene
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -172,10 +174,6 @@ function handleLogout() {
       !window.location.pathname.includes('/register')) {
     window.location.href = '/login?expired=true'
   }
-}
-
-function generateRequestId() {
-  return `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 }
 
 // ============================================

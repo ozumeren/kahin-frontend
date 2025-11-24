@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { usePortfolio, useCancelOrder, useAmendOrder, useConditionalOrders } from '../hooks/useMarketQueries'
+import {
+  usePortfolio,
+  useCancelOrder,
+  useAmendOrder,
+  useConditionalOrders,
+  usePortfolioRealized,
+  usePortfolioPerformance
+} from '../hooks/useMarketQueries'
 import {
   TrendingUp,
   TrendingDown,
@@ -16,7 +23,11 @@ import {
   Edit3,
   Trash2,
   Shield,
-  X
+  X,
+  BarChart3,
+  Percent,
+  Award,
+  Zap
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import apiClient from '../api/client'
@@ -26,18 +37,18 @@ export default function PortfolioPage() {
   const [activeTab, setActiveTab] = useState('positions')
 
   const { data: portfolio, isLoading: portfolioLoading, error: portfolioError } = usePortfolio(isAuthenticated)
+  const { data: performance } = usePortfolioPerformance(isAuthenticated)
+  const { data: realizedPnL } = usePortfolioRealized(isAuthenticated)
 
   // Debug için console log
   useEffect(() => {
     if (portfolio) {
       console.log('📊 PORTFOLIO DATA:', portfolio)
-      console.log('📊 Summary:', portfolio.summary)
-      console.log('📊 Positions:', portfolio.positions)
     }
-    if (portfolioError) {
-      console.error('❌ PORTFOLIO ERROR:', portfolioError)
+    if (performance) {
+      console.log('📊 PERFORMANCE DATA:', performance)
     }
-  }, [portfolio, portfolioError])
+  }, [portfolio, performance])
 
   const { data: ordersData } = useQuery({
     queryKey: ['myOrders'],
@@ -69,7 +80,8 @@ export default function PortfolioPage() {
   const tabs = [
     { id: 'positions', label: 'Pozisyonlar', icon: Target, count: portfolio?.positions?.length || 0 },
     { id: 'orders', label: 'Emirler', icon: Activity, count: orders.filter(o => o.status === 'pending').length },
-    { id: 'history', label: 'İşlem Geçmişi', icon: Clock, count: tradeHistory.length },
+    { id: 'history', label: 'Islem Gecmisi', icon: Clock, count: tradeHistory.length },
+    { id: 'performance', label: 'Performans', icon: BarChart3, count: 0 },
   ]
 
   if (!isAuthenticated) {
@@ -208,6 +220,7 @@ export default function PortfolioPage() {
         {activeTab === 'positions' && <PositionsPanel positions={positions} />}
         {activeTab === 'orders' && <OrdersPanel orders={orders} />}
         {activeTab === 'history' && <TradeHistoryPanel trades={tradeHistory} />}
+        {activeTab === 'performance' && <PerformancePanel performance={performance} realizedPnL={realizedPnL} />}
       </div>
     </div>
   )
@@ -563,6 +576,179 @@ function TradeHistoryPanel({ trades }) {
           </div>
         </div>
       ))}
+    </div>
+  )
+}
+
+// Performance Panel
+function PerformancePanel({ performance, realizedPnL }) {
+  if (!performance && !realizedPnL) {
+    return (
+      <div className="rounded-2xl shadow-md p-12 text-center" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
+        <div className="w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: '#555555' }}>
+          <BarChart3 className="w-10 h-10" style={{ color: '#ffffff', opacity: 0.5 }} />
+        </div>
+        <h3 className="text-xl font-semibold mb-2" style={{ color: '#ffffff' }}>Performans verisi yok</h3>
+        <p style={{ color: '#ffffff', opacity: 0.7 }}>Islem yaptikca performans metrikleri burada gorunecek</p>
+      </div>
+    )
+  }
+
+  // Performance metrikleri
+  const metrics = {
+    totalTrades: performance?.totalTrades || 0,
+    winningTrades: performance?.winningTrades || 0,
+    losingTrades: performance?.losingTrades || 0,
+    winRate: performance?.winRate || 0,
+    totalReturn: performance?.totalReturn || 0,
+    roi: performance?.roi || 0,
+    avgWin: performance?.avgWin || 0,
+    avgLoss: performance?.avgLoss || 0,
+    profitFactor: performance?.profitFactor || 0,
+    maxDrawdown: performance?.maxDrawdown || 0,
+    sharpeRatio: performance?.sharpeRatio || 0,
+    bestTrade: performance?.bestTrade || 0,
+    worstTrade: performance?.worstTrade || 0,
+  }
+
+  // Realized P&L
+  const realized = {
+    totalRealized: realizedPnL?.totalRealized || 0,
+    realizedByMarket: realizedPnL?.byMarket || [],
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Ana Metrikler */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <MetricCard
+          title="Toplam Getiri"
+          value={`₺${metrics.totalReturn.toFixed(2)}`}
+          icon={DollarSign}
+          color={metrics.totalReturn >= 0 ? '#ccff33' : '#FF0000'}
+          subtitle={`ROI: ${metrics.roi.toFixed(1)}%`}
+        />
+        <MetricCard
+          title="Kazanma Orani"
+          value={`${metrics.winRate.toFixed(1)}%`}
+          icon={Percent}
+          color={metrics.winRate >= 50 ? '#ccff33' : '#FF0000'}
+          subtitle={`${metrics.winningTrades}W / ${metrics.losingTrades}L`}
+        />
+        <MetricCard
+          title="Toplam Islem"
+          value={metrics.totalTrades}
+          icon={Activity}
+          color="#3b82f6"
+          subtitle="Tamamlanan"
+        />
+        <MetricCard
+          title="Gerceklesmis K/Z"
+          value={`₺${realized.totalRealized.toFixed(2)}`}
+          icon={Award}
+          color={realized.totalRealized >= 0 ? '#ccff33' : '#FF0000'}
+          subtitle="Kapanan pozisyonlar"
+        />
+      </div>
+
+      {/* Detayli Metrikler */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Kar/Zarar Analizi */}
+        <div className="rounded-xl p-6" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
+          <h3 className="text-lg font-semibold mb-4" style={{ color: '#ffffff' }}>Kar/Zarar Analizi</h3>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span style={{ color: '#888888' }}>Ortalama Kazanc</span>
+              <span className="font-semibold" style={{ color: '#ccff33' }}>₺{metrics.avgWin.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span style={{ color: '#888888' }}>Ortalama Kayip</span>
+              <span className="font-semibold" style={{ color: '#FF0000' }}>₺{Math.abs(metrics.avgLoss).toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span style={{ color: '#888888' }}>En Iyi Islem</span>
+              <span className="font-semibold" style={{ color: '#ccff33' }}>₺{metrics.bestTrade.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span style={{ color: '#888888' }}>En Kotu Islem</span>
+              <span className="font-semibold" style={{ color: '#FF0000' }}>₺{Math.abs(metrics.worstTrade).toFixed(2)}</span>
+            </div>
+            <div className="pt-4" style={{ borderTop: '1px solid #333333' }}>
+              <div className="flex justify-between items-center">
+                <span style={{ color: '#888888' }}>Kar Faktoru</span>
+                <span className="font-semibold" style={{ color: metrics.profitFactor >= 1 ? '#ccff33' : '#FF0000' }}>
+                  {metrics.profitFactor.toFixed(2)}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Risk Metrikleri */}
+        <div className="rounded-xl p-6" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
+          <h3 className="text-lg font-semibold mb-4" style={{ color: '#ffffff' }}>Risk Metrikleri</h3>
+          <div className="space-y-4">
+            <div className="flex justify-between items-center">
+              <span style={{ color: '#888888' }}>Max Drawdown</span>
+              <span className="font-semibold" style={{ color: '#FF0000' }}>{metrics.maxDrawdown.toFixed(1)}%</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span style={{ color: '#888888' }}>Sharpe Orani</span>
+              <span className="font-semibold" style={{ color: metrics.sharpeRatio >= 1 ? '#ccff33' : '#888888' }}>
+                {metrics.sharpeRatio.toFixed(2)}
+              </span>
+            </div>
+
+            {/* Win Rate Progress Bar */}
+            <div className="pt-4" style={{ borderTop: '1px solid #333333' }}>
+              <div className="flex justify-between text-sm mb-2">
+                <span style={{ color: '#888888' }}>Kazanma Orani</span>
+                <span style={{ color: '#ffffff' }}>{metrics.winRate.toFixed(0)}%</span>
+              </div>
+              <div className="h-3 rounded-full overflow-hidden" style={{ backgroundColor: '#333333' }}>
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{
+                    width: `${Math.min(metrics.winRate, 100)}%`,
+                    backgroundColor: metrics.winRate >= 50 ? '#ccff33' : '#FF0000'
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Market Bazli Gerceklesmis K/Z */}
+      {realized.realizedByMarket.length > 0 && (
+        <div className="rounded-xl p-6" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
+          <h3 className="text-lg font-semibold mb-4" style={{ color: '#ffffff' }}>Market Bazli Gerceklesmis K/Z</h3>
+          <div className="space-y-3">
+            {realized.realizedByMarket.slice(0, 10).map((item, index) => (
+              <div key={index} className="flex justify-between items-center p-3 rounded-lg" style={{ backgroundColor: '#0a0a0a' }}>
+                <span className="text-sm truncate flex-1 mr-4" style={{ color: '#ffffff' }}>{item.marketTitle}</span>
+                <span className="font-semibold" style={{ color: item.realized >= 0 ? '#ccff33' : '#FF0000' }}>
+                  {item.realized >= 0 ? '+' : ''}₺{item.realized.toFixed(2)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// Metric Card Component
+function MetricCard({ title, value, icon: Icon, color, subtitle }) {
+  return (
+    <div className="rounded-xl p-5" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-sm" style={{ color: '#888888' }}>{title}</span>
+        <Icon className="w-5 h-5" style={{ color }} />
+      </div>
+      <div className="text-2xl font-bold mb-1" style={{ color }}>{value}</div>
+      {subtitle && <div className="text-xs" style={{ color: '#666666' }}>{subtitle}</div>}
     </div>
   )
 }

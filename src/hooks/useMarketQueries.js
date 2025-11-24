@@ -10,9 +10,48 @@ export function usePortfolio(enabled = true) {
       const response = await apiClient.get('/portfolio');
       return response.data.data;
     },
-    enabled: enabled, // Sadece enabled=true ise çalış
-    staleTime: 10000, // 10 saniye
-    retry: 1, // Hata durumunda sadece 1 kez tekrar dene
+    enabled: enabled,
+    staleTime: 10000,
+    retry: 1,
+  });
+}
+
+// Gerçekleşmiş kar/zarar (Realized P&L)
+export function usePortfolioRealized(enabled = true) {
+  return useQuery({
+    queryKey: ['portfolioRealized'],
+    queryFn: async () => {
+      const response = await apiClient.get('/portfolio/realized');
+      return response.data.data;
+    },
+    enabled: enabled,
+    staleTime: 30000, // 30 saniye
+  });
+}
+
+// Performans metrikleri (ROI, win rate, vb.)
+export function usePortfolioPerformance(enabled = true) {
+  return useQuery({
+    queryKey: ['portfolioPerformance'],
+    queryFn: async () => {
+      const response = await apiClient.get('/portfolio/performance');
+      return response.data.data;
+    },
+    enabled: enabled,
+    staleTime: 60000, // 1 dakika
+  });
+}
+
+// Belirli market pozisyonu
+export function usePortfolioMarket(marketId, enabled = true) {
+  return useQuery({
+    queryKey: ['portfolioMarket', marketId],
+    queryFn: async () => {
+      const response = await apiClient.get(`/portfolio/market/${marketId}`);
+      return response.data.data;
+    },
+    enabled: enabled && !!marketId,
+    staleTime: 10000,
   });
 }
 
