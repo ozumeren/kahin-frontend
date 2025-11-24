@@ -257,90 +257,153 @@ export default function Navbar({ activeCategory, setActiveCategory, showCategori
         {/* Mobile Menu Popup */}
         {mobileMenuOpen && (
           <>
-            {/* Backdrop */}
+            {/* Backdrop with blur */}
             <div
-              className="md:hidden fixed inset-0 z-40"
-              style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
+              className="md:hidden fixed inset-0 z-40 animate-fade-in"
+              style={{
+                backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                backdropFilter: 'blur(4px)',
+                WebkitBackdropFilter: 'blur(4px)'
+              }}
               onClick={() => setMobileMenuOpen(false)}
             />
             {/* Menu Panel */}
             <div
-              className="md:hidden fixed top-16 right-4 z-50 w-64 rounded-xl animate-fade-in-scale"
-              style={{ backgroundColor: '#1a1a1a', border: '1px solid #333333', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}
+              className="md:hidden fixed top-16 right-4 z-50 w-72 rounded-2xl animate-slide-in-right overflow-hidden"
+              style={{
+                backgroundColor: 'rgba(26, 26, 26, 0.98)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+                boxShadow: '0 25px 60px rgba(0, 0, 0, 0.6), 0 0 1px rgba(255, 255, 255, 0.1)'
+              }}
             >
-              <div className="py-2">
-              {user && (
-                <Link
-                  to="/portfolio"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="px-4 py-2 rounded-lg font-medium"
-                  style={{
-                    backgroundColor: isActive('/portfolio') ? '#555555' : 'transparent',
-                    color: '#ffffff'
-                  }}
-                >
-                  Portfolyo
-                </Link>
-              )}
-              {user?.role === 'admin' && (
-                <Link
-                  to="/admin"
-                  onClick={() => setMobileMenuOpen(false)}
-                  className="px-4 py-2 rounded-lg font-medium flex items-center gap-1"
-                  style={{
-                    backgroundColor: isActive('/admin') ? '#555555' : 'transparent',
-                    color: '#ffffff'
-                  }}
-                >
-                  <Shield className="w-4 h-4" />
-                  Admin
-                </Link>
-              )}
-
-              <div className="pt-4 mt-2 space-y-2" style={{ borderTop: '1px solid #555555' }}>
-                {user ? (
-                  <>
-                    <div className="px-4 py-2 rounded-lg" style={{ backgroundColor: '#555555', border: '1px solid #555555' }}>
-                      <div className="flex items-center gap-2 mb-1">
-                        <User className="w-4 h-4" style={{ color: '#ffffff', opacity: 0.7 }} />
-                        <span className="text-sm font-medium" style={{ color: '#ffffff' }}>{user.username}</span>
+              {user ? (
+                <>
+                  {/* User Profile Section */}
+                  <div
+                    className="p-4"
+                    style={{
+                      background: 'linear-gradient(135deg, rgba(204, 255, 51, 0.1) 0%, rgba(204, 255, 51, 0.02) 100%)',
+                      borderBottom: '1px solid rgba(255, 255, 255, 0.1)'
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      {/* User Avatar */}
+                      <div
+                        className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-lg"
+                        style={{
+                          background: 'linear-gradient(135deg, #ccff33 0%, #99cc00 100%)',
+                          color: '#111111',
+                          boxShadow: '0 4px 15px rgba(204, 255, 51, 0.3)'
+                        }}
+                      >
+                        {user.username?.charAt(0).toUpperCase() || 'U'}
                       </div>
-                      <div className="text-xs" style={{ color: '#ffffff', opacity: 0.7 }}>
-                        Bakiye: ₺{parseFloat(user.balance || 0).toFixed(2)}
+                      <div className="flex-1">
+                        <div className="font-semibold text-white text-base">{user.username}</div>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <span style={{ color: '#ccff33', fontSize: '14px', fontWeight: '600' }}>
+                            ₺{parseFloat(user.balance || 0).toFixed(2)}
+                          </span>
+                          <span style={{ color: '#888888', fontSize: '12px' }}>bakiye</span>
+                        </div>
                       </div>
                     </div>
+                  </div>
+
+                  {/* Navigation Links */}
+                  <div className="p-2">
+                    <Link
+                      to="/portfolio"
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 hover:brightness-110"
+                      style={{
+                        backgroundColor: isActive('/portfolio') ? 'rgba(204, 255, 51, 0.1)' : 'transparent',
+                        color: isActive('/portfolio') ? '#ccff33' : '#ffffff'
+                      }}
+                    >
+                      <TrendingUp className="w-5 h-5" style={{ opacity: isActive('/portfolio') ? 1 : 0.7 }} />
+                      <span className="font-medium">Portfolyo</span>
+                      {isActive('/portfolio') && (
+                        <div className="ml-auto w-2 h-2 rounded-full" style={{ backgroundColor: '#ccff33' }} />
+                      )}
+                    </Link>
+
+                    {user?.role === 'admin' && (
+                      <Link
+                        to="/admin"
+                        onClick={() => setMobileMenuOpen(false)}
+                        className="flex items-center gap-3 px-3 py-3 rounded-xl transition-all duration-200 hover:brightness-110"
+                        style={{
+                          backgroundColor: isActive('/admin') ? 'rgba(204, 255, 51, 0.1)' : 'transparent',
+                          color: isActive('/admin') ? '#ccff33' : '#ffffff'
+                        }}
+                      >
+                        <Shield className="w-5 h-5" style={{ opacity: isActive('/admin') ? 1 : 0.7 }} />
+                        <span className="font-medium">Admin Panel</span>
+                        {isActive('/admin') && (
+                          <div className="ml-auto w-2 h-2 rounded-full" style={{ backgroundColor: '#ccff33' }} />
+                        )}
+                      </Link>
+                    )}
+                  </div>
+
+                  {/* Logout Section */}
+                  <div className="p-2 pt-0">
+                    <div style={{ borderTop: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '8px' }} />
                     <button
                       onClick={handleLogout}
-                      className="w-full px-4 py-2 rounded-lg font-medium flex items-center justify-center gap-2 hover:brightness-110 transition-all"
-                      style={{ backgroundColor: 'rgba(255, 0, 0, 0.1)', color: '#FF0000', border: '1px solid rgba(255, 0, 0, 0.3)' }}
+                      className="w-full flex items-center gap-3 px-3 py-3 rounded-xl font-medium transition-all duration-200 hover:brightness-110"
+                      style={{
+                        backgroundColor: 'rgba(255, 59, 48, 0.1)',
+                        color: '#ff3b30'
+                      }}
                     >
-                      <LogOut className="w-4 h-4" />
-                      Çıkış Yap
+                      <LogOut className="w-5 h-5" />
+                      <span>Çıkış Yap</span>
                     </button>
-                  </>
-                ) : (
-                  <>
-                    <Link
-                      to="/login"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="block w-full px-4 py-2 text-center rounded-lg font-medium hover:brightness-110 transition-all"
-                      style={{ border: '1px solid #555555', color: '#ffffff' }}
+                  </div>
+                </>
+              ) : (
+                <div className="p-4 space-y-3">
+                  {/* Guest Welcome */}
+                  <div className="text-center pb-3" style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+                    <div
+                      className="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center"
+                      style={{ backgroundColor: 'rgba(255, 255, 255, 0.1)' }}
                     >
-                      Giriş
-                    </Link>
-                    <Link
-                      to="/register"
-                      onClick={() => setMobileMenuOpen(false)}
-                      className="block w-full px-4 py-2 text-center rounded-lg font-medium hover:brightness-110 transition-all"
-                      style={{ backgroundColor: '#555555', color: '#ffffff' }}
-                    >
-                      Kayıt Ol
-                    </Link>
-                  </>
-                )}
-              </div>
+                      <User className="w-8 h-8" style={{ color: '#888888' }} />
+                    </div>
+                    <div className="text-white font-medium">Hoş Geldiniz</div>
+                    <div style={{ color: '#888888', fontSize: '13px' }}>Tahmin yapmak için giriş yapın</div>
+                  </div>
+
+                  <Link
+                    to="/login"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block w-full px-4 py-3 text-center rounded-xl font-medium transition-all duration-200 hover:brightness-110"
+                    style={{
+                      backgroundColor: 'transparent',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      color: '#ffffff'
+                    }}
+                  >
+                    Giriş Yap
+                  </Link>
+                  <Link
+                    to="/register"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="block w-full px-4 py-3 text-center rounded-xl font-semibold transition-all duration-200 hover:brightness-110"
+                    style={{
+                      background: 'linear-gradient(135deg, #ccff33 0%, #99cc00 100%)',
+                      color: '#111111',
+                      boxShadow: '0 4px 15px rgba(204, 255, 51, 0.3)'
+                    }}
+                  >
+                    Kayıt Ol
+                  </Link>
+                </div>
+              )}
             </div>
-          </div>
           </>
         )}
       </div>
