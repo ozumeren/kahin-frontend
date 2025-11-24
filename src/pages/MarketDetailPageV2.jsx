@@ -240,9 +240,10 @@ const MarketDetailPageV2 = () => {
             {/* Chart */}
             <div className="rounded-xl p-6" style={{ backgroundColor: '#111111', border: '1px solid #1a1a1a' }}>
               <h3 className="text-lg font-semibold mb-4" style={{ color: '#ffffff' }}>Fiyat Grafiği</h3>
-              <PriceChart 
-                trades={trades} 
-                height={300}
+              <PriceChart
+                marketId={marketId}
+                trades={trades}
+                height={350}
                 isMultipleChoice={isMultipleChoice}
                 outcomes={outcomes}
               />

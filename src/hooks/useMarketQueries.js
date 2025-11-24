@@ -113,6 +113,39 @@ export function useCreateOrder() {
   });
 }
 
+// Fiyat geçmişi (candles) verilerini getir
+export function usePriceCandles(marketId, options = {}) {
+  const { interval = '1h', outcome = 'true', limit = 100 } = options;
+
+  return useQuery({
+    queryKey: ['candles', marketId, interval, outcome],
+    queryFn: async () => {
+      const response = await apiClient.get(`/markets/${marketId}/candles`, {
+        params: { interval, outcome, limit }
+      });
+      return response.data.data || [];
+    },
+    enabled: !!marketId,
+    staleTime: 60000, // 1 dakika
+    refetchInterval: 60000, // 1 dakikada bir yenile
+  });
+}
+
+// 24 saatlik istatistikleri getir
+export function useMarket24hStats(marketId, outcome = 'true') {
+  return useQuery({
+    queryKey: ['market24hStats', marketId, outcome],
+    queryFn: async () => {
+      const response = await apiClient.get(`/markets/${marketId}/stats/24h`, {
+        params: { outcome }
+      });
+      return response.data.data;
+    },
+    enabled: !!marketId,
+    staleTime: 30000, // 30 saniye
+  });
+}
+
 // Order iptal etme mutation (bonus)
 export function useCancelOrder() {
   const queryClient = useQueryClient();

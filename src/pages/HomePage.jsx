@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import { Link, useOutletContext, useSearchParams } from 'react-router-dom'
-import { TrendingUp, ChevronRight, Users } from 'lucide-react'
+import { TrendingUp, ChevronRight, Users, Star, Flame } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
 import apiClient from '../api/client'
 
 // Import category icons
@@ -21,6 +22,29 @@ export default function HomePage() {
 
   // Get search query from URL
   const searchQuery = searchParams.get('search') || ''
+
+  // Featured markets query
+  const { data: featuredData } = useQuery({
+    queryKey: ['featuredMarkets'],
+    queryFn: async () => {
+      const response = await apiClient.get('/markets/featured')
+      return response.data.data || []
+    },
+    staleTime: 60000 // 1 dakika cache
+  })
+
+  // Trending markets query
+  const { data: trendingData } = useQuery({
+    queryKey: ['trendingMarkets'],
+    queryFn: async () => {
+      const response = await apiClient.get('/markets/trending')
+      return response.data.data || []
+    },
+    staleTime: 60000 // 1 dakika cache
+  })
+
+  const featuredMarkets = featuredData || []
+  const trendingMarkets = trendingData || []
 
   const categories = [
     { id: 'all', name: 'Tüm Marketler', icon: AllIcon },
@@ -79,15 +103,98 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: '#111111' }}>
-      {/* Markets Grid */}
       <div className="container mx-auto px-4 py-8">
+        {/* Featured Markets Section */}
+        {featuredMarkets.length > 0 && !searchQuery && activeCategory === 'all' && (
+          <div className="mb-10">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold flex items-center gap-2" style={{ color: '#EEFFDD' }}>
+                <Star className="w-5 h-5" style={{ color: '#FFD700' }} />
+                Öne Çıkan Marketler
+              </h3>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {featuredMarkets.slice(0, 3).map((market) => (
+                <Link
+                  key={market.id}
+                  to={`/markets/${market.id}`}
+                  className="block p-5 rounded-xl transition-all hover:brightness-110"
+                  style={{
+                    backgroundColor: '#1a1a1a',
+                    border: '2px solid rgba(255, 215, 0, 0.3)',
+                    boxShadow: '0 0 20px rgba(255, 215, 0, 0.1)'
+                  }}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-12 h-12 rounded-xl overflow-hidden flex-shrink-0" style={{ backgroundColor: 'rgba(255, 215, 0, 0.1)' }}>
+                      {market.image_url ? (
+                        <img src={market.image_url} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        <Star className="w-6 h-6 m-3" style={{ color: '#FFD700' }} />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-semibold mb-1 line-clamp-2" style={{ color: '#EEFFDD' }}>{market.title}</h4>
+                      <div className="flex items-center gap-2 text-sm">
+                        <span className="font-bold" style={{ color: '#FFD700' }}>
+                          {Math.round((market.yesMidPrice || 0.5) * 100)}%
+                        </span>
+                        <span style={{ color: '#888888' }}>EVET</span>
+                      </div>
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Trending Markets Section */}
+        {trendingMarkets.length > 0 && !searchQuery && activeCategory === 'all' && (
+          <div className="mb-10">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold flex items-center gap-2" style={{ color: '#EEFFDD' }}>
+                <Flame className="w-5 h-5" style={{ color: '#FF6B35' }} />
+                Trend Marketler
+              </h3>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-2 scrollbar-hide">
+              {trendingMarkets.slice(0, 6).map((market, index) => (
+                <Link
+                  key={market.id}
+                  to={`/markets/${market.id}`}
+                  className="flex-shrink-0 w-64 p-4 rounded-xl transition-all hover:brightness-110"
+                  style={{
+                    backgroundColor: '#1a1a1a',
+                    border: '1px solid #333333'
+                  }}
+                >
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold"
+                      style={{ backgroundColor: '#FF6B35', color: '#ffffff' }}>
+                      {index + 1}
+                    </span>
+                    <Flame className="w-4 h-4" style={{ color: '#FF6B35' }} />
+                  </div>
+                  <h4 className="font-medium text-sm mb-2 line-clamp-2" style={{ color: '#EEFFDD' }}>{market.title}</h4>
+                  <div className="flex items-center justify-between text-xs">
+                    <span style={{ color: '#ccff33' }}>{Math.round((market.yesMidPrice || 0.5) * 100)}% EVET</span>
+                    <span style={{ color: '#888888' }}>₺{parseFloat(market.volume || 0).toLocaleString('tr-TR', { maximumFractionDigits: 0 })}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Markets Grid */}
         <div className="mb-8">
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-2xl font-bold flex items-center gap-2" style={{ color: '#EEFFDD' }}>
               <TrendingUp className="w-6 h-6" style={{ color: '#ccff33' }} />
               {searchQuery ? `"${searchQuery}" için sonuçlar` : categories.find(c => c.id === activeCategory)?.name}
             </h3>
-            <button 
+            <button
               onClick={fetchMarkets}
               className="text-sm font-medium flex items-center gap-1 hover:opacity-80 transition-opacity"
               style={{ color: '#ccff33' }}

@@ -1,6 +1,6 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { TrendingUp, User, LogOut, Menu, X, Shield, Search } from 'lucide-react'
+import { TrendingUp, User, LogOut, Menu, X, Shield, Search, Trophy, Wallet, MessageCircle } from 'lucide-react'
 import { useState } from 'react'
 
 // Import category icons
@@ -17,6 +17,7 @@ export default function Navbar({ activeCategory, setActiveCategory, showCategori
   const location = useLocation()
   const navigate = useNavigate()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [categoryDropdownOpen, setCategoryDropdownOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [showProfileMenu, setShowProfileMenu] = useState(false)
 
@@ -71,8 +72,18 @@ export default function Navbar({ activeCategory, setActiveCategory, showCategori
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-2">
-            {/* Navigation items removed - only logo remains */}
+          <div className="hidden md:flex items-center gap-4">
+            <Link
+              to="/leaderboard"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg font-medium transition-all hover:brightness-110"
+              style={{
+                backgroundColor: isActive('/leaderboard') ? '#555555' : 'transparent',
+                color: '#ffffff'
+              }}
+            >
+              <Trophy className="w-4 h-4" style={{ color: '#FFD700' }} />
+              Liderlik
+            </Link>
           </div>
 
           {/* Spacer to push search to the right */}
@@ -118,15 +129,54 @@ export default function Navbar({ activeCategory, setActiveCategory, showCategori
 
                   {/* Profile Dropdown */}
                   {showProfileMenu && (
-                    <div 
+                    <div
                       className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg overflow-hidden z-50"
                       style={{ backgroundColor: '#1a1a1a', border: '1px solid #555555' }}
                     >
                       <Link
+                        to="/profile"
+                        onClick={() => setShowProfileMenu(false)}
+                        className="flex items-center gap-2 px-4 py-3 transition-all hover:brightness-110"
+                        style={{
+                          backgroundColor: isActive('/profile') ? '#555555' : 'transparent',
+                          color: '#ffffff',
+                          borderBottom: '1px solid #555555'
+                        }}
+                      >
+                        <User className="w-4 h-4" />
+                        Profilim
+                      </Link>
+                      <Link
+                        to="/messages"
+                        onClick={() => setShowProfileMenu(false)}
+                        className="flex items-center gap-2 px-4 py-3 transition-all hover:brightness-110"
+                        style={{
+                          backgroundColor: isActive('/messages') ? '#555555' : 'transparent',
+                          color: '#ffffff',
+                          borderBottom: '1px solid #555555'
+                        }}
+                      >
+                        <MessageCircle className="w-4 h-4" />
+                        Mesajlar
+                      </Link>
+                      <Link
+                        to="/wallet"
+                        onClick={() => setShowProfileMenu(false)}
+                        className="flex items-center gap-2 px-4 py-3 transition-all hover:brightness-110"
+                        style={{
+                          backgroundColor: isActive('/wallet') ? '#555555' : 'transparent',
+                          color: '#ffffff',
+                          borderBottom: '1px solid #555555'
+                        }}
+                      >
+                        <Wallet className="w-4 h-4" />
+                        Cüzdan
+                      </Link>
+                      <Link
                         to="/portfolio"
                         onClick={() => setShowProfileMenu(false)}
                         className="flex items-center gap-2 px-4 py-3 transition-all hover:brightness-110"
-                        style={{ 
+                        style={{
                           backgroundColor: isActive('/portfolio') ? '#555555' : 'transparent',
                           color: '#ffffff',
                           borderBottom: '1px solid #555555'
@@ -170,28 +220,26 @@ export default function Navbar({ activeCategory, setActiveCategory, showCategori
             )}
           </div>
 
-          {/* Mobile Menu Button - only show when categories are not shown */}
-          {!showCategories && (
-            <button 
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
-              className="md:hidden p-2 rounded-lg transition-all hover:brightness-110"
-              style={{ backgroundColor: '#555555' }}
-            >
-              {mobileMenuOpen ? <X className="w-6 h-6" style={{ color: '#ffffff' }} /> : <Menu className="w-6 h-6" style={{ color: '#ffffff' }} />}
-            </button>
-          )}
+          {/* Mobile Menu Button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 rounded-lg transition-all hover:brightness-110"
+            style={{ backgroundColor: '#555555' }}
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" style={{ color: '#ffffff' }} /> : <Menu className="w-6 h-6" style={{ color: '#ffffff' }} />}
+          </button>
         </div>
 
         {/* Category Navigation */}
         {showCategories && (
-          <div className="py-4" style={{ borderTop: '1px solid #555555' }}>
-            {/* Desktop Categories */}
-            <nav className="hidden md:flex gap-2 overflow-x-auto scrollbar-hide">
+          <div className="py-3" style={{ borderTop: '1px solid #555555' }}>
+            {/* Categories - Horizontal Scroll (both mobile and desktop) */}
+            <nav className="flex gap-2 overflow-x-auto scrollbar-hide px-1">
               {categories.map(cat => (
                 <button
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium whitespace-nowrap transition-all flex-shrink-0"
                   style={{
                     backgroundColor: activeCategory === cat.id ? '#555555' : 'transparent',
                     color: '#ffffff',
@@ -203,49 +251,24 @@ export default function Navbar({ activeCategory, setActiveCategory, showCategori
                 </button>
               ))}
             </nav>
-
-            {/* Mobile Category Selector */}
-            <div className="md:hidden flex items-center justify-between">
-              <button 
-                className="flex items-center gap-2 px-4 py-2 rounded-lg"
-                style={{ backgroundColor: '#555555', color: '#ffffff' }}
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              >
-                <img src={categories.find(c => c.id === activeCategory)?.icon} alt="" className="w-4 h-4" />
-                <span className="text-sm font-medium">{categories.find(c => c.id === activeCategory)?.name}</span>
-                {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
-              </button>
-            </div>
-
-            {/* Mobile Categories Dropdown */}
-            {mobileMenuOpen && (
-              <div className="md:hidden mt-4 space-y-2">
-                {categories.map(cat => (
-                  <button
-                    key={cat.id}
-                    onClick={() => {
-                      setActiveCategory(cat.id)
-                      setMobileMenuOpen(false)
-                    }}
-                    className="w-full text-left px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2"
-                    style={{
-                      backgroundColor: activeCategory === cat.id ? '#555555' : 'transparent',
-                      color: '#ffffff'
-                    }}
-                  >
-                    <img src={cat.icon} alt="" className="w-4 h-4" />
-                    {cat.name}
-                  </button>
-                ))}
-              </div>
-            )}
           </div>
         )}
 
-        {/* Mobile Menu */}
-        {mobileMenuOpen && !showCategories && (
-          <div className="md:hidden py-4" style={{ borderTop: '1px solid #555555' }}>
-            <div className="flex flex-col space-y-2">
+        {/* Mobile Menu Popup */}
+        {mobileMenuOpen && (
+          <>
+            {/* Backdrop */}
+            <div
+              className="md:hidden fixed inset-0 z-40"
+              style={{ backgroundColor: 'rgba(0, 0, 0, 0.6)' }}
+              onClick={() => setMobileMenuOpen(false)}
+            />
+            {/* Menu Panel */}
+            <div
+              className="md:hidden fixed top-16 right-4 z-50 w-64 rounded-xl animate-fade-in-scale"
+              style={{ backgroundColor: '#1a1a1a', border: '1px solid #333333', boxShadow: '0 20px 50px rgba(0,0,0,0.5)' }}
+            >
+              <div className="py-2">
               {user && (
                 <Link
                   to="/portfolio"
@@ -318,6 +341,7 @@ export default function Navbar({ activeCategory, setActiveCategory, showCategori
               </div>
             </div>
           </div>
+          </>
         )}
       </div>
     </nav>
