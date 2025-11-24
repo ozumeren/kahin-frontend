@@ -146,7 +146,7 @@ export function useMarket24hStats(marketId, outcome = 'true') {
   });
 }
 
-// Order iptal etme mutation (bonus)
+// Order iptal etme mutation
 export function useCancelOrder() {
   const queryClient = useQueryClient();
 
@@ -157,14 +157,96 @@ export function useCancelOrder() {
     },
     onSuccess: (data, orderId) => {
       toast.success('Emir iptal edildi');
-      
+
       // Tüm order ve portfolio verilerini yenile
       queryClient.invalidateQueries({ queryKey: ['myOrders'] });
       queryClient.invalidateQueries({ queryKey: ['portfolio'] });
-      queryClient.invalidateQueries({ queryKey: ['orderBook'] }); // Market'teki order book'u da güncelle
+      queryClient.invalidateQueries({ queryKey: ['orderBook'] });
+      queryClient.invalidateQueries({ queryKey: ['conditionalOrders'] });
     },
     onError: (error) => {
       const message = error.response?.data?.message || 'Emir iptal edilemedi';
+      toast.error(message);
+    },
+  });
+}
+
+// Koşullu emirleri getir (stop-loss, take-profit)
+export function useConditionalOrders(marketId = null) {
+  return useQuery({
+    queryKey: ['conditionalOrders', marketId],
+    queryFn: async () => {
+      const params = marketId ? { marketId } : {};
+      const response = await apiClient.get('/orders/conditional', { params });
+      return response.data.data || [];
+    },
+    staleTime: 10000,
+  });
+}
+
+// Emir güncelleme mutation
+export function useAmendOrder() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async ({ orderId, price, quantity }) => {
+      const response = await apiClient.patch(`/orders/${orderId}`, { price, quantity });
+      return response.data;
+    },
+    onSuccess: (data) => {
+      toast.success('Emir güncellendi');
+      queryClient.invalidateQueries({ queryKey: ['myOrders'] });
+      queryClient.invalidateQueries({ queryKey: ['portfolio'] });
+      queryClient.invalidateQueries({ queryKey: ['orderBook'] });
+      queryClient.invalidateQueries({ queryKey: ['conditionalOrders'] });
+    },
+    onError: (error) => {
+      const message = error.response?.data?.message || 'Emir güncellenemedi';
+      toast.error(message);
+    },
+  });
+}
+
+// Toplu emir oluşturma mutation
+export function useCreateBatchOrders() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (orders) => {
+      const response = await apiClient.post('/orders/batch', { orders });
+      return response.data;
+    },
+    onSuccess: (data) => {
+      toast.success(`${data.data?.created || 0} emir oluşturuldu`);
+      queryClient.invalidateQueries({ queryKey: ['myOrders'] });
+      queryClient.invalidateQueries({ queryKey: ['portfolio'] });
+      queryClient.invalidateQueries({ queryKey: ['orderBook'] });
+    },
+    onError: (error) => {
+      const message = error.response?.data?.message || 'Emirler oluşturulamadı';
+      toast.error(message);
+    },
+  });
+}
+
+// Toplu emir iptal mutation
+export function useCancelBatchOrders() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (orderIds) => {
+      const response = await apiClient.delete('/orders/batch', { data: { order_ids: orderIds } });
+      return response.data;
+    },
+    onSuccess: (data) => {
+      toast.success(`${data.data?.cancelled || 0} emir iptal edildi`);
+      queryClient.invalidateQueries({ queryKey: ['myOrders'] });
+      queryClient.invalidateQueries({ queryKey: ['portfolio'] });
+      queryClient.invalidateQueries({ queryKey: ['orderBook'] });
+      queryClient.invalidateQueries({ queryKey: ['conditionalOrders'] });
+    },
+    onError: (error) => {
+      const message = error.response?.data?.message || 'Emirler iptal edilemedi';
       toast.error(message);
     },
   });

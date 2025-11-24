@@ -1,18 +1,22 @@
 import React, { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
-import { usePortfolio } from '../hooks/useMarketQueries'
-import { 
-  TrendingUp, 
-  TrendingDown, 
-  Target, 
-  Clock, 
+import { usePortfolio, useCancelOrder, useAmendOrder, useConditionalOrders } from '../hooks/useMarketQueries'
+import {
+  TrendingUp,
+  TrendingDown,
+  Target,
+  Clock,
   AlertCircle,
   DollarSign,
   Activity,
   CheckCircle,
   XCircle,
-  Loader
+  Loader,
+  Edit3,
+  Trash2,
+  Shield,
+  X
 } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import apiClient from '../api/client'
@@ -301,6 +305,62 @@ function PositionsPanel({ positions }) {
 
 // Orders Panel
 function OrdersPanel({ orders }) {
+  const [editingOrder, setEditingOrder] = useState(null)
+  const [editPrice, setEditPrice] = useState('')
+  const [editQuantity, setEditQuantity] = useState('')
+
+  const cancelOrderMutation = useCancelOrder()
+  const amendOrderMutation = useAmendOrder()
+
+  const handleCancelOrder = (orderId) => {
+    if (window.confirm('Bu emri iptal etmek istediğinize emin misiniz?')) {
+      cancelOrderMutation.mutate(orderId)
+    }
+  }
+
+  const handleEditOrder = (order) => {
+    setEditingOrder(order.id)
+    setEditPrice(order.price?.toString() || '')
+    setEditQuantity(order.quantity?.toString() || '')
+  }
+
+  const handleSaveEdit = () => {
+    if (!editingOrder) return
+
+    amendOrderMutation.mutate({
+      orderId: editingOrder,
+      price: parseFloat(editPrice),
+      quantity: parseInt(editQuantity)
+    }, {
+      onSuccess: () => {
+        setEditingOrder(null)
+        setEditPrice('')
+        setEditQuantity('')
+      }
+    })
+  }
+
+  const handleCancelEdit = () => {
+    setEditingOrder(null)
+    setEditPrice('')
+    setEditQuantity('')
+  }
+
+  // Emir tipini Türkçe'ye çevir
+  const getOrderTypeLabel = (orderType) => {
+    const labels = {
+      'LIMIT': 'Limit',
+      'MARKET': 'Piyasa',
+      'STOP_LOSS': 'Stop-Loss',
+      'TAKE_PROFIT': 'Take-Profit',
+    }
+    return labels[orderType] || orderType
+  }
+
+  const isConditionalOrder = (order) => {
+    return order.order_type === 'STOP_LOSS' || order.order_type === 'TAKE_PROFIT'
+  }
+
   if (orders.length === 0) {
     return (
       <div className="rounded-2xl shadow-md p-12 text-center" style={{ backgroundColor: '#111111', border: '1px solid #555555' }}>
@@ -317,34 +377,141 @@ function OrdersPanel({ orders }) {
     <div className="space-y-3">
       {orders.map((order) => (
         <div key={order.id} className="p-6 market-card">
-          <div className="flex items-start justify-between">
-            <div className="flex-1">
-              <h4 className="font-semibold mb-2" style={{ color: '#ffffff' }}>{order.marketTitle}</h4>
-              <div className="flex items-center gap-3 text-sm">
-                <span className="px-3 py-1 rounded-full font-medium"
-                  style={{
-                    backgroundColor: order.type === 'BUY' ? 'rgba(204, 255, 51, 0.2)' : 'rgba(255, 0, 0, 0.2)',
-                    color: order.type === 'BUY' ? '#ccff33' : '#FF0000'
-                  }}
+          {editingOrder === order.id ? (
+            // Edit Mode
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <h4 className="font-semibold" style={{ color: '#ffffff' }}>{order.marketTitle}</h4>
+                <button
+                  onClick={handleCancelEdit}
+                  className="p-1 rounded hover:opacity-80"
+                  style={{ color: '#666666' }}
                 >
-                  {order.type === 'BUY' ? 'AL' : 'SAT'}
-                </span>
-                <span className="px-3 py-1 rounded-full font-medium"
-                  style={{
-                    backgroundColor: order.outcome === 'YES' ? 'rgba(204, 255, 51, 0.2)' : 'rgba(255, 0, 0, 0.2)',
-                    color: order.outcome === 'YES' ? '#ccff33' : '#FF0000'
-                  }}
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs mb-1 block" style={{ color: '#666666' }}>Fiyat (₺)</label>
+                  <input
+                    type="number"
+                    value={editPrice}
+                    onChange={(e) => setEditPrice(e.target.value)}
+                    step="0.01"
+                    min="0.01"
+                    max="0.99"
+                    className="w-full px-3 py-2 rounded-lg"
+                    style={{ backgroundColor: '#0a0a0a', color: '#ffffff', border: '1px solid #333333' }}
+                  />
+                </div>
+                <div>
+                  <label className="text-xs mb-1 block" style={{ color: '#666666' }}>Miktar</label>
+                  <input
+                    type="number"
+                    value={editQuantity}
+                    onChange={(e) => setEditQuantity(e.target.value)}
+                    min="1"
+                    className="w-full px-3 py-2 rounded-lg"
+                    style={{ backgroundColor: '#0a0a0a', color: '#ffffff', border: '1px solid #333333' }}
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={handleSaveEdit}
+                  disabled={amendOrderMutation.isPending}
+                  className="flex-1 py-2 px-4 rounded-lg font-medium transition-all hover:opacity-90 disabled:opacity-50"
+                  style={{ backgroundColor: '#ccff33', color: '#000000' }}
                 >
-                  {order.outcome}
-                </span>
-                <span style={{ color: '#ffffff', opacity: 0.7 }}>{order.quantity} Hisse</span>
+                  {amendOrderMutation.isPending ? 'Kaydediliyor...' : 'Kaydet'}
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  className="py-2 px-4 rounded-lg font-medium transition-all hover:opacity-90"
+                  style={{ backgroundColor: '#333333', color: '#ffffff' }}
+                >
+                  İptal
+                </button>
               </div>
             </div>
-            <div className="text-right">
-              <div className="text-sm mb-1" style={{ color: '#ffffff', opacity: 0.7 }}>Fiyat</div>
-              <div className="text-xl font-bold" style={{ color: '#ffffff' }}>₺{parseFloat(order.price).toFixed(2)}</div>
+          ) : (
+            // View Mode
+            <div className="flex items-start justify-between">
+              <div className="flex-1">
+                <div className="flex items-center gap-2 mb-2">
+                  <h4 className="font-semibold" style={{ color: '#ffffff' }}>{order.marketTitle}</h4>
+                  {isConditionalOrder(order) && (
+                    <Shield className="w-4 h-4" style={{ color: '#3b82f6' }} />
+                  )}
+                </div>
+                <div className="flex items-center gap-2 text-sm flex-wrap">
+                  <span className="px-2 py-1 rounded-full text-xs font-medium"
+                    style={{
+                      backgroundColor: order.type === 'BUY' ? 'rgba(0, 255, 136, 0.2)' : 'rgba(255, 68, 68, 0.2)',
+                      color: order.type === 'BUY' ? '#00ff88' : '#ff4444'
+                    }}
+                  >
+                    {order.type === 'BUY' ? 'AL' : 'SAT'}
+                  </span>
+                  <span className="px-2 py-1 rounded-full text-xs font-medium"
+                    style={{
+                      backgroundColor: order.outcome === 'YES' ? 'rgba(0, 255, 136, 0.2)' : 'rgba(255, 68, 68, 0.2)',
+                      color: order.outcome === 'YES' ? '#00ff88' : '#ff4444'
+                    }}
+                  >
+                    {order.outcome}
+                  </span>
+                  <span className="px-2 py-1 rounded-full text-xs font-medium"
+                    style={{ backgroundColor: '#1a1a1a', color: '#888888' }}
+                  >
+                    {getOrderTypeLabel(order.order_type)}
+                  </span>
+                  <span style={{ color: '#888888' }}>{order.quantity} Hisse</span>
+                </div>
+
+                {/* Trigger price for conditional orders */}
+                {isConditionalOrder(order) && order.trigger_price && (
+                  <div className="mt-2 text-xs" style={{ color: '#3b82f6' }}>
+                    Tetikleme: ₺{parseFloat(order.trigger_price).toFixed(2)}
+                  </div>
+                )}
+              </div>
+
+              <div className="flex items-start gap-3">
+                <div className="text-right">
+                  <div className="text-xs mb-1" style={{ color: '#666666' }}>Fiyat</div>
+                  <div className="text-lg font-bold" style={{ color: '#ffffff' }}>
+                    ₺{parseFloat(order.price).toFixed(2)}
+                  </div>
+                </div>
+
+                {/* Action buttons */}
+                {order.status === 'pending' && (
+                  <div className="flex gap-1">
+                    <button
+                      onClick={() => handleEditOrder(order)}
+                      className="p-2 rounded-lg transition-all hover:opacity-80"
+                      style={{ backgroundColor: '#1a1a1a' }}
+                      title="Emri Düzenle"
+                    >
+                      <Edit3 className="w-4 h-4" style={{ color: '#ccff33' }} />
+                    </button>
+                    <button
+                      onClick={() => handleCancelOrder(order.id)}
+                      disabled={cancelOrderMutation.isPending}
+                      className="p-2 rounded-lg transition-all hover:opacity-80 disabled:opacity-50"
+                      style={{ backgroundColor: '#1a1a1a' }}
+                      title="Emri İptal Et"
+                    >
+                      <Trash2 className="w-4 h-4" style={{ color: '#ff4444' }} />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       ))}
     </div>
